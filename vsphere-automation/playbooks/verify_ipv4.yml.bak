@@ -1,0 +1,97 @@
+---
+- name: Verify multiple IP addresses before setup
+  hosts: kickstart
+  gather_facts: false
+
+  tasks:
+    # - name: Validate IP address format for each IP
+    #   assert:
+    #     that:
+    #       - item.esxi_mgmt_ip is match("^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
+    #     fail_msg: "Invalid IP address format: {{ item.esxi_mgmt_ip }}"
+    #     success_msg: "Valid IP address format: {{ item.esxi_mgmt_ip }}"
+    #   loop: "{{ esxi_info }}"
+
+    # - name: Ensure each IP is not available (ping check)
+    #   command: ping -c 3 {{ item.esxi_mgmt_ip }}
+    #   register: ping_results
+    #   ignore_errors: yes
+    #   loop: "{{ esxi_info }}"
+    #   loop_control:
+    #     label: "{{ item.esxi_mgmt_ip }}"
+
+    # - name: Verify each IP status
+    #   assert:
+    #     that:
+    #       - item.rc == 1
+    #     fail_msg: "One or more IP addresses are available: {{ item.item.esxi_mgmt_ip }}"
+    #     success_msg: "IP address {{ item.item.esxi_mgmt_ip }} is not available."
+    #   loop: "{{ ping_results.results }}"
+    #   loop_control:
+    #     label: "{{ item.item.esxi_mgmt_ip }}"
+
+    # - name: Proceed with setup task for each IP
+    #   debug:
+    #     msg: "IP {{ item.item.esxi_mgmt_ip }} is valid"
+    #   when: item.rc == 1
+    #   loop: "{{ ping_results.results }}"
+    #   loop_control:
+    #     label: "{{ item.item.esxi_mgmt_ip }}"
+
+    - name: Gather all IPs into a list
+      set_fact:
+        all_ips: "{{ all_ips | default([]) + [item.esxi_mgmt_ip, item.esxi_vmotion_ip, item.esxi_backupnfc_ip, item.esxi_iscsi_ip1, item.esxi_iscsi_ip2, item.esxi_replication_ip] }}"
+      loop: "{{ esxi_info }}"
+    
+    - name: Remove duplicate IPs from the list
+      set_fact:
+        all_ips: "{{ all_ips | flatten | unique }}"
+
+    - name: Debug all IPs
+      debug:
+        msg: "All IPs: {{ all_ips }}"
+
+    - name: Validate IP address format
+      assert:
+        that:
+          - item is match("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")
+        fail_msg: "Invalid IP address format: {{ item }}"
+        success_msg: "Valid IP address format: {{ item }}"
+      loop: "{{ all_ips }}"
+      loop_control:
+        label: "{{ item }}"
+
+    - name: Ping each IP address
+      command: ping -c 3 {{ item }}
+      register: ping_results
+      ignore_errors: yes
+      loop: "{{ all_ips }}"
+      loop_control:
+        label: "{{ item }}"
+
+    # - name: Debug ping results
+    #   debug:
+    #     msg: "Ping results for IP {{ item.item }}: RC={{ item.rc }}"
+    #   loop: "{{ ping_results.results }}"
+    #   loop_control:
+    #     label: "{{ item.item }}"
+
+    - name: Extract Available IPs
+      set_fact:
+        available_ips: "{{ ping_results.results | selectattr('rc', 'equalto', 1) | map(attribute='item') | list }}"
+
+    - name: Extract Used IPs
+      set_fact:
+        used_ips: "{{ ping_results.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
+
+
+    # - name: Debug available IPs
+    #   debug:
+    #     msg: 
+    #       - "Available IPs: {{ available_ips }}"
+    #       - "Used IPs: {{ used_ips }}"
+
+    - name: Fail the playbook if any IP is reachable
+      fail:
+        msg: "One or more IPs are reachable: {{ used_ips }}"
+      when: used_ips | length > 0

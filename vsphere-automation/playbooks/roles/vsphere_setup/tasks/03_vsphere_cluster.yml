@@ -1,0 +1,69 @@
+---
+      - name: Create Cluster
+        community.vmware.vmware_cluster:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          # Specific Configuration
+          datacenter_name: "{{ datacenter_name }}"
+          cluster_name: "{{ cluster_name }}"
+        when: >
+          datacenter_name is defined and
+          cluster_name is defined
+        delegate_to: localhost
+
+      # - name: "DRS Configuration"
+      #   community.vmware.vmware_cluster_drs:
+      #     hostname: "{{ vcenter_hostname }}"
+      #     username: "{{ vcenter_username }}"
+      #     password: "{{ vcenter_password }}"
+      #     datacenter_name: "{{ datacenter_name }}"
+      #     cluster_name: "{{ cluster_name }}"
+      #     validate_certs: "{{ vcenter_validate_certs }}"
+      #     # Specific Configuration
+      #     enable: true
+      #     drs_default_vm_behavior: "{{ automation_level }}"
+      #     drs_vmotion_rate: "{{ migration_threshold }}"
+      #     predictive_drs: "{{ predictive_drs }}"
+      #   when: >
+      #     cluster_name is defined and
+      #     automation_level is defined and
+      #     migration_threshold is defined and
+      #     predictive_drs is defined
+      #   delegate_to: localhost
+      #   register: drs_msg
+
+      # - name: "HA Configuration"
+      #   community.vmware.vmware_cluster_ha:
+      #     hostname: "{{ vcenter_hostname }}"
+      #     username: "{{ vcenter_username }}"
+      #     password: "{{ vcenter_password }}"
+      #     datacenter_name: "{{ datacenter_name }}"
+      #     cluster_name: "{{ cluster_name }}"
+      #     validate_certs: "{{ vcenter_validate_certs }}"
+      #     # Specific Configuration
+      #     enable: true
+      #   when: >
+      #     datacenter_name is defined and
+      #     cluster_name is defined
+      #   delegate_to: localhost
+      #   register: ha_msg
+
+      # - name: "EVC Mode Configuration"
+      #   community.vmware.vmware_evc_mode:
+      #     hostname: "{{ vcenter_hostname }}"
+      #     username: "{{ vcenter_username }}"
+      #     password: "{{ vcenter_password }}"
+      #     datacenter_name: "{{ datacenter_name }}"
+      #     cluster_name: "{{ cluster_name }}"
+      #     validate_certs: "{{ vcenter_validate_certs }}"
+      #     # Specific Configuration
+      #     evc_mode: "{{ evc_mode }}"
+      #     state: present
+      #   when: >
+      #     datacenter_name is defined and
+      #     cluster_name is defined and
+      #     evc_mode is defined
+      #   delegate_to: localhost
+      #   register: evc_msg

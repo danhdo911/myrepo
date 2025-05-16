@@ -1,0 +1,49 @@
+---
+- name: Configure Apache
+  block:
+    - name: Install Apache package
+      apt:
+        name: apache2
+        state: latest
+
+    - name: Create directory contain KS Configurations in TFTP
+      file:
+        path: /var/lib/tftpboot/ks
+        state: directory
+        owner: root
+        group: root
+        mode: '755'
+
+    - name: Remove index.html file default
+      ansible.builtin.file:
+        path: /var/www/html/index.html
+        state: absent
+
+    - name: Create directory contain KS Configurations in Apache
+      file:
+        path: /var/www/html/ks
+        state: directory
+        owner: root
+        group: root
+        mode: '777'
+
+    - name: Create symbolic link
+      file:
+        src: /var/lib/tftpboot/ks
+        dest: /var/www/html/ks
+        owner: root
+        group: root
+        state: link
+        force: yes
+
+    - name: Start Apache service
+      service:
+        name: apache2
+        state: started
+        enabled: yes
+
+    - name: Restart Apache service
+      systemd:
+        name: apache2
+        enabled: yes
+        state: restarted

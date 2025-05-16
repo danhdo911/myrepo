@@ -1,0 +1,26 @@
+---
+- name: Generate boot files if ESXi's IPv4 is available
+  hosts: kickstart
+  gather_facts: false
+
+  tasks:
+    - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}42_esxi_verify_ipv4.yml"
+      ignore_errors: true
+
+    - name: Extract available IPs
+      debug:
+        msg: 
+          - "Available IPs: {{ available_ips }}"
+          - "Used IPs: {{ used_ips }}"
+      
+    - name: Check status task verify_ipv4
+      assert:
+        that:
+          - used_ips | length == 0
+        fail_msg: "One or more IPs are reachable, Generate_Boot_Files task will not run."
+        success_msg: "No used IPs, Generate_Boot_Files task will run"
+
+    - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}61_esxi_generate_bootfiles_manual_mac.yml"
+      when: used_ips | length == 0
+
+        

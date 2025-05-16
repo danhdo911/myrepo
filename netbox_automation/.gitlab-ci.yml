@@ -1,0 +1,48 @@
+image: harbor.iij.com.vn/customized-images/iijvn-runner:v1.0
+
+stages:
+  - build
+  - run
+
+.common-option: &common-option
+  after_script:
+    # Remove the temporary key file
+    - rm -f /tmp/private_key
+  when: manual
+  tags: [dd-runner-lab]
+  only:  
+    - monthly
+
+.ssh-script: &ssh-script
+  - umask 077
+  - echo "$SSH_PRIVATE_KEY" > /tmp/private_key
+  - chmod 600 /tmp/private_key
+
+update-code:
+  stage: build
+  script:
+    - *ssh-script
+    - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_LAB199
+        "cd /iijvn/netbox_automation && git checkout monthly && git pull origin monthly"
+  after_script:
+    - rm -f /tmp/private_key
+  when: on_success
+  tags: [dd-runner-lab]
+  only:  
+    - monthly
+
+ssl-expired-check:
+  stage: run
+  script:
+    - *ssh-script
+    - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_LAB199
+        "cd /iijvn/netbox_automation && docker-compose -f docker-compose.yml run --rm netbox_ssl_check"
+  <<: *common-option
+
+ip-public-scan:
+  stage: run
+  script:
+    - *ssh-script
+    - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_LAB199
+        "cd /iijvn/netbox_automation && docker-compose -f docker-compose.yml run --rm netbox_ip_scan"
+  <<: *common-option

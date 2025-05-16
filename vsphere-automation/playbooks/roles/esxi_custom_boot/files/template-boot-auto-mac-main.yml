@@ -1,0 +1,61 @@
+---
+# tasks file for esxi-custom-boot
+## Auto get MAC from iDRAC and generate custom boot file
+
+### UEFI Boot Mode
+- name: "Create folder with ESXi MAC Address"
+  file:
+    path: "{{ global_path_tftpboot }}/01-{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ mac_addresses }}"
+  register: esxiboot_dirs
+
+- name: "Symlink file mboot.efi"
+  file:
+    src: "{{ global_path_tftpboot }}/mboot.efi"
+    dest: "{{ global_path_tftpboot }}/01-{{ item }}/mboot.efi"
+    state: link
+    force: true
+  loop: "{{ mac_addresses }}"
+  when: esxiboot_dirs is succeeded
+
+- name: "Create custom boot file for UEFI mode"
+  copy:
+    content: |
+        bootstate=0
+        title=Loading ESXi installer {{ item }}
+        timeout=5
+        prefix=esxi80u2
+        kernel=b.b00
+        kernelopt=ks={{ global_http_ksconfig }}/{{ item }}.cfg
+        modules=jumpstrt.gz --- useropts.gz --- features.gz --- k.b00 --- uc_intel.b00 --- uc_amd.b00 --- uc_hygon.b00 --- procfs.b00 --- vmx.v00 --- vim.v00 --- tpm.v00 --- sb.v00 --- s.v00 --- atlantic.v00 --- bcm_mpi3.v00 --- bnxtnet.v00 --- bnxtroce.v00 --- brcmfcoe.v00 --- cndi_igc.v00 --- dwi2c.v00 --- elxiscsi.v00 --- elxnet.v00 --- i40en.v00 --- iavmd.v00 --- icen.v00 --- igbn.v00 --- intelgpi.v00 --- ionic_cl.v00 --- ionic_en.v00 --- irdman.v00 --- iser.v00 --- ixgben.v00 --- lpfc.v00 --- lpnic.v00 --- lsi_mr3.v00 --- lsi_msgp.v00 --- lsi_msgp.v01 --- lsi_msgp.v02 --- mtip32xx.v00 --- ne1000.v00 --- nenic.v00 --- nfnic.v00 --- nhpsa.v00 --- nipmi.v00 --- nmlx5_cc.v00 --- nmlx5_co.v00 --- nmlx5_rd.v00 --- ntg3.v00 --- nvme_pci.v00 --- nvmerdma.v00 --- nvmetcp.v00 --- nvmxnet3.v00 --- nvmxnet3.v01 --- pvscsi.v00 --- qcnic.v00 --- qedentv.v00 --- qedrntv.v00 --- qfle3.v00 --- qfle3f.v00 --- qfle3i.v00 --- qflge.v00 --- rdmahl.v00 --- rste.v00 --- sfvmk.v00 --- smartpqi.v00 --- vmkata.v00 --- vmksdhci.v00 --- vmkusb.v00 --- vmw_ahci.v00 --- bmcal.v00 --- clusters.v00 --- crx.v00 --- drivervm.v00 --- elx_esx_.v00 --- btldr.v00 --- esx_dvfi.v00 --- esx_ui.v00 --- esxupdt.v00 --- tpmesxup.v00 --- weaselin.v00 --- esxio_co.v00 --- infravis.v00 --- loadesx.v00 --- lsuv2_hp.v00 --- lsuv2_in.v00 --- lsuv2_ls.v00 --- lsuv2_nv.v00 --- lsuv2_oe.v00 --- lsuv2_oe.v01 --- lsuv2_sm.v00 --- native_m.v00 --- qlnative.v00 --- trx.v00 --- vdfs.v00 --- vds_vsip.v00 --- vmware_e.v00 --- hbrsrv.v00 --- vsan.v00 --- vsanheal.v00 --- vsanmgmt.v00 --- tools.t00 --- xorg.v00 --- gc.v00 --- imgdb.tgz --- basemisc.tgz --- resvibs.tgz --- esxiodpt.tgz --- imgpayld.tgz
+        build=8.0.2-0.30.23305546
+        updated=0
+    dest: "{{ global_path_tftpboot }}/01-{{ item }}/boot.cfg"
+  loop: "{{ mac_addresses }}"
+  when: esxiboot_dirs is succeeded
+
+### BIOS Boot Mode
+- name: "Create custom boot file for BIOS mode"
+  copy:
+    content: |
+        DEFAULT menu.c32
+        MENU TITLE ESXi-8.0 Boot Menu - {{ item }}
+        NOHALT 1
+        PROMPT 0
+        TIMEOUT 300
+        LABEL esxi80u2-interactive
+            KERNEL mboot.c32
+            APPEND -c boot.cfg
+            MENU LABEL ^Interactive ESXi-8.0U2 installer
+        LABEL esxi80u2-scripted
+            KERNEL mboot.c32
+            APPEND -c boot.cfg ks={{ global_http_ksconfig }}/{{ item }}.cfg
+            MENU LABEL ^Automation ESXi-8.0U2 installer - MACBOUND
+        LABEL hddboot
+            LOCALBOOT 0x80
+            MENU LABEL ^Boot from local disk     
+    dest: "{{ global_pxelinux_cfg }}/01-{{ item }}"
+  loop: "{{ mac_addresses }}"
+  when: esxiboot_dirs is succeeded

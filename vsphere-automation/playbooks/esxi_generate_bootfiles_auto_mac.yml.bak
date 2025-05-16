@@ -1,0 +1,22 @@
+---
+
+- name: Get MAC NICs from iDRAC
+  import_playbook: idrac_getinfo.yml
+
+- name: Apply MAC Address to generate boot files configuration
+  hosts: dd_kickstart_02
+  remote_user: root
+  gather_facts: no
+  tasks:
+    - name: Include role for Kickstart configuration
+      include_role:
+        name: esxi_kickstart
+      vars:
+        mac_addresses: "{{ hostvars['localhost']['mac_addresses_transformed'] }}"
+    
+    - name: Include role for Custom Boot configuration
+      include_role:
+        name: esxi_custom_boot
+      vars:
+        mac_addresses: "{{ hostvars['localhost']['mac_addresses_transformed'] }}"
+  

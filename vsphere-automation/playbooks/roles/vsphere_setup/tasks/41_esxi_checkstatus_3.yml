@@ -1,0 +1,88 @@
+---
+- name: Initialize ESXi status
+  set_fact:
+    _esxi_running: {}
+    _esxi_registered: {}
+    _esxi_maintenancemode: {}
+
+- name: Check whether ESXi is running
+  block:
+    - name: Wait for port 443 to check if ESXi is running
+      wait_for:
+        host: "{{ item.esxi_hostname }}"
+        port: 443
+        timeout: 10
+      loop: "{{ esxi_info }}"
+      register: _wait_result
+      delegate_to: localhost
+
+    - name: Set "ESXi is running" flag per host
+      set_fact:
+        _esxi_running: "{{ _esxi_running | combine({ item.item.esxi_hostname: true }) }}"
+      loop: "{{ _wait_result.results }}"
+      when: item is success
+
+  rescue:
+    - name: Mark hosts as not running and fail
+      fail:
+        msg: "ESXi host {{ item.item.esxi_hostname }} is NOT running!"
+      loop: "{{ _wait_result.results }}"
+      when: item is failed
+
+- name: Check whether ESXi is in maintenance mode
+  block:
+    - name: Gather ESXi maintenance mode status
+      community.vmware.vmware_host_facts:
+        hostname: "{{ item.esxi_hostname }}"
+        username: "{{ esxi_username }}"
+        password: "{{ esxi_password }}"
+        validate_certs: "{{ vcenter_validate_certs }}"
+        schema: vsphere
+        properties:
+          - runtime.inMaintenanceMode
+      loop: "{{ esxi_info }}"
+      register: _esxi_facts_maintenance
+      delegate_to: localhost
+
+    - name: Set "ESXi is in maintenance mode" flag per host
+      set_fact:
+        _esxi_maintenancemode: "{{ _esxi_maintenancemode | combine({ item.item.esxi_hostname: (item.ansible_facts.runtime.inMaintenanceMode | bool) }) }}"
+      loop: "{{ _esxi_facts_maintenance.results }}"
+      when: item.ansible_facts.runtime is defined
+
+  rescue:
+    - name: Mark hosts as failed due to maintenance mode check failure
+      fail:
+        msg: "ESXi host {{ item.item.esxi_hostname }} maintenance mode check failed!"
+      loop: "{{ _esxi_facts_maintenance.results }}"
+      when: item.failed is defined and item.failed
+
+- name: Check whether ESXi is registered on vCenter
+  block:
+    - name: Gather ESXi registration status
+      community.vmware.vmware_host_facts:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: "{{ vcenter_validate_certs }}"
+        esxi_hostname: "{{ item.esxi_hostname }}"
+        schema: vsphere
+        properties:
+          - runtime.connectionState
+          - runtime.powerState
+      loop: "{{ esxi_info }}"
+      register: _esxi_facts
+      delegate_to: localhost
+
+    - name: Fail if ESXi is already registered
+      fail:
+        msg: "ESXi host {{ item.item.esxi_hostname }} is already registered in vCenter!"
+      loop: "{{ _esxi_facts.results }}"
+      when: item.ansible_facts.runtime.connectionState == 'connected'
+
+  rescue:
+    - name: Mark hosts as not registered
+      set_fact:
+        _esxi_registered: "{{ _esxi_registered | combine({ item.item.esxi_hostname: false }) }}"
+      loop: "{{ _esxi_facts.results }}"
+      when: item.failed is defined and item.failed

@@ -1,0 +1,40 @@
+---
+  - name: Enable iSCSI of ESXi
+    community.vmware.vmware_host_iscsi:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: "{{ vcenter_validate_certs }}"
+      esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+      state: enabled
+    loop: "{{ esxi_info }}"
+    delegate_to: localhost
+
+  - name: Add a dynamic target to iSCSI config of ESXi
+    community.vmware.vmware_host_iscsi:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: "{{ vcenter_validate_certs }}"
+      esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+      iscsi_config:
+        vmhba_name: "{{ vmhba_name | default('vmhba65') }}"
+        send_target:
+          address: "{{ send_target_address }}"
+          port: "{{ send_target_port | default(3260) }}"
+      state: present
+    loop: "{{ esxi_info }}"
+    delegate_to: localhost
+
+  - name: Rescan HBA's for a given ESXi host and refresh storage system objects
+    community.vmware.vmware_host_scanhba:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: "{{ vcenter_validate_certs }}"
+      esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+      rescan_hba: true
+      refresh_storage: true
+    loop: "{{ esxi_info }}"
+    delegate_to: localhost
+

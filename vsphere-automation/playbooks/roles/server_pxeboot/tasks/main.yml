@@ -1,0 +1,9 @@
+---
+# ## Setup DHCP server
+# - ansible.builtin.import_tasks: 01_dhcp.yml
+# - ansible.builtin.import_tasks: 02_tftp.yml
+# - ansible.builtin.import_tasks: 03_http.yml
+# - ansible.builtin.import_tasks: 04_syslinux.yml
+
+### Update DHCP config with host list
+- ansible.builtin.import_tasks: 10_dhcp_allow_hosts.yml

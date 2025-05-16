@@ -1,0 +1,31 @@
+---
+  - hosts: localhost
+    gather_facts: false
+    connection: local
+    collections:
+      - community.vmware
+    
+    tasks:
+      - name: Gather ESXi host facts
+        community.vmware.vmware_host_facts:
+          hostname: "{{ item.esxi_mgmt_ip }}"
+          username: "{{ esxi_username }}"
+          password: "{{ esxi_password }}"
+          validate_certs: false
+        with_items:
+          - "{{ esxi_info }}"
+        register: host_facts
+        delegate_to: localhost
+      
+      - debug:
+          msg:
+            - "Index: {{ index }}" 
+            - "ESXi Host: {{ esxi.ansible_facts.ansible_vmk0.ipv4.address }}"
+            - "MAC Address: {{ esxi.ansible_facts.ansible_vmk0.macaddress }}"
+        loop: "{{ host_facts.results }}"
+        loop_control:
+          loop_var: esxi #option custom 'item' variable to improve readability. Default is 'item' -- item.ansible_facts.xyz
+          index_var: index #option to access the index of the current loop
+          label: "{{ esxi.item.esxi_hostname }}"
+
+

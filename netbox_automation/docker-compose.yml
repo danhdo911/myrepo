@@ -1,0 +1,23 @@
+version: '3'
+services:
+  netbox_ssl_check:
+    image: "$NETBOX_IMAGE"
+    container_name: ssl_check
+    volumes:
+      - .:/netbox
+    environment:
+      - PYTHONWARNINGS="ignore:Unverified HTTPS request"  # Ignore SSL warnings if necessary
+    env_file:
+      - .env
+    command: "python3 /netbox/ssl_expiry_check.py"
+
+  netbox_ip_scan:
+    image: "$NETBOX_IMAGE"
+    container_name: ip_scan
+    volumes:
+      - .:/netbox
+    environment:
+      - PYTHONWARNINGS="ignore:Unverified HTTPS request"  # Ignore SSL warnings if necessary
+    env_file:
+      - .env
+    command: "python3 /netbox/nmap_scan_new_ips.py"

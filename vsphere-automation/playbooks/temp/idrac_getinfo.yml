@@ -1,0 +1,76 @@
+---
+  - hosts: ansible
+    gather_facts: false
+    collections:
+      - dellemc.openmanage
+
+    tasks:
+      - name: Gather iDRAC Info
+        dellemc.openmanage.idrac_system_info:
+          idrac_ip: "{{ idrac_ip }}"
+          idrac_user: "{{ idrac_user }}"
+          idrac_password: "{{ idrac_password }}"
+          validate_certs: "{{ idrac_validate_certs }}"
+        register: idrac_facts
+        delegate_to: localhost
+
+      # - debug:
+      #     var: idrac_facts.system_info.NIC
+
+      ### My code
+      # - debug:
+      #     msg:
+      #       - "Description: {{ item.DeviceDescription }}"
+      #       - "MAC Address: {{ item.CurrentMACAddress }}"
+      #       - "NIC Status: {{ item.LinkStatus }}"
+      #   loop: "{{ idrac_facts.system_info.NIC }}"
+      #   loop_control:
+      #     label: "{{ item.ProductName }}"
+      #   when: item.LinkStatus == "Up"
+      
+      ### Optimize code with filter
+      # - name: Filter NICs with status Up
+      #   set_fact:
+      #     nics_up: "{{ idrac_facts.system_info.NIC | selectattr('LinkStatus', 'equalto', 'Up') | list }}"
+
+      # - name: Debug NIC information
+      #   debug:
+      #     msg:
+      #       - "Description: {{ item.DeviceDescription }}"
+      #       - "MAC Address: {{ item.CurrentMACAddress }}"
+      #       - "NIC Status: {{ item.LinkStatus }}"
+      #   loop: "{{ nics_up }}"
+      #   loop_control:
+      #     label: "{{ item.ProductName }}"
+
+      ### Filter and only get attribute MAC Address
+      # - name: Filter NICs with status Up and extract MAC addresses
+      #   set_fact:
+      #     nics_up_mac_addresses: "{{ idrac_facts.system_info.NIC | selectattr('LinkStatus', 'equalto', 'Up') | map(attribute='CurrentMACAddress') | list }}"
+
+      # - name: Debug MAC addresses of NICs with status Up
+      #   debug:
+      #     msg: "{{ nics_up_mac_addresses }}"
+
+      # - name: Set filtered MAC addresses as a variable for another role
+      #   set_fact:
+      #     role_specific_mac_addresses: "{{ nics_up_mac_addresses }}"
+
+      # - name: Include another role and pass the variable
+      #   include_role:
+      #     name: esxi_custom_boot
+      #   vars:
+      #     mac_addresses: "{{ role_specific_mac_addresses }}"
+
+      - name: Filter NICs with status Up and extract MAC addresses
+        set_fact:
+          nics_up_mac_addresses: "{{ idrac_facts.system_info.NIC | selectattr('LinkStatus', 'equalto', 'Up') | map(attribute='CurrentMACAddress') | list }}"
+
+      # Replace colons with hyphens and convert to lowercase for MAC Address
+      - name: Transform MAC addresses 
+        set_fact:
+          mac_addresses_transformed: "{{ nics_up_mac_addresses | map('lower') | map('replace', ':', '-') | list }}"
+
+      - name: Debug MAC addresses of NICs with status Up
+        debug:
+          msg: "{{ mac_addresses_transformed }}"

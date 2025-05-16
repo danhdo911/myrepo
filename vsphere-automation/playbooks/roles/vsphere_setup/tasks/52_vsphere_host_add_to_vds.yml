@@ -1,0 +1,30 @@
+---
+  - name: Check if ESXi hosts are already on the vDS
+    community.vmware.vmware_dvswitch_info:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: "{{ vcenter_validate_certs }}"
+      # Specific Configuration
+      switch_name: "{{ vds_switch02 }}"
+    when: >
+      vds_switch02 is defined
+    register: dvs_info
+
+  - name: Add ESXi hosts to vDS
+    community.vmware.vmware_dvs_host:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      esxi_hostname: "{{ item.esxi_hostname }}"
+      validate_certs: "{{ vcenter_validate_certs }}"
+      # Specific Configuration
+      switch_name: "{{ vds_switch02 }}"
+      vmnics: "{{ [item.esxi_vmnic_uplink3, item.esxi_vmnic_uplink4] | select('defined') | select('string') | list }}"
+      state: present
+    loop: "{{ esxi_info }}"
+    when: >
+      vds_switch02 is defined and
+      dvs_info.distributed_virtual_switches[0].configure.name == vds_switch02 and
+      item.esxi_hostname not in dvs_info.distributed_virtual_switches[0].configure.hosts
+    delegate_to: localhost

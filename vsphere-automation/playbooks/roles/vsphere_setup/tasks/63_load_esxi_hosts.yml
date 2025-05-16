@@ -1,0 +1,4 @@
+---
+  - name: Load ready ESXi hosts
+    set_fact:
+      esxi_info: "{{ lookup('file', output_dir ~ 'ready_esxi_info.json') | from_json }}"

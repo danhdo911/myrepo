@@ -1,0 +1,19 @@
+---
+      - name: Make sure {{ item.esxi_vmnic_uplink2 }} available
+        community.vmware.vmware_vswitch:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          esxi_hostname: "{{ item.esxi_hostname }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          # Specific Configuration
+          switch: "{{ vss_default }}"
+          nics:
+          - "{{ item.esxi_vmnic_uplink1 }}"
+        loop: "{{ esxi_info }}"
+        when: >
+          vss_default is defined and
+          item.esxi_vmnic_uplink1 is defined and
+          item.esxi_vmnic_uplink2 is defined
+        ignore_errors: true
+        delegate_to: localhost

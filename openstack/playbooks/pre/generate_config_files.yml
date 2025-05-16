@@ -1,0 +1,36 @@
+- name: Prepare configurations before run kolla-ansible
+  hosts: localhost
+  gather_facts: no
+  become: yes
+  connection: local
+
+  vars:
+    kolla_default_dir: "/etc/kolla/"
+    kolla_config_dir: "{{ kolla_default_dir }}config/"
+
+  tasks:
+    - name: Create custom config directory
+      ansible.builtin.file:
+        path: "{{ kolla_config_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Generate globals.yml config file
+      template:
+        src: "{{ templates_dir }}globals.me.yml.j2"
+        dest: "{{ kolla_default_dir }}globals.yml"
+        mode: '0755'
+
+    - name: NFS share config file
+      template:
+        src: "{{ templates_dir }}nfs_shares.j2"
+        dest: "{{ kolla_config_dir }}nfs_shares"
+        mode: '0755'
+
+    - name: Neutron ml2_conf.ini
+      template:
+        src: "{{ templates_dir }}ml2_conf.ini.j2"
+        dest: "{{ kolla_config_dir }}neutron/ml2_conf.ini"
+        mode: '0755'

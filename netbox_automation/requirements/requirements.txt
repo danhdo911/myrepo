@@ -1,0 +1,6 @@
+requests
+python-nmap
+python-dotenv
+hvac >= 2.3.0
+vault-cli
+pytz

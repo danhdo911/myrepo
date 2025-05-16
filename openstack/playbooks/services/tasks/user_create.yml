@@ -1,0 +1,8 @@
+---
+    - name: Create user in OpenStack
+      openstack.cloud.identity_user:
+        name: "{{ user_name }}"
+        domain: default
+        password: "{{ user_password }}"
+        state: present
+      

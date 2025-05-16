@@ -1,0 +1,202 @@
+---
+  - name: Delete LAB
+    hosts: localhost
+    gather_facts: false
+    connection: local
+    
+    # vars_files:
+    #   - "../vaults/{{ vcsa_login_user }}.yml"
+
+    tasks:
+      - name: Remove {{ esxi_vmnic_uplink2 }} from vDS
+        community.vmware.vmware_dvs_host:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          # Specific Configuration
+          switch_name: "{{ vds_name }}"
+          vmnics:
+              - "{{ esxi_vmnic_uplink1 }}"
+          state: present
+        loop: "{{ esxi_info }}"
+        delegate_to: localhost
+
+      - name: Create vSS with {{ esxi_vmnic_uplink2 }}
+        community.vmware.vmware_vswitch:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          # Specific Configuration
+          switch: "{{ vss_default }}"
+          nics:
+          - "{{ esxi_vmnic_uplink2 }}"
+        loop: "{{ esxi_info }}"
+        ignore_errors: true
+        delegate_to: localhost
+
+      - name: Add MGMT and VMOTION port group
+        community.vmware.vmware_portgroup:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+          switch: "{{ vss_default }}"
+          portgroup: "{{ vss_default_pg_name }}"
+          vlan_id: "{{ vss_default_vlanid }}"
+        loop: "{{ esxi_info }}"
+        delegate_to: localhost
+
+      - name: Migrate vmk0 from vDS to vSS
+        community.vmware.vmware_vmkernel:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          # Specific Configuration
+          vswitch_name: "{{ vss_default }}"
+          portgroup_name: "{{ vss_default_pg_name }}"
+          network:
+            type: "static"
+            ip_address: "{{ item.esxi_mgmt_ip }}"
+            subnet_mask: "{{ default_netmask }}"
+          state: present
+          enable_mgmt: true
+        loop: "{{ esxi_info }}"
+        delegate_to: localhost
+
+      - name: Remove vmkernel VMOTION
+        community.vmware.vmware_vmkernel:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+          # Specific Configuration
+          dvswitch_name: "{{ vds_name }}"
+          portgroup_name: "{{ vds_vmotion_pg_name }}"
+          device: "vmk1"
+          state: absent
+        loop: "{{ esxi_info }}"
+        delegate_to: localhost
+
+      # - name: Remove vmkernel BackupNFC
+      #   community.vmware.vmware_vmkernel:
+      #     hostname: "{{ vcenter_hostname }}"
+      #     username: "{{ vcenter_username }}"
+      #     password: "{{ vcenter_password }}"
+      #     validate_certs: "{{ vcenter_validate_certs }}"
+      #     esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+      #     # Specific Configuration
+      #     dvswitch_name: "{{ vds_name }}"
+      #     portgroup_name: "{{ vds_backupnfc_pg_name }}"
+      #     enable_backup_nfc: true
+      #     device: "vmk2"
+      #     state: absent
+      #   loop: "{{ esxi_info }}"
+      #   delegate_to: localhost
+
+      - name: Remove vmkernel ISCSI 01
+        community.vmware.vmware_vmkernel:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+          # Specific Configuration
+          dvswitch_name: "{{ vds_name }}"
+          portgroup_name: "{{ vds_iscsi_pg[0].vds_iscsi_pg_name }}"
+          enable_backup_nfc: true
+          device: "vmk2"
+          state: absent
+        loop: "{{ esxi_info }}"
+        delegate_to: localhost
+
+      - name: Remove vmkernel ISCSI 02
+        community.vmware.vmware_vmkernel:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+          # Specific Configuration
+          dvswitch_name: "{{ vds_name }}"
+          portgroup_name: "{{ vds_iscsi_pg[1].vds_iscsi_pg_name }}"
+          enable_backup_nfc: true
+          device: "vmk3"
+          state: absent
+        loop: "{{ esxi_info }}"
+        delegate_to: localhost
+
+      - name: Remove vmkernel REPLICATION
+        community.vmware.vmware_vmkernel:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+          # Specific Configuration
+          dvswitch_name: "{{ vds_name }}"
+          portgroup_name: "{{ vds_replication_backup_pg_name }}"
+          device: "vmk4"
+          state: absent
+        loop: "{{ esxi_info }}"
+        delegate_to: localhost
+
+      - name: Remove uplinks
+        community.vmware.vmware_dvs_host:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          # Specific Configuration
+          switch_name: "{{ vds_name }}"
+          vmnics:
+            - "{{ esxi_vmnic_uplink1 }}"
+          state: absent
+        loop: "{{ esxi_info }}"
+        delegate_to: localhost
+
+      - name: Remove ESXi Hosts from Datacenter 
+        community.vmware.vmware_host:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          datacenter_name: "{{ datacenter_name }}"
+          folder: "/{{ datacenter_name }}/host"
+          esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+          esxi_username: "{{ esxi_username }}"
+          esxi_password: "{{ esxi_password }}"
+          state: absent
+          validate_certs: "{{ vcenter_validate_certs }}"
+        loop: "{{ esxi_info }}"
+        delegate_to: localhost
+
+      # - name: Delete Cluster
+      #   community.vmware.vmware_cluster:
+      #     hostname: "{{ vcenter_hostname }}"
+      #     username: "{{ vcenter_username }}"
+      #     password: "{{ vcenter_password }}"
+      #     validate_certs: "{{ vcenter_validate_certs }}"
+      #     # Specific Configuration
+      #     datacenter_name: "{{ datacenter_name }}"
+      #     cluster_name: "{{ cluster_name }}"
+      #     state: absent
+      #   delegate_to: localhost
+
+      # - name: Delete Datacenter
+      #   community.vmware.vmware_datacenter:
+      #     hostname: "{{ vcenter_hostname }}"
+      #     username: "{{ vcenter_username }}"
+      #     password: "{{ vcenter_password }}"
+      #     datacenter_name: "{{ datacenter_name }}"
+      #     validate_certs: "{{ vcenter_validate_certs }}"
+      #     state: absent
+      #   delegate_to: localhost
+

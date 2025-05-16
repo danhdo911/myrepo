@@ -1,0 +1,13 @@
+---
+  - name: Add ESXi license and assign to the ESXi host
+    community.vmware.vcenter_license:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      esxi_hostname: "{{ item.esxi_hostname }}"
+      validate_certs: "{{ vcenter_validate_certs }}"
+      # Specific Configuration
+      license: "{{ esxi_license }}"
+      state: present
+    loop: "{{ esxi_info }}"  
+    delegate_to: localhost

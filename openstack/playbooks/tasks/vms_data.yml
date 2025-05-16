@@ -1,0 +1,8 @@
+---
+    - name: Load Terraform Output
+      set_fact:
+        vm_data: "{{ lookup('file', vm_data_file) | from_json }}"
+
+    - name: Extract VM Data for the Host
+      set_fact:
+        vm_host_data: "{{ vm_data.values()| selectattr('name', 'equalto', inventory_hostname) | first }}"

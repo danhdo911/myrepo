@@ -1,0 +1,37 @@
+---
+- name: Configure TFTP
+  block:
+    - name: Install TFTP package
+      apt:
+        name: tftpd-hpa
+        state: latest
+
+    - name: TFTP Configurations
+      template:
+        src: tftpd-hpa.j2
+        owner: root
+        group: root
+        mode: 0644
+        dest: /etc/default/tftpd-hpa
+      register: tftp_config
+
+    - name: TFTP Directory
+      file:
+        path: /var/lib/tftpboot
+        state: directory
+        owner: nobody
+        group: nogroup
+        mode: '777'
+    
+    - name: Start TFTP service
+      service:
+        name: tftpd-hpa
+        state: started
+        enabled: yes
+
+    - name: Restart TFTP service
+      systemd:
+        name: tftpd-hpa
+        enabled: yes
+        state: restarted
+      when: tftp_config.changed

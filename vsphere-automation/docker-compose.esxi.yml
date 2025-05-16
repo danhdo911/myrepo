@@ -1,0 +1,18 @@
+---
+version: '3.5'
+services:
+  ansible:
+    image: "$ANSIBLE_IMAGE"
+    container_name: ansible_vsphere
+    volumes:
+      # mount repo
+      - .:/iijvn/vsphere-automation
+    environment:
+      ANSIBLE_ENVIRONMENT_DEPLOYMENT: ""
+      ANSIBLE_ENVIRONMENT_INVENTORY: ""
+      ANSIBLE_MAIN_PLAYBOOK: ""
+      ANSIBLE_PLAYBOOK_OPTS: ""
+    env_file:
+      - .env
+    entrypoint: /bin/bash
+    command: "scripts/run_esxi.sh"

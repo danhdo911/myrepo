@@ -1,0 +1,28 @@
+---
+  - name: Filter out custom_attributes with empty values
+    ansible.builtin.set_fact:
+      filtered_custom_attributes: >-
+        {{ custom_attributes | selectattr('value', 'defined') 
+                            | selectattr('value', 'string') 
+                            | selectattr('value', '!=', '') 
+                            | list }}
+
+  - name: Merge esxi_info with custom_attributes in group_vars
+    ansible.builtin.set_fact:
+      esxi_combined: "{{ esxi_info | map('combine', {'attributes': filtered_custom_attributes}) | list }}"
+
+  - name: Add ESXi host custom attributes
+    community.vmware.vmware_host_custom_attributes:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: "{{ vcenter_validate_certs }}"
+      esxi_hostname: "{{ item.esxi_hostname }}"
+      attributes: "{{ item.attributes }}"
+      state: present
+    loop: "{{ esxi_combined }}"
+    delegate_to: localhost
+    when: >
+      custom_attributes | selectattr('value', 'defined') 
+                        | selectattr('value', 'string') 
+                        | selectattr('value', '!=', '')

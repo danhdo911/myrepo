@@ -1,0 +1,33 @@
+{% for rule in rules %}
+module "{{ rule.rule_name }}" {
+    source                   = "../../modules/vcd/firewall_nat"
+
+    vcd_org                  = var.vcd_org
+    edge_gateway_id          = data.vcd_nsxt_edgegateway.edgegateway.id
+
+    rule_name                = "{{ rule.rule_name }}"
+    rule_type                = "{{ rule.rule_type }}"
+    description              = "{{ rule.description }}"
+
+    external_address         = "{{ rule.external_address }}"
+    internal_address         = "{{ rule.internal_address }}"
+
+    {% if rule.app_port_profile_id %}
+    app_port_profile_id      = {{ "module." + rule.app_port_profile_id + ".id" if rule.scope.strip().upper() == "CUSTOM" else "data.vcd_nsxt_app_port_profile." + rule.app_port_profile_id + ".id" }}
+    {% endif %}
+
+    {% if rule.rule_type == "DNAT" and rule.dnat_external_port %}
+    dnat_external_port       = "{{ rule.dnat_external_port }}"
+    {% elif rule.rule_type == "SNAT" and rule.snat_destination_address %}
+    snat_destination_address = "{{ rule.snat_destination_address }}"
+    {% endif %}
+
+    enabled_logging          = {{ rule.enabled_logging | lower }}
+    firewall_match           = "{{ rule.firewall_match }}"
+    
+    {% if rule.priority %}
+    priority                 = {{ rule.priority }}
+    {% endif %}
+}
+
+{% endfor %}

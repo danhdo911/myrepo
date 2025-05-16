@@ -1,0 +1,36 @@
+# Test combine array
+- name: Create Kickstart file for ESXi hosts
+  hosts: localhost
+  gather_facts: no
+  vars:
+    esxi_info:
+      - esxi_hostname: hcm87aesxi01.higio.lab
+        esxi_mgmt_ip: 172.20.0.2
+      - esxi_hostname: hcm87aesxi02.higio.lab
+        esxi_mgmt_ip: 172.20.0.3
+
+    mac_addresses:
+      - "EC-F4-BB-E9-39-9D"
+      - "EC-F4-BB-E9-39-9C"
+
+  tasks:
+    - name: Debug ESXi info
+      debug:
+        msg: "{{ esxi_info }}"
+
+    - name: Debug MAC addresses
+      debug:
+        msg: "{{ mac_addresses }}"
+
+    - name: Combine ESXi info with MAC addresses
+      set_fact:
+        combined_list: >-
+          {%- set combined = [] -%}
+          {%- for host, mac in esxi_info | zip(mac_addresses) -%}
+            {%- set _ = combined.append({'esxi_hostname': host.esxi_hostname, 'esxi_mgmt_ip': host.esxi_mgmt_ip, 'esxi_mac': mac}) -%}
+          {%- endfor -%}
+          {{ combined }}
+
+    - name: Debug combined list
+      debug:
+        var: combined_list

@@ -1,0 +1,8 @@
+---
+- name: Run Python script to generate variables environment file
+  hosts: localhost
+  gather_facts: false
+  connection: local
+
+  tasks:
+    - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}62_generate_vars_env.yml"

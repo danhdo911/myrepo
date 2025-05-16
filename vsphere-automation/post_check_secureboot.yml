@@ -1,0 +1,16 @@
+---
+  - name: Run Secure Boot check on ESXi hosts
+    hosts: esxi_hosts
+    gather_facts: false
+
+    tasks:
+      - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}45_esxi_check_secureboot.yml"
+
+      - name: Show output
+        debug:
+          var: secureboot_result.stdout
+
+      - name: Fail if secure boot is disabled
+        ansible.builtin.fail:
+          msg: "Secure Boot is DISABLED on {{ inventory_hostname }}!"
+        when: secureboot_result.stdout is search("Disabled")

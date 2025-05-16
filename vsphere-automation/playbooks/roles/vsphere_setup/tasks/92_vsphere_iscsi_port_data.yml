@@ -1,0 +1,24 @@
+---
+  - name: Prepare ISCSI vmkernel port data
+    set_fact:
+      iscsi_port_data: |
+        {{ iscsi_port_data | default([]) + 
+          [{'iscsi_ip': esxi_host.esxi_iscsi_ip1, 
+            'iscsi_pg': vds_iscsi_pg[0].vds_iscsi_pg_name, 
+            'iscsi_gw': vds_iscsi_pg[0].vds_iscsi_gateway, 
+            'esxi_hostname': esxi_host.esxi_mgmt_ip}] +
+          [{'iscsi_ip': esxi_host.esxi_iscsi_ip2, 
+            'iscsi_pg': vds_iscsi_pg[1].vds_iscsi_pg_name, 
+            'iscsi_gw': vds_iscsi_pg[1].vds_iscsi_gateway, 
+            'esxi_hostname': esxi_host.esxi_mgmt_ip}]
+        }}
+    loop: "{{ esxi_info }}"
+    loop_control:
+      loop_var: esxi_host
+    when: >
+      esxi_host.esxi_iscsi_ip1 is defined and
+      esxi_host.esxi_iscsi_ip2 is defined and
+      vds_iscsi_pg[0].vds_iscsi_pg_name is defined and
+      vds_iscsi_pg[0].vds_iscsi_gateway is defined and
+      vds_iscsi_pg[1].vds_iscsi_pg_name is defined and
+      vds_iscsi_pg[1].vds_iscsi_pg_name is defined

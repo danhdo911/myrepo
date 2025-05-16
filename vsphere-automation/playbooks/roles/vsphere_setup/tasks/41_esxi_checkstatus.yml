@@ -1,0 +1,64 @@
+---
+  - name: Initialize registration status
+    set_fact:
+      _esxi_running: {}
+      _esxi_registered: {}
+
+
+  - name: Check whether ESXi is running
+    block:
+      - name: Wait port
+        wait_for:
+          host: "{{ item.esxi_hostname }}"
+          port: 443
+          timeout: 10
+        loop: "{{ esxi_inventory }}"
+        register: _wait_result
+        delegate_to: localhost
+
+      - name: Set "esxi is running" flag
+        set_fact:
+          _esxi_running: true
+        loop: "{{ _wait_result.results }}"
+        when: item is success
+
+    rescue:
+      - name: Set "esxi is not running" flag
+        set_fact:
+          _esxi_running: false
+        loop: "{{ _wait_result.results }}"
+        when: item is failed
+
+  - name: Check whether ESXi is registered on vCenter
+    block:
+      - name: Gather ESXi facts from vCenter
+        community.vmware.vmware_host_facts:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          esxi_hostname: "{{ item.esxi_hostname }}"
+          schema: vsphere
+          properties:
+            - runtime.connectionState
+            - runtime.powerState
+        loop: "{{ esxi_inventory }}"
+        register: _esxi_facts
+        delegate_to: localhost
+
+      - name: Set "esxi is registered" flag
+        set_fact:
+          _esxi_registered: "{{ _esxi_registered | combine({ item.item.esxi_hostname: true }) }}"
+          # _esxi_registered: true
+        loop: "{{ _esxi_facts.results }}"
+        when: >
+          item.ansible_facts.runtime.connectionState == 'connected' and
+          item.ansible_facts.runtime.powerState == 'poweredOn'
+
+    rescue:
+      - name: Mark hosts as not registered
+        set_fact:
+          _esxi_registered: "{{ _esxi_registered | combine({ item.item.esxi_hostname: false }) }}"
+          # _esxi_registered: false
+        loop: "{{ _esxi_facts.results }}"
+        when: item is failed

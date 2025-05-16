@@ -1,0 +1,11 @@
+---
+  - hosts: localhost
+    gather_facts: false
+    connection: local
+
+    tasks:
+      - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}63_load_esxi_hosts.yml"
+
+      - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}04_vsphere_host_add_to_datacenter.yml"
+        when: esxi_info | length > 0
+
