@@ -25,6 +25,7 @@ openvswitch_ovs_vsctl_wrapper_enabled: "true"
 
 # nova
 nova_compute_virt_type: "qemu"
+nova_instance_datadir_volume: "{{ nfs_mountpoint }}/nova_instances"
 
 ## cinder
 enable_cinder: "yes"
