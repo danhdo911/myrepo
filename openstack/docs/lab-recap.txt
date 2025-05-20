@@ -8,23 +8,17 @@
 @ddops-ctrl01:~# cat /etc/hosts
 172.20.20.101 internal.dd-iaas.local
 172.20.21.101 public.dd-iaas.local
-172.20.20.11 ddops-ctrl01.internal.dd-iaas.local
-172.20.20.13 ddops-gw01.internal.dd-iaas.local
-172.20.20.14 ddops-com01.internal.dd-iaas.local
+#KOLLA-ANSIBLE generate internal dns for each node
 
 @dops-gw01:~# cat /etc/hosts
 172.20.20.101 internal.dd-iaas.local
 172.20.21.101 public.dd-iaas.local
-172.20.20.11 ddops-ctrl01.internal.dd-iaas.local
-172.20.20.13 ddops-gw01.internal.dd-iaas.local
-172.20.20.14 ddops-com01.internal.dd-iaas.local
+#KOLLA-ANSIBLE generate internal dns for each node
 
 @ddops-com01:~# cat /etc/hosts
 172.20.20.101 internal.dd-iaas.local
 172.20.21.101 public.dd-iaas.local
-172.20.20.11 ddops-ctrl01.internal.dd-iaas.local
-172.20.20.13 ddops-gw01.internal.dd-iaas.local
-172.20.20.14 ddops-com01.internal.dd-iaas.local
+#KOLLA-ANSIBLE generate internal dns for each node
 
 ### Custom configs
 /etc/kolla/config/
@@ -35,7 +29,7 @@
 └── nova
 
 ### NFS
-Permission NFS folders: cinder, backup, glance (current: 775)
+Permission NFS folders: cinder, backup, glance, nova_instances (current: 775)
 
 (kolla-venv) root@dd-ansible02:~# cat /etc/kolla/config/nfs_shares
 172.20.23.242:/nfs/ops-data/cinder
@@ -65,6 +59,7 @@ enable_fluentd: "no"
 openvswitch_ovs_vsctl_wrapper_enabled: "true"
 ## nova
 nova_compute_virt_type: "qemu"
+nova_instance_datadir_volume: "/nfs-data/nova_instances
 # cinder
 enable_cinder: "yes"
 enable_cinder_backend_nfs: "yes"

@@ -31,6 +31,6 @@ kolla_external_fqdn: "public.dd-iaas.local"
 kolla_external_vip_address: "172.20.21.101"
 
 ### Neutron External - Provider
-neutron_external_interface: "eth1"
-neutron_physical_network: "physnet1"
-neutron_bridge_name: "br-ex1"
+neutron_external_interface: "eth1,eth2"
+neutron_physical_network: "physnet1,physnet2"
+neutron_bridge_name: "br-ex1,br-ex2"
