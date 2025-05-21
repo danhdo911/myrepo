@@ -29,10 +29,31 @@ module "membership" {
 }
 
 module "role_assignment" {
-  source = "../../modules/ops/identity_role_assign"
+  source = "../../modules/ops/identity_role_assignment"
   depends_on = [module.create_group, module.project_tenant_a]
 
   group_id   = module.create_group.id
   project_id = module.project_tenant_a.project_id
   role_id    = data.openstack_identity_role_v3.admin.id
+}
+
+module "quota_blockstorage" {
+  source = "../../modules/ops/quota_blockstorage"
+  depends_on = [module.project_tenant_a]
+
+  project_id = module.project_tenant_a.project_id
+}
+
+module "quota_compute" {
+  source = "../../modules/ops/quota_compute"
+  depends_on = [module.project_tenant_a]
+
+  project_id = module.project_tenant_a.project_id
+}
+
+module "quota_network" {
+  source = "../../modules/ops/quota_network"
+  depends_on = [module.project_tenant_a]
+
+  project_id = module.project_tenant_a.project_id
 }
