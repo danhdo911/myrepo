@@ -88,6 +88,7 @@ resource "vsphere_virtual_machine" "vm" {
       user     = var.vm_user_login
       password = var.vm_user_password
       host     = each.value.vm_ips[0]
+      timeout  = "10m"
     }
 
     inline = [
@@ -103,7 +104,7 @@ resource "vsphere_virtual_machine" "vm" {
 
       # Extend primary disk
       "sudo chmod +x /tmp/resize_disk.sh",
-      "sudo /tmp/resize_disk.sh"
+      "nohub sudo /tmp/resize_disk.sh > /tmp/resize_disk.log 2>&1 &"
     ]
   }
 }
