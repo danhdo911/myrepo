@@ -1,0 +1,18 @@
+module "{{ project_name }}_{{ router_name }}" {
+  source     = "../../modules/ops/network/network_router"
+  depends_on = [module.{{ external_network }},module.{{ external_network }}_{{ external_subnet }}]
+
+  tenant_id           = module.{{ project_name }}.id
+  router_name         = "{{ project_name }}_{{ router_name }}"
+  external_network_id = module.{{ external_network }}.id
+  external_subnet_id  = module.{{ external_network }}_{{ external_subnet }}.id
+  external_ip_address = "{{ external_ip_address }}"
+}
+
+module "{{ project_name }}_{{ router_name }}_{{ local_network }}_{{ local_subnet }}_interface" {
+  source = "../../modules/ops/network/network_router_interface"
+  depends_on = [module.{{ project_name }}_{{ router_name }}]
+
+  router_id = module.{{ project_name }}_{{ router_name }}.id
+  subnet_id = module.{{ local_network }}_{{ local_subnet }}.id
+}

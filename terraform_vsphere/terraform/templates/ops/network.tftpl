@@ -1,0 +1,42 @@
+{% for network in networks %}
+module "{{ network.network_name }}" {
+    source  = "../../modules/ops/network/network_network"
+    depends_on = [module.{{ network.project_name }}]
+
+    tenant_id = module.{{ network.project_name }}.id
+    network_name = "{{ network.project_name }}_{{ network.network_name }}"
+
+    {% if network.external_enabled|lower == "true" %}
+    external_enabled = true
+    network_type     = "{{ network.network_type }}"
+    physical_network = "{{ network.physical_network }}"
+    segmentation_id  = {{ network.segmentation_id }}
+    {% endif %}
+}
+
+module "{{ network.network_name }}_{{ network.subnet_name }}" {
+  source     = "../../modules/ops/network/network_subnet"
+  depends_on = [module.{{ network.network_name }}]
+
+  network_id  = module.{{ network.network_name }}.id
+  subnet_name = "{{ network.subnet_name }}"
+  subnet_cidr = "{{ network.subnet_cidr }}"
+
+  {% if network.enable_dhcp|lower == "true" %}
+  enable_dhcp = true
+  allocation_pools = [
+    {% for p in network.allocation_pools %}
+    {
+        allocation_pool_start = "{{ p.allocation_pool_start }}"
+        allocation_pool_end = "{{ p.allocation_pool_end }}"
+    },
+    {% endfor %}
+  ]
+  {% endif -%}
+
+  {% if network.dns_nameservers %}
+  dns_nameservers = [{{ network.dns_nameservers | join(', ') }}]
+  {% endif %}
+}
+
+{% endfor %}

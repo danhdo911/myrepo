@@ -1,4 +1,4 @@
-resource "openstack_networking_router_v2" "router_1" {
+resource "openstack_networking_router_v2" "router" {
     tenant_id           = var.tenant_id
     name                = var.router_name
     admin_state_up      = var.admin_state_up
