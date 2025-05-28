@@ -1,18 +1,23 @@
-module "{{ project_name }}_{{ router_name }}" {
+################### Router Configurations ####################
+{% for router in routers %}
+module "{{ router.project_name }}_{{ router.router_name }}" {
   source     = "../../modules/ops/network/network_router"
-  depends_on = [module.{{ external_network }},module.{{ external_network }}_{{ external_subnet }}]
+  depends_on = [module.{{ router.external_network }},module.{{ router.external_network }}_{{ router.external_subnet }}]
 
-  tenant_id           = module.{{ project_name }}.id
-  router_name         = "{{ project_name }}_{{ router_name }}"
-  external_network_id = module.{{ external_network }}.id
-  external_subnet_id  = module.{{ external_network }}_{{ external_subnet }}.id
-  external_ip_address = "{{ external_ip_address }}"
+  tenant_id           = module.{{ router.project_name }}.id
+  router_name         = "{{ router.project_name }}_{{ router.router_name }}"
+  external_network_id = module.{{ router.external_network }}.id
+  external_subnet_id  = module.{{ router.external_network }}_{{ router.external_subnet }}.id
+  {% if router.external_ip_address %}
+  external_ip_address = "{{ router.external_ip_address }}"
+  {% endif %}
 }
 
-module "{{ project_name }}_{{ router_name }}_{{ local_network }}_{{ local_subnet }}_interface" {
+module "{{ router.project_name }}_{{ router.router_name }}_{{ router.local_network }}_{{ router.local_subnet }}_interface" {
   source = "../../modules/ops/network/network_router_interface"
-  depends_on = [module.{{ project_name }}_{{ router_name }}]
+  depends_on = [module.{{ router.project_name }}_{{ router.router_name }}]
 
-  router_id = module.{{ project_name }}_{{ router_name }}.id
-  subnet_id = module.{{ local_network }}_{{ local_subnet }}.id
+  router_id = module.{{ router.project_name }}_{{ router.router_name }}.id
+  subnet_id = module.{{ router.local_network }}_{{ router.local_subnet }}.id
 }
+{% endfor %}

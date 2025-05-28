@@ -1,3 +1,4 @@
+################### Network Configurations ####################
 {% for network in networks %}
 module "{{ network.network_name }}" {
     source  = "../../modules/ops/network/network_network"
@@ -14,18 +15,19 @@ module "{{ network.network_name }}" {
     {% endif %}
 }
 
-module "{{ network.network_name }}_{{ network.subnet_name }}" {
+{% for subnet in network.subnets %}
+module "{{ subnet.network_name }}_{{ subnet.subnet_name }}" {
   source     = "../../modules/ops/network/network_subnet"
-  depends_on = [module.{{ network.network_name }}]
+  depends_on = [module.{{ subnet.network_name }}]
 
-  network_id  = module.{{ network.network_name }}.id
-  subnet_name = "{{ network.subnet_name }}"
-  subnet_cidr = "{{ network.subnet_cidr }}"
+  network_id  = module.{{ subnet.network_name }}.id
+  subnet_name = "{{ subnet.subnet_name }}"
+  subnet_cidr = "{{ subnet.subnet_cidr }}"
 
-  {% if network.enable_dhcp|lower == "true" %}
+  {% if subnet.enable_dhcp|lower == "true" %}
   enable_dhcp = true
   allocation_pools = [
-    {% for p in network.allocation_pools %}
+    {% for p in subnet.allocation_pools %}
     {
         allocation_pool_start = "{{ p.allocation_pool_start }}"
         allocation_pool_end = "{{ p.allocation_pool_end }}"
@@ -34,9 +36,10 @@ module "{{ network.network_name }}_{{ network.subnet_name }}" {
   ]
   {% endif -%}
 
-  {% if network.dns_nameservers %}
-  dns_nameservers = [{{ network.dns_nameservers | join(', ') }}]
+  {% if subnet.dns_nameservers %}
+  dns_nameservers = [{{ subnet.dns_nameservers | join(', ') }}]
   {% endif %}
 }
 
+{% endfor %}
 {% endfor %}

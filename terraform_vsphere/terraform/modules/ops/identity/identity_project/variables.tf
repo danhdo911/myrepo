@@ -3,7 +3,7 @@ variable "project_name" {
   type        = string
 }
 
-variable "project_description" {
+variable "description" {
   description = "A description for the OpenStack project."
   type        = string
   default     = ""
