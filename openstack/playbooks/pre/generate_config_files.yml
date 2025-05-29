@@ -22,15 +22,21 @@
         src: "{{ templates_dir }}globals.me.yml.j2"
         dest: "{{ kolla_default_dir }}globals.yml"
         mode: '0755'
+      tags:
+        - globals
 
     - name: NFS share config file
       template:
         src: "{{ templates_dir }}nfs_shares.j2"
         dest: "{{ kolla_config_dir }}nfs_shares"
         mode: '0755'
+      tags:
+        - nfs
 
     - name: Neutron ml2_conf.ini
       template:
         src: "{{ templates_dir }}ml2_conf.ini.j2"
         dest: "{{ kolla_config_dir }}neutron/ml2_conf.ini"
         mode: '0755'
+      tags:
+        - neutron

@@ -81,6 +81,7 @@
         executable: /bin/bash
       tags:
         - rebuild
+        - reconfigure
         - deploy
 
     - name: Post-deploy after OpenStack was successfuly deployed
