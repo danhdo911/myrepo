@@ -43,6 +43,7 @@ variable "vsphere_unverified_ssl" {
 variable "vsphere_datacenter" {}
 variable "vsphere_cluster" {}
 variable "vsphere_resource_pool" {}
+variable "vsphere_folder" {}
 
 ### VM Authenticate ###
 # variable "vm_remote_type" {}

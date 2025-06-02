@@ -7,6 +7,7 @@ resource "vsphere_virtual_machine" "vm" {
 
   name                   = each.value.vm_name
   resource_pool_id       = data.vsphere_resource_pool.pool.id
+  folder                  = trimprefix(data.vsphere_folder.folder.path, "/${data.vsphere_datacenter.datacenter.name}/vm")
   datastore_id           = data.vsphere_datastore.datastore[each.key].id
   num_cpus               = each.value.vm_num_cpus
   num_cores_per_socket   = each.value.vm_cores_per_socket
@@ -37,11 +38,6 @@ resource "vsphere_virtual_machine" "vm" {
       unit_number = disk.value != null ? index(each.value.vm_disk_label, disk.value) : null
     }
   }
-  # disk {
-  #   label       = each.value.vm_disk02_label
-  #   size        = each.value.vm_disk02_size == "" ? data.vsphere_virtual_machine.template.disks.1.size : each.value.vm_disk02_size
-  #   unit_number = 1
-  # }
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
@@ -104,7 +100,7 @@ resource "vsphere_virtual_machine" "vm" {
 
       # Extend primary disk
       "sudo chmod +x /tmp/resize_disk.sh",
-      "nohub sudo /tmp/resize_disk.sh > /tmp/resize_disk.log 2>&1 &"
+      "sudo /tmp/resize_disk.sh > /tmp/resize_disk.log 2>&1 &"
     ]
   }
 }

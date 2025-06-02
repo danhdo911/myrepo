@@ -4,6 +4,7 @@ module "ops_vm" {
   vsphere_datacenter    = var.vsphere_datacenter
   vsphere_cluster       = var.vsphere_cluster
   vsphere_resource_pool = var.vsphere_resource_pool
+  vsphere_folder        = var.vsphere_folder
 
   vm_template       = var.vm_template
   vm_ssh_public_key = var.vm_ssh_public_key

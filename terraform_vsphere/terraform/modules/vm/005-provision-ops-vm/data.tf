@@ -12,6 +12,10 @@ data "vsphere_resource_pool" "pool" {
   datacenter_id = data.vsphere_datacenter.datacenter.id
 }
 
+data "vsphere_folder" "folder" {
+  path = "/${data.vsphere_datacenter.datacenter.name}/vm/${var.vsphere_folder}"
+}
+
 data "vsphere_datastore" "datastore" {
   for_each      = var.vm_configs
   name          = each.value.vm_datastore
