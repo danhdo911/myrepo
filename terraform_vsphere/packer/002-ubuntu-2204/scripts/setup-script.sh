@@ -27,3 +27,14 @@ echo "==> Cleanup apt"
 sudo apt-get -y autoremove
 sudo apt-get clean
 sudo rm -rf /var/lib/apt/lists/*
+
+echo '==> Removing cloud-int networking...'
+sudo rm /etc/netplan/50-cloud-init.yaml
+
+echo "==> Disable cloud-init network"
+sudo mkdir -p /etc/cloud/cloud.cfg.d
+sudo tee /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg > /dev/null <<EOF
+network: {config: disabled}
+EOF
+
+

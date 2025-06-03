@@ -3,6 +3,7 @@ network:
   ethernets:
     {{ ansible_default_ipv4.interface }}:
       dhcp4: false
+      dhcp6: false
       addresses: [{{ vm_host_data.networks[0].ip_address }}]
       routes:
         - to: default
@@ -14,7 +15,8 @@ network:
 {% if net.alias_name is not none and net.alias_name | length > 0 %}
     {{ net.alias_name }}:
       dhcp4: false
-{% if net.alias_name != 'eth1' %}
+      dhcp6: false
+{% if 'eth' not in net.alias_name %}
       addresses:
         - {{ net.ip_address }}
 {% endif %}

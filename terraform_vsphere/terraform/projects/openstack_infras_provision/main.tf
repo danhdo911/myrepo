@@ -13,30 +13,42 @@ module "ops_vm" {
   vm_configs = var.vm_configs
 }
 
-resource "null_resource" "export_vms_info" {
+# resource "null_resource" "export_vms_info" {
+#   depends_on = [module.ops_vm]
+
+#   triggers = {
+#     vms_info_checksum = sha1(jsonencode(module.ops_vm.vms_info))
+#   }
+
+#   provisioner "local-exec" {
+#     interpreter = ["bash", "-c"]
+#     command = <<-EOT
+#       terraform output -json vms_info > /iijvn/openstack/data_build/vms_info.json
+#     EOT
+#     on_failure  = "continue"
+
+#   }
+# }
+
+resource "local_file" "vms_info" {
   depends_on = [module.ops_vm]
 
-  triggers = {
-    vms_info_checksum = sha1(jsonencode(module.ops_vm.vms_info))
-  }
-
-  provisioner "local-exec" {
-    command = <<-EOT
-      terraform output -json vms_info > /iijvn/openstack/data_build/vms_info.json
-    EOT
-  }
+  content  = jsonencode(module.ops_vm.vms_info)
+  filename = "${path.module}/vms_info.json"
 }
 
-resource "null_resource" "netplan" {
+resource "null_resource" "ansible_tasks" {
   depends_on = [
     module.ops_vm,
-    resource.null_resource.export_vms_info
+    resource.local_file.vms_info
   ]
 
   provisioner "local-exec" {
-    command = <<-EOT
+    command    = <<-EOT
+      cp ${path.module}/vms_info.json /iijvn/openstack/data_build/vms_info.json
       cd /iijvn/openstack/
       ansible all -i inventories/lab -m ping
     EOT
+    on_failure = continue
   }
 }

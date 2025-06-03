@@ -10,15 +10,16 @@ autoinstall:
           - name: ubuntu
             gecos: 'Ubuntu Admin'
             passwd: '$y$j9T$/VqgGL5Kdu8g5nBKom/gj/$OLr1oqzq9QVElSKZzRezf5wm15/Pm3biPD8I1LANxg0'
-            #groups: adm, cdrom, dip, lxd, plugdev, sudo
             shell: /bin/bash
-            lock_passwd: False
+            lock_passwd: false
+            groups: [adm, sudo]
+            sudo: ALL=(ALL) NOPASSWD:ALL
     ssh:
         install-server: yes
         allow-pw: yes
-    late-commands:
+    late-commands: 
+      # - echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/ubuntu
+      # - chmod 440 /target/etc/sudoers.d/ubuntu
       - sed -i -e 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/g' /target/etc/ssh/sshd_config
-      - echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/ubuntu
-      - chmod 440 /target/etc/sudoers.d/ubuntu
       - lvresize -v -l +100%FREE /dev/mapper/ubuntu--vg-ubuntu--lv
       - resize2fs -p /dev/mapper/ubuntu--vg-ubuntu--lv

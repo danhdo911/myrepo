@@ -1,7 +1,5 @@
 # metadata.tpl
+instance-id: ubuntu-template
+local-hostname: ubuntu-template
 network:
-  version: 2
-  ethernets:
-    ${interface_name}:
-      dhcp4: ${dhcp4}
-      dhcp6: ${dhcp6}
+  config: disabled

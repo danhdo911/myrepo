@@ -47,36 +47,43 @@ resource "vsphere_virtual_machine" "vm" {
         domain    = ""
       }
 
-      network_interface {
-        ipv4_address = each.value.vm_ips[0]
-        ipv4_netmask = each.value.vm_netmask[0]
+      dynamic "network_interface" {
+        for_each = toset(range(length(each.value.vm_ips)))
+        content {
+          ipv4_address = each.value.vm_ips[network_interface.key]
+          ipv4_netmask = each.value.vm_netmask[network_interface.key]
+        }
       }
+
       ipv4_gateway    = each.value.vm_mgmt_gateway
       dns_server_list = var.dns_server_list
 
-      dynamic "network_interface" {
-        for_each = slice(each.value.vm_ips, 1, length(each.value.vm_ips)) # Skip first IP (mgmt)
-        content {
-          # ipv4_address = network_interface.value
-          # ipv4_netmask = each.value.vm_netmask[index(each.value.vm_ips, network_interface.value)]
-          ipv4_address = network_interface.value != null ? network_interface.value : null
-          ipv4_netmask = network_interface.value != null ? each.value.vm_netmask[index(each.value.vm_ips, network_interface.value)] : null
-        }
-      }
+      # network_interface {
+      #   ipv4_address = each.value.vm_ips[0]
+      #   ipv4_netmask = each.value.vm_netmask[0]
+      # }
+      
+      # dynamic "network_interface" {
+      #   for_each = slice(each.value.vm_ips, 1, length(each.value.vm_ips)) # Skip first IP (mgmt)
+      #   content {
+      #     ipv4_address = network_interface.value != null ? network_interface.value : null
+      #     ipv4_netmask = network_interface.value != null ? each.value.vm_netmask[index(each.value.vm_ips, network_interface.value)] : null
+      #   }
+      # }
     }
   }
 
-  provisioner "file" {
-    connection {
-      type     = var.vm_remote_type
-      user     = var.vm_user_login
-      password = var.vm_user_password
-      host     = each.value.vm_ips[0]
-    }
+  # provisioner "file" {
+  #   connection {
+  #     type     = var.vm_remote_type
+  #     user     = var.vm_user_login
+  #     password = var.vm_user_password
+  #     host     = each.value.vm_ips[0]
+  #   }
 
-    source      = "/iijvn/terraform_vsphere/terraform/scripts/resize_disk.sh"
-    destination = "/tmp/resize_disk.sh"
-  }
+  #   source      = "/iijvn/terraform_vsphere/terraform/scripts/resize_disk.sh"
+  #   destination = "/tmp/resize_disk.sh"
+  # }
 
   provisioner "remote-exec" {
     connection {
@@ -98,9 +105,9 @@ resource "vsphere_virtual_machine" "vm" {
       "sudo chmod 600 /home/${var.vm_user_login}/.ssh/authorized_keys",
       "sudo chown -R ${var.vm_user_login}:${var.vm_user_login} /home/${var.vm_user_login}/.ssh",
 
-      # Extend primary disk
-      "sudo chmod +x /tmp/resize_disk.sh",
-      "sudo /tmp/resize_disk.sh > /tmp/resize_disk.log 2>&1 &"
+      # # Extend primary disk
+      # "sudo chmod +x /tmp/resize_disk.sh",
+      # "sudo /tmp/resize_disk.sh > /tmp/resize_disk.log 2>&1"
     ]
   }
 }
