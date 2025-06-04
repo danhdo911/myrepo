@@ -28,7 +28,7 @@ def gen_network_csv(file_path):
             for row in reader:
                 key = (
                     parse_strip(row.get("project_name")).upper(),
-                    parse_strip(row.get("network_name"))
+                    parse_strip(row.get("network_name")),
                 )
 
                 subnet = {
@@ -62,7 +62,8 @@ def gen_network_csv(file_path):
                         "network_type": parse_strip(row.get("network_type")),
                         "physical_network": parse_strip(row.get("physical_network")),
                         "segmentation_id": parse_strip(row.get("segmentation_id")),
-                        "subnets": []
+                        "subnets": [],
+                        "rbac_action": parse_strip(row.get("rbac_action"))
                     }
 
                 networks_map[key]["subnets"].append(subnet)

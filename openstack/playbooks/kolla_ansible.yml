@@ -8,6 +8,7 @@
 
   vars:
     default_dir: "/root/"
+    kolla_dir: "/etc/kolla"
     kolla_venv: "{{ default_dir }}kolla-venv/bin/activate"
 
 
@@ -18,8 +19,10 @@
         kolla-ansible install-deps
       args:
         executable: /bin/bash
+      register: _dependencies
       tags:
         - dependencies
+        - predeploy
 
     - name: Kolla generate password
       shell: |
@@ -27,6 +30,9 @@
         kolla-genpwd
       args:
         executable: /bin/bash
+      register: _genpasswd
+      # when: >
+      #   _dependencies is succeeded
       tags:
         - rebuild
         - predeploy
@@ -38,6 +44,10 @@
         kolla-ansible certificates -i {{ default_dir }}multinode
       args:
         executable: /bin/bash
+      register: _certificates
+      # when: >
+      #   _dependencies is succeeded and 
+      #   _genpasswd is succeeded
       tags:
         - rebuild
         - predeploy
@@ -75,10 +85,13 @@
 
     - name: Proceed to actual OpenStack deployment
       shell: |
+        set -o pipefail
         source {{ kolla_venv }}
-        kolla-ansible deploy -i {{ default_dir }}multinode
+        kolla-ansible deploy -i {{ default_dir }}multinode 2>&1 | tee /tmp/kolla_ansible.log
       args:
         executable: /bin/bash
+      environment:
+        ANSIBLE_FORCE_COLOR: "true"
       tags:
         - rebuild
         - reconfigure
@@ -100,6 +113,15 @@
       tags:
         - rebuild
         - postdeploy
+
+    - name: Initial default image, sec group, flavors
+      shell: |
+        source {{ kolla_venv }}
+        source {{ kolla_dir }}/admin-openrc.sh
+        /iijvn/openstack/scripts/init_test.sh
+      tags:
+        - init
+    
 
 
 

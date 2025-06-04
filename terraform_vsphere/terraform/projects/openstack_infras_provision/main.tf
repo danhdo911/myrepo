@@ -33,6 +33,7 @@ module "ops_vm" {
 resource "local_file" "vms_info" {
   depends_on = [module.ops_vm]
 
+
   content  = jsonencode(module.ops_vm.vms_info)
   filename = "${path.module}/vms_info.json"
 }
@@ -43,10 +44,15 @@ resource "null_resource" "ansible_tasks" {
     resource.local_file.vms_info
   ]
 
+  triggers = {
+    vms_info_checksum = sha1(jsonencode(module.ops_vm.vms_info))
+  }
+
   provisioner "local-exec" {
     command    = <<-EOT
       cp ${path.module}/vms_info.json /iijvn/openstack/data_build/vms_info.json
       cd /iijvn/openstack/
+      python3 ./scripts/inventory.py --input_file data_build/vms_info.json --output-file inventories/dynamic_ops.ini
       ansible all -i inventories/lab -m ping
     EOT
     on_failure = continue

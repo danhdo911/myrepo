@@ -4,7 +4,7 @@ autoinstall:
     locale: en_US
     keyboard:
         layout: us
-    packages: [open-vm-tools, openssh-server, nano, iputils-ping]
+    packages: [openssh-server, nano, iputils-ping]
     user-data:
         users:
           - name: ubuntu

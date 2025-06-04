@@ -8,9 +8,9 @@ terraform {
 }
 
 provider "openstack" {
-  user_name   = "danhdo"
+  user_name   = "admin"
   tenant_name = "admin"
-  password    = "P@ssw0rd"
+  password    = "opgVQRBUZsnZorjjAHS0vEDmyfePtU3IA9luKYf9"
   auth_url    = "https://public.dd-iaas.local:5000"
   region      = "RegionOne"
 }

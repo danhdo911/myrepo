@@ -5,7 +5,7 @@ vsphere_datacenter = "Datacenter"
 vsphere_cluster = "IIJVN-vSAN"
 vsphere_datastore = "IIJVN-vSAN"
 
-vm_name = "ubuntu2204-5-disablenet"
+vm_name = "ubuntu2204-5-novmwtool"
 vm_version = "19"
 vm_guest_os_type = "ubuntu64Guest"
 vm_num_cpus = "2"

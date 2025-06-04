@@ -1,19 +1,31 @@
 ################### Network Configurations ####################
 {% for network in networks %}
 module "{{ network.network_name }}" {
-    source  = "../../modules/ops/network/network_network"
-    depends_on = [module.{{ network.project_name }}]
+  source  = "../../modules/ops/network/network_network"
+  depends_on = [module.{{ network.project_name }}]
 
-    tenant_id = module.{{ network.project_name }}.id
-    network_name = "{{ network.project_name }}_{{ network.network_name }}"
+  tenant_id = module.{{ network.project_name }}.id
+  network_name = "{{ network.project_name }}_{{ network.network_name }}"
 
-    {% if network.external_enabled|lower == "true" %}
-    external_enabled = true
-    network_type     = "{{ network.network_type }}"
-    physical_network = "{{ network.physical_network }}"
-    segmentation_id  = {{ network.segmentation_id }}
-    {% endif %}
+  {% if network.external_enabled|lower == "true" %}
+  external_enabled = true
+  network_type     = "{{ network.network_type }}"
+  physical_network = "{{ network.physical_network }}"
+  segmentation_id  = {{ network.segmentation_id }}
+  {% endif %}
 }
+
+{% if network.external_enabled|lower == "true" %}
+module "{{ network.project_name }}_{{ network.network_name }}_rbac" {
+  source = "../../modules/ops/network/network_rbac"
+  depends_on = [module.{{ network.network_name }}]
+
+  rbac_action   = "{{ network.rbac_action if network.rbac_action else 'access_as_external' }}"
+  object_type   = "{{ network.object_type if network.object_type else 'network' }}"
+  object_id     = module.{{ network.network_name }}.id
+  target_tenant = module.{{ network.project_name }}.id
+}
+{% endif %}
 
 {% for subnet in network.subnets %}
 module "{{ subnet.network_name }}_{{ subnet.subnet_name }}" {
@@ -23,9 +35,9 @@ module "{{ subnet.network_name }}_{{ subnet.subnet_name }}" {
   network_id  = module.{{ subnet.network_name }}.id
   subnet_name = "{{ subnet.subnet_name }}"
   subnet_cidr = "{{ subnet.subnet_cidr }}"
+  enable_dhcp = {{ subnet.enable_dhcp | default(false) }}
 
-  {% if subnet.enable_dhcp|lower == "true" %}
-  enable_dhcp = true
+  {% if subnet.allocation_pools %}
   allocation_pools = [
     {% for p in subnet.allocation_pools %}
     {

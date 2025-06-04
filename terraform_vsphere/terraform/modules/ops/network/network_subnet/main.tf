@@ -6,7 +6,7 @@ resource "openstack_networking_subnet_v2" "subnet" {
     enable_dhcp = var.enable_dhcp
 
     dynamic allocation_pool {
-    for_each = var.enable_dhcp ? var.allocation_pools : []
+    for_each = var.allocation_pools != null ? var.allocation_pools : []
         content {
             start = allocation_pool.value.allocation_pool_start
             end   = allocation_pool.value.allocation_pool_end

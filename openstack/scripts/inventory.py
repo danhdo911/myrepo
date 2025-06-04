@@ -2,8 +2,8 @@ import json
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--input_file", required=True)
-parser.add_argument("--output_file", required=True)
+parser.add_argument("--input-file", required=True)
+parser.add_argument("--output-file", required=True)
 args = parser.parse_args()
 
 # Load Terraform output from JSON file

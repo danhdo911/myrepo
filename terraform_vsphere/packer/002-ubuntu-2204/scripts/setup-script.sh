@@ -36,5 +36,3 @@ sudo mkdir -p /etc/cloud/cloud.cfg.d
 sudo tee /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg > /dev/null <<EOF
 network: {config: disabled}
 EOF
-
-
