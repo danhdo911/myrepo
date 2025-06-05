@@ -1,0 +1,36 @@
+root_dir: "/iijvn/openstack"
+templates_dir: "{{ root_dir }}/templates/"
+
+general_password: "P@ssw0rd"
+ssh_private_key: "{{ lookup('file', '~/.ssh/iij_danhdo.pub') }}"
+
+dns_servers: [192.168.138.240, 8.8.8.8]
+
+### NTP
+ntp_server: "192.168.138.235"
+timezone: "Asia/Ho_Chi_Minh"
+
+### NFS
+nfs_server_ip: "172.20.23.242"
+nfs_path: "/nfs/ops-data"
+nfs_mountpoint: "/nfs-data"
+nfs_cinder_volumes: "cinder"
+
+################ globals.yml ################
+### Interfaces
+api_interface: "ens1"
+kolla_external_vip_interface: "ens2"
+tunnel_interface: "ens3"
+storage_interface: "ens4"
+
+### DNS - VIP
+kolla_internal_fqdn: "internal.dd-iaas.local"
+kolla_internal_vip_address: "172.20.20.101"
+
+kolla_external_fqdn: "public.dd-iaas.local"
+kolla_external_vip_address: "172.20.21.101"
+
+### Neutron External - Provider
+neutron_external_interface: "eth1,eth2,eth3,eth4,eth5,eth6,eth7"
+neutron_physical_network: "physnet1,physnet2,physnet3,physnet4,physnet5,physnet6,physnet7"
+neutron_bridge_name: "br-ex1,br-ex2,br-ex3,br-ex4,br-ex5,br-ex6,br-ex7"

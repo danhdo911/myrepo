@@ -1,0 +1,77 @@
+resource "vsphere_virtual_machine" "vm" {
+
+  wait_for_guest_ip_timeout  = 10
+  wait_for_guest_net_timeout = 10
+
+  for_each = var.vm_configs
+
+  name                 = each.value.vm_name
+  resource_pool_id     = data.vsphere_compute_cluster.cluster.resource_pool_id
+  datastore_id         = data.vsphere_datastore.datastore[each.key].id
+  num_cpus             = each.value.vm_num_cpus
+  num_cores_per_socket = each.value.vm_cores_per_socket
+  memory               = each.value.vm_memory
+  guest_id             = data.vsphere_virtual_machine.template.guest_id
+
+  dynamic "network_interface" {
+    for_each = each.value.vm_networks
+    content {
+      network_id   = data.vsphere_network.network[network_interface.value].id
+      adapter_type = "vmxnet3"
+    }
+  }
+
+  disk {
+    label       = each.value.vm_disk01_label
+    size        = each.value.vm_disk01_size == "" ? data.vsphere_virtual_machine.template.disks.0.size : each.value.vm_disk01_size
+    unit_number = 0
+  }
+
+  disk {
+    label       = each.value.vm_disk02_label
+    size        = each.value.vm_disk02_size == "" ? data.vsphere_virtual_machine.template.disks.1.size : each.value.vm_disk02_size
+    unit_number = 1
+  }
+
+  clone {
+    template_uuid = data.vsphere_virtual_machine.template.id
+    customize {
+      linux_options {
+        host_name = each.value.vm_name
+        domain    = ""
+      }
+
+      network_interface {
+        ipv4_address = each.value.vm_ips[0]
+        ipv4_netmask = each.value.vm_netmask[0]
+      }
+      ipv4_gateway    = each.value.vm_mgmt_gateway
+      dns_server_list = each.value.dns_server_list
+
+      dynamic "network_interface" {
+        for_each = slice(each.value.vm_ips, 1, length(each.value.vm_ips)) # Skip first IP (mgmt)
+        content {
+          ipv4_address = network_interface.value
+          ipv4_netmask = each.value.vm_netmask[index(each.value.vm_ips, network_interface.value)]
+        }
+      }
+    }
+  }
+
+  provisioner "remote-exec" {
+    connection {
+      type     = var.vm_remote_type
+      user     = var.vm_user_login
+      password = var.vm_user_password
+      host     = each.value.vm_ips[0]
+    }
+    inline = [
+      "if [ ! -d /home/${var.vm_user_login}/.ssh ]; then sudo mkdir -p /home/${var.vm_user_login}/.ssh; fi",
+      "sudo chmod 700 /home/${var.vm_user_login}/.ssh",
+      "echo '${each.value.vm_ssh_public_key}' | sudo tee -a /home/${var.vm_user_login}/.ssh/authorized_keys",
+      "sudo chmod 600 /home/${var.vm_user_login}/.ssh/authorized_keys",
+      "sudo chown -R ${var.vm_user_login}:${var.vm_user_login} /home/${var.vm_user_login}/.ssh"
+    ]
+  }
+
+}

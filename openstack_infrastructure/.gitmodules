@@ -1,0 +1,8 @@
+[submodule "ansible"]
+	path = ansible
+	url = https://gitlab.iij.com.vn/iijvn-randd/openstack_ansible.git
+	branch = main
+[submodule "terraform"]
+	path = terraform
+	url = https://gitlab.iij.com.vn/iijvn-randd/terraform_vsphere.git
+	branch = main

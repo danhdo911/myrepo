@@ -1,0 +1,53 @@
+---
+- hosts: dd-maas
+
+  vars:
+    netplan_template: "../../templates/01-netcfg.yaml.j2"
+    netplan_file_name: "01-netcfg.yaml"
+    vm_data_file: "../../data_build/vm_provision.json"
+
+    vcenter_hostname: "vcenter199.lab.local"
+    vcenter_username: "danh.do@vsphere.local"
+    vcenter_password: "Hn1Ft!x0!%zIGfS;"
+    datacenter_name: "Datacenter"
+    new_nics:
+      - name: "pgc_danh_20_internal"
+        connected: false
+      - name: "pgc_danh_20_internal"
+        connected: false
+
+  tasks:
+    - name: Load VMs Data
+      ansible.builtin.include_tasks: "../tasks/vms_data.yml"
+
+    - name: Install pyvmomi
+      pip:
+        name: pyvmomi
+        executable: pip3
+      become: true
+
+    # - name: Add new NICs to VM
+    #   community.vmware.vmware_guest_network:
+    #     hostname: "{{ vcenter_hostname }}"
+    #     username: "{{ vcenter_username }}"
+    #     password: "{{ vcenter_password }}"
+    #     validate_certs: no
+    #     datacenter: "{{ datacenter_name }}"
+    #     name: "{{ vm_host_data.name }}"
+    #     state: present
+    #     network_name: "{{ item.network_name | default(omit) }}"
+    #     connected: "{{ item.connected | default(omit) }}"
+    #   loop: "{{ new_nics }}"
+    #   delegate_to: localhost
+    
+    - name: Add new NICs
+      community.vmware.vmware_guest:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: false
+        datacenter: "{{ datacenter_name }}"
+        name: "{{ vm_host_data.name }}"
+        networks: "{{ new_nics }}"
+
+        

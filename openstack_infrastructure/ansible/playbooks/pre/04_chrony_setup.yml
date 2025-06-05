@@ -1,0 +1,58 @@
+---
+- name: Install and configure Chrony with custom server
+  hosts: all  # Target the specific host or group as needed
+  become: true
+
+  tasks:
+    - name: Install Chrony
+      ansible.builtin.apt:
+        name: chrony
+        state: present
+        update_cache: yes
+
+    - name: Backup original chrony configuration file
+      ansible.builtin.copy:
+        src: /etc/chrony/chrony.conf
+        dest: /etc/chrony/chrony.conf.bak
+        remote_src: yes
+        backup: yes
+
+    - name: Update Chrony configuration with custom server
+      ansible.builtin.lineinfile:
+        path: /etc/chrony/chrony.conf
+        regexp: '^pool '
+        state: absent  # Remove default pool entries
+
+    - name: Add custom server to chrony.conf
+      ansible.builtin.lineinfile:
+        path: /etc/chrony/chrony.conf
+        line: 'server {{ ntp_server }} iburst'
+        insertafter: EOF
+
+    - name: Restart Chrony service
+      ansible.builtin.service:
+        name: chrony
+        state: restarted
+        enabled: yes
+
+    - name: Verify Chrony sources
+      ansible.builtin.shell: chronyc sources
+      register: chrony_sources_output
+
+    - name: Display Chrony sources output
+      ansible.builtin.debug:
+        msg: "{{ chrony_sources_output.stdout }}"
+
+    - name: Set timezone to {{ timezone }}
+      become: true
+      community.general.timezone:
+        name: "{{ timezone }}"
+
+    - name: Get the current timezone
+      ansible.builtin.command:
+        cmd: timedatectl show --property=Timezone --value
+      register: timezone_output
+
+    - name: Show current timezone
+      ansible.builtin.debug:
+        msg: "The current timezone is {{ timezone_output.stdout }}"

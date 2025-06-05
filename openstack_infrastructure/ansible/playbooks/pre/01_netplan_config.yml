@@ -1,0 +1,42 @@
+- name: Configure network interfaces with Netplan
+  hosts: all
+  # gather_facts: yes
+  become: yes
+
+  vars:
+    netplan_template: "../../templates/01-netcfg.yaml.j2"
+    netplan_file_name: "01-netcfg.yaml"
+    # vm_data_file: "../../data_build/vms_info.json"
+
+  tasks:
+    - name: Load VMs Data
+      ansible.builtin.include_tasks: "../tasks/vms_data.yml"
+
+    - name: Disable cloud-init network config
+      ansible.builtin.lineinfile:
+        path: /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+        line: "network: {config: disabled}"
+        create: yes
+
+    - name: Find all files in /etc/netplan
+      ansible.builtin.find:
+        paths: /etc/netplan/
+        file_type: file
+      register: netplan_files
+
+    - name: Remove all default files in /etc/netplan
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ netplan_files.files }}"
+      when: item.path | basename != netplan_file_name
+
+    - name: Generate Netplan config file
+      template:
+        src: "{{ netplan_template }}"
+        dest: /etc/netplan/{{ netplan_file_name }}
+        mode: '0600'
+
+    - name: Apply Netplan configuration
+      command: netplan apply
+

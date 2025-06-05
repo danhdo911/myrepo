@@ -1,0 +1,18 @@
+services:
+  terraform:
+    image: hashicorp/terraform:1.10.3
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    environment:
+      - VAULT_TOKEN=${VAULT_TOKEN}
+    entrypoint: ["terraform"]
+
+  ansible:
+    image: harbor.iij.com.vn/customized-images/ansible:1.0
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    environment:
+      - VAULT_TOKEN=${VAULT_TOKEN}
+    entrypoint: ["ansible-playbook"]

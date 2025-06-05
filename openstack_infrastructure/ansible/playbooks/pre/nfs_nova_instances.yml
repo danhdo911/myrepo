@@ -1,0 +1,28 @@
+---
+- name: Setup NFS Client for OpenStack
+  hosts: compute
+  become: yes
+
+  vars:
+    nfs_nova_instances: "nova_instances"
+    nfs_nova_instances_mountpoint: "/var/lib/nova/instances"
+
+  tasks:
+    - name: Ensure NFS client is installed
+      package:
+        name: nfs-common
+        state: present
+
+    - name: Create mount point for NFS
+      file:
+        path: "{{ nfs_nova_instances_mountpoint }}"
+        state: directory
+        mode: '0775'
+
+    - name: Mount NFS share
+      mount:
+        path: "{{ nfs_nova_instances_mountpoint }}"
+        src: "{{ nfs_server_ip }}:{{ nfs_path }}/{{ nfs_nova_instances }}"
+        fstype: nfs
+        opts: defaults
+        state: mounted

@@ -1,0 +1,30 @@
+module "{{ network_type }}_{{ network_name }}" {
+    source = "../../modules/vcd/{{ network_type }}"
+    
+    {% if network_type.endswith("network_routed") -%}
+    org_vdc     = var.vcd_vdc
+    edgegateway = var.edgegateway
+    {% endif %}
+    network_name  = "{{ network_name }}"
+    gateway       = "{{ gateway }}"
+    prefix_length = {{ prefix_length }}
+    dns1          = var.dns1
+    dns2          = var.dns2
+    {% if ip_pool|lower == "true" %}
+    enable_static_ip_pool = true
+    ip_pool_start = "{{ ip_pool_start }}"
+    ip_pool_end   = "{{ ip_pool_end }}"
+    {% endif -%}
+}
+{% if dhcp|lower == "true" %}
+module "{{ network_name }}_dhcp" {
+    source = "../../modules/vcd/network_dhcp"
+    depends_on = [module.{{ network_type }}_{{ network_name }}]
+
+    vcd_org         = var.vcd_org
+    org_network_id  = module.{{ network_type }}_{{ network_name }}.id
+
+    dhcp_pool_start = "{{ dhcp_pool_start }}"
+    dhcp_pool_end   = "{{ dhcp_pool_end }}"
+}
+{% endif %}

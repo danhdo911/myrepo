@@ -1,0 +1,11 @@
+---
+- hosts: all
+
+  tasks:
+    - name: Display network interface facts
+      ansible.builtin.debug:
+        msg: 
+            - "Network interfaces: {{ item }}"
+            - "IP Address: {{ ansible_facts[item]['ipv4']['address'] | default(None) }}"
+            - "MAC: {{ ansible_facts[item]['macaddress'] | default(None) }}"
+      loop: "{{ ansible_interfaces }}"

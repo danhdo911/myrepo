@@ -1,0 +1,47 @@
+---
+- name: Add Ceph Repository
+  hosts: ddops-ctrl01
+  become: yes
+  tasks:
+    - name: Install required dependencies
+      apt:
+        name:
+          - wget
+          - gnupg
+        state: present
+
+    - name: Create keyrings directory (if not exists)
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Ceph GPG key and convert to ASCII format
+      ansible.builtin.shell: |
+        wget -q -O- 'https://download.ceph.com/keys/release.asc' | gpg --dearmor -o /etc/apt/keyrings/cephadm.gpg
+      args:
+        creates: /etc/apt/keyrings/cephadm.gpg
+
+    - name: Add Ceph APT repository
+      ansible.builtin.copy:
+        content: "deb [signed-by=/etc/apt/keyrings/cephadm.gpg] https://download.ceph.com/debian-reef/ {{ ansible_distribution_release }} main\n"
+        dest: /etc/apt/sources.list.d/cephadm.list
+        mode: '0644'
+
+    - name: Update APT cache
+      apt:
+        update_cache: yes
+
+    - name: Check Cephadm package policy
+      command: apt-cache policy cephadm
+      register: cephadm_policy
+      changed_when: false
+
+    - name: Display Cephadm package policy
+      debug:
+        msg: "{{ cephadm_policy.stdout_lines }}"
+
+    - name: Install Cephadm
+      apt:
+        name: cephadm
+        state: present
