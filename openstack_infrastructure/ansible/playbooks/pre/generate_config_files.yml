@@ -7,7 +7,7 @@
   vars:
     kolla_default_dir: "/etc/kolla/"
     kolla_config_dir: "{{ kolla_default_dir }}config/"
-    templates_dir: "../../templates/"
+    templates_dir: "../../templates/" 
 
   tasks:
     - name: Create custom config directory
@@ -20,9 +20,11 @@
 
     - name: Generate globals.yml config file
       template:
-        src: "{{ templates_dir }}globals.me.yml.j2"
+        src: "{{ templates_dir }}{{ template_file }}"
         dest: "{{ kolla_default_dir }}globals.yml"
         mode: '0755'
+        force: true
+        backup: true
       tags:
         - globals
 

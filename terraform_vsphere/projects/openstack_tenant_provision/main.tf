@@ -62,20 +62,20 @@ module "TENANT_B_quota_network" {
 
 ################### Network Configurations ####################
 module "public_vlan" {
-  source     = "../../modules/ops/network/network_network"
+  source  = "../../modules/ops/network/network_network"
   depends_on = [module.TENANT_B]
 
-  tenant_id    = module.TENANT_B.id
+  tenant_id = module.TENANT_B.id
   network_name = "TENANT_B_public_vlan"
 
   external_enabled = true
   network_type     = "vlan"
   physical_network = "physnet3"
-  segmentation_id  = 137
+  segmentation_id  = 138
 }
 
 module "TENANT_B_public_vlan_rbac" {
-  source     = "../../modules/ops/network/network_rbac"
+  source = "../../modules/ops/network/network_rbac"
   depends_on = [module.public_vlan]
 
   rbac_action   = "access_as_external"
@@ -84,29 +84,29 @@ module "TENANT_B_public_vlan_rbac" {
   target_tenant = module.TENANT_B.id
 }
 
-module "public_vlan_vlan_137" {
+module "public_vlan_vlan_138" {
   source     = "../../modules/ops/network/network_subnet"
   depends_on = [module.public_vlan]
 
   network_id  = module.public_vlan.id
-  subnet_name = "vlan_137"
-  subnet_cidr = "192.168.137.0/24"
+  subnet_name = "vlan_138"
+  subnet_cidr = "192.168.138.0/24"
   enable_dhcp = false
 
   allocation_pools = [
     {
-      allocation_pool_start = "192.168.137.248"
-      allocation_pool_end   = "192.168.137.249"
+        allocation_pool_start = "192.168.138.248"
+        allocation_pool_end = "192.168.138.249"
     },
   ]
   dns_nameservers = ["8.8.8.8", "8.8.4.4"]
 }
 
 module "local_app" {
-  source     = "../../modules/ops/network/network_network"
+  source  = "../../modules/ops/network/network_network"
   depends_on = [module.TENANT_B]
 
-  tenant_id    = module.TENANT_B.id
+  tenant_id = module.TENANT_B.id
   network_name = "TENANT_B_local_app"
 
 }
@@ -123,18 +123,18 @@ module "local_app_vlan_172_11_10" {
 
   allocation_pools = [
     {
-      allocation_pool_start = "172.11.10.101"
-      allocation_pool_end   = "172.11.10.150"
+        allocation_pool_start = "172.11.10.101"
+        allocation_pool_end = "172.11.10.150"
     },
   ]
   dns_nameservers = ["8.8.8.8", "8.8.4.4"]
 }
 
 module "local_db" {
-  source     = "../../modules/ops/network/network_network"
+  source  = "../../modules/ops/network/network_network"
   depends_on = [module.TENANT_B]
 
-  tenant_id    = module.TENANT_B.id
+  tenant_id = module.TENANT_B.id
   network_name = "TENANT_B_local_db"
 
 }
@@ -155,17 +155,17 @@ module "local_db_vlan_172_11_20" {
 ################### Router Configurations ####################
 module "TENANT_B_router_1" {
   source     = "../../modules/ops/network/network_router"
-  depends_on = [module.public_vlan, module.public_vlan_vlan_137]
+  depends_on = [module.public_vlan,module.public_vlan_vlan_138]
 
   tenant_id           = module.TENANT_B.id
   router_name         = "TENANT_B_router_1"
   external_network_id = module.public_vlan.id
-  external_subnet_id  = module.public_vlan_vlan_137.id
-  external_ip_address = "192.168.137.248"
+  external_subnet_id  = module.public_vlan_vlan_138.id
+  external_ip_address = "192.168.138.248"
 }
 
 module "TENANT_B_router_1_local_app_vlan_172_11_10_interface" {
-  source     = "../../modules/ops/network/network_router_interface"
+  source = "../../modules/ops/network/network_router_interface"
   depends_on = [module.TENANT_B_router_1]
 
   router_id = module.TENANT_B_router_1.id

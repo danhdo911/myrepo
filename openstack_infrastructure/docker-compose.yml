@@ -6,13 +6,14 @@ services:
     working_dir: /workspace
     environment:
       - VAULT_TOKEN=${VAULT_TOKEN}
-    entrypoint: ["terraform"]
+    entrypoint: ["sh", "-c"]
 
   ansible:
-    image: harbor.iij.com.vn/customized-images/ansible:1.0
+    image: alpine/ansible:2.18.6
     volumes:
       - .:/workspace
+      - /tmp:/tmp
     working_dir: /workspace
     environment:
       - VAULT_TOKEN=${VAULT_TOKEN}
-    entrypoint: ["ansible-playbook"]
+    entrypoint: ["sh", "-c"]

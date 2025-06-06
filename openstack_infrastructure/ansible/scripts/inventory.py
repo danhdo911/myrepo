@@ -25,4 +25,4 @@ with open(args.output_file, "w") as inv_file:
     # Group variables
     inv_file.write("[all:vars]\n")
     inv_file.write("ansible_user=ubuntu\n")
-    inv_file.write("ansible_ssh_private_key_file=~/.ssh/iij_danhdo\n")
+    inv_file.write("ansible_ssh_private_key_file=/tmp/iij_danhdo\n")

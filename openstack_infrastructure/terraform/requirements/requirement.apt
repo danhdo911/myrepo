@@ -22,3 +22,6 @@ unzip
 
 # netcat
 netcat-traditional
+
+#ecrypt hash
+passlib

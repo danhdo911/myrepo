@@ -9,72 +9,123 @@ TF_JSON=output/$(ENV)-vms_info.json
 
 KOLLA_VENV=/root/kolla-venv/bin
 KOLLA_DIR=/etc/kolla
-KOLLA_INV=$(ENV_DIR)/kolla-inventory/multinode
-KOLLA_GLOBAL_YML=$(ENV_DIR)/kolla-inventory/globals.yml
+KOLLA_INV=$(ENV_DIR)/kolla/multinode
+KOLLA_GLOBAL_YML=$(ENV_DIR)/kolla/globals.yml
 
 ######################################################################################################################
-.PHONY: terraform_plan terraform_apply terraform_output clear \
-		ansible_setup \
-		kolla_predeploy kolla_deploy kolla_postdeploy
+
+### TERRAFORM PROVISIONING OPENSTACK INFRASTRUCTURE (GS) #############################################################
+.PHONY: terraform_deploy terraform_plan terraform_apply terraform_output terraform_clean
 
 terraform_deploy: terraform_apply terraform_output
 
-######################################################################################################################
+#===================== Executions =====================#
+# terraform_plan:
+# 	cd $(DEPLOY_DIR) && \
+# 		terraform workspace select -or-create $(ENV) && \
+# 		terraform fmt && terraform init && terraform validate && terraform plan -var-file=$(ROOT_DIR)/$(TF_VARS)
+
 terraform_plan:
-	cd $(DEPLOY_DIR) && \
-		terraform workspace select -or-create $(ENV) && \
-		terraform fmt && terraform init && terraform validate && terraform plan -var-file=$(ROOT_DIR)/$(TF_VARS)
+	docker compose -f docker-compose.yml run --rm terraform "\
+		cd $(DEPLOY_DIR) && \
+			terraform workspace select -or-create $(ENV) && \
+			terraform fmt && terraform init && terraform validate && terraform plan -var-file=$(ROOT_DIR)/$(TF_VARS)"
 
 terraform_apply:
-	cd $(DEPLOY_DIR) && \
-		terraform apply -auto-approve -var-file=$(ROOT_DIR)/$(TF_VARS)
+	docker compose -f docker-compose.yml run --rm terraform "\
+		cd $(DEPLOY_DIR) && \
+			terraform apply -auto-approve -var-file=$(ROOT_DIR)/$(TF_VARS)"
 
 terraform_output:
-	cd $(DEPLOY_DIR) && \
-		terraform output -json vms_info > $(ROOT_DIR)/$(TF_JSON)
+	docker compose -f docker-compose.yml run --rm terraform "\
+		cd $(DEPLOY_DIR) && \
+			terraform output -json vms_info > $(ROOT_DIR)/$(TF_JSON)"
 
-clean:
-	cd $(DEPLOY_DIR) && \
-		terraform destroy -auto-approve -var-file=$(ROOT_DIR)/$(TF_VARS)
-		rm -f $(ROOT_DIR)/$(TF_JSON)
+terraform_clean:
+	docker compose -f docker-compose.yml run --rm terraform "\
+		cd $(DEPLOY_DIR) && \
+			terraform destroy -auto-approve -var-file=$(ROOT_DIR)/$(TF_VARS)
+			rm -f $(ROOT_DIR)/$(TF_JSON)"
 
-######################################################################################################################
-ansible_setup:
-	python3 ./$(ANSIBLE_DIR)/scripts/inventory.py --input-file $(TF_JSON) --output-file $(ENV_DIR)/dynamic_inv.ini
-	ansible-playbook $(ANSIBLE_DIR)/playbooks/pre_setup_ops.yml \
+### ANSIBLE PREPARE FOR SETUP OPENSTACK ################################################################################
+.PHONY: os_setup gen_config
+
+#===================== Executions =====================#
+os_setup:
+	docker compose -f docker-compose.yml run --rm ansible "\
+		python3 ./$(ANSIBLE_DIR)/scripts/inventory.py --input-file $(TF_JSON) --output-file $(ENV_DIR)/dynamic_inv.ini && \
+		ansible-playbook $(ANSIBLE_DIR)/playbooks/pre_setup_ops.yml \
+			-i $(ENV_DIR)/dynamic_inv.ini \
+			-e "vm_data_file=../$(ROOT_DIR)/$(TF_JSON)" \
+			$(if $(TAG),--tags "$(TAG)",) \
+			$(if $(LIMIT),--limit "$(LIMIT)",)"
+
+gen_config:
+	ansible-playbook $(ANSIBLE_DIR)/playbooks/pre/generate_config_files.yml \
 		-i $(ENV_DIR)/dynamic_inv.ini \
-		-e "vm_data_file=../$(ROOT_DIR)/$(TF_JSON)" \
-		$(if $(TAG),--tags "$(TAG)",) \
-		$(if $(LIMIT),--limit "$(LIMIT)",)
+		$(if $(TAG),--tags "$(TAG)",)
 
-######################################################################################################################
-# kolla:
-# 	ansible-playbook $(ANSIBLE_DIR)/playbooks/kolla_ansible.yml \
-# 		-i $(KOLLA_INV) \
-# 		$(if $(TAG),--tags "$(TAG)",) \
-# 		$(if $(LIMIT),--limit "$(LIMIT)",)
+### KOLLA OPENSTACK ###################################################################################################################
+.PHONY: kolla_deps kolla_pre kolla_post kolla_add_node \
+		kolla_install_deps kolla_genpwd kolla_certificates kolla_bootstrap kolla_precheck \
+		kolla_deploy kolla_postdeploy kolla_addcert kolla_verify \
+		kolla_reconfigure
 
-kolla_predeploy:
-	. $(KOLLA_VENV)/activate
-	kolla-ansible install-deps $(if $(TAG),--tags "$(TAG)",) $(if $(LIMIT),--limit "$(LIMIT)",)
-	kolla-genpwd
-	kolla-ansible certificates -i $(KOLLA_INV) $(if $(TAG),--tags "$(TAG)",) $(if $(LIMIT),--limit "$(LIMIT)",)
-	cat /etc/kolla/certificates/ca/root.crt /etc/ssl/certs/ca-certificates.crt
-	kolla-ansible bootstrap-servers -i $(KOLLA_INV) $(if $(TAG),--tags "$(TAG)",) $(if $(LIMIT),--limit "$(LIMIT)",)
-	kolla-ansible precheck -i $(KOLLA_INV) $(if $(TAG),--tags "$(TAG)",) $(if $(LIMIT),--limit "$(LIMIT)",)
-	deactivate
+# Using for new provision
+kolla_deps: kolla_install_deps kolla_genpwd
+kolla_pre: kolla_certificates kolla_bootstrap kolla_precheck
+kolla_post: kolla_postdeploy kolla_addcert kolla_verify
+
+# Using for add new node - run with LIMIT SUBSET
+kolla_addnode: kolla_bootstrap kolla_precheck kolla_deploy kolla_postdeploy
+
+#===================== Executions =====================#
+kolla_install_deps:
+	. $(KOLLA_VENV)/activate && \
+		kolla-ansible install-deps && \
+		deactivate
+
+kolla_genpwd:
+	. $(KOLLA_VENV)/activate && \
+		kolla-genpwd && \
+		deactivate
+
+kolla_certificates:
+	. $(KOLLA_VENV)/activate && \
+		kolla-ansible certificates -i $(KOLLA_INV) $(if $(TAG),--tags "$(TAG)",) $(if $(LIMIT),--limit "$(LIMIT)",) && \
+		deactivate
+
+kolla_bootstrap:
+	. $(KOLLA_VENV)/activate && \
+		kolla-ansible bootstrap-servers -i $(KOLLA_INV) $(if $(TAG),--tags "$(TAG)",) $(if $(LIMIT),--limit "$(LIMIT)",) && \
+		deactivate
+	
+kolla_precheck:
+	. $(KOLLA_VENV)/activate && \
+		kolla-ansible precheck -i $(KOLLA_INV) $(if $(TAG),--tags "$(TAG)",) $(if $(LIMIT),--limit "$(LIMIT)",) && \
+		deactivate
 
 kolla_deploy:
-	. $(KOLLA_VENV)/activate
-	kolla-ansible deploy -i $(KOLLA_INV) $(if $(TAG),--tags "$(TAG)",) $(if $(LIMIT),--limit "$(LIMIT)",)
-	deactivate
+	. $(KOLLA_VENV)/activate && \
+		kolla-ansible deploy -i $(KOLLA_INV) $(if $(TAG),--tags "$(TAG)",) $(if $(LIMIT),--limit "$(LIMIT)",) && \
+		deactivate
 
 kolla_postdeploy:
 	. $(KOLLA_VENV)/activate && \
 		kolla-ansible post-deploy -i $(KOLLA_INV) $(if $(TAG),--tags "$(TAG)",) $(if $(LIMIT),--limit "$(LIMIT)",)
-		echo "export OS_CACERT=/etc/ssl/certs/ca-certificates.crt" >> $(KOLLA_DIR)/admin-openrc.sh
-		. $(KOLLA_DIR)/admin-openrc.sh
-		./$(ANSIBLE_DIR)/scripts/kolla_check.sh
+
+kolla_addcert:
+	cat /etc/kolla/certificates/ca/root.crt /etc/ssl/certs/ca-certificates.crt
+	echo "export OS_CACERT=/etc/ssl/certs/ca-certificates.crt" >> $(KOLLA_DIR)/admin-openrc.sh
+
+kolla_verify:
+	. $(KOLLA_VENV)/activate && \
+		. $(KOLLA_DIR)/admin-openrc.sh && \
+		./$(ANSIBLE_DIR)/scripts/kolla_check.sh && \
 		deactivate
 
+kolla_reconfigure:
+	. $(KOLLA_VENV)/activate && \
+		kolla-ansible reconfigure -i $(KOLLA_INV) $(if $(TAG),--tags "$(TAG)",) $(if $(LIMIT),--limit "$(LIMIT)",) && \
+		deactivate
 
