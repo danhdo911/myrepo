@@ -4,16 +4,21 @@ services:
     volumes:
       - .:/workspace
     working_dir: /workspace
-    environment:
-      - VAULT_TOKEN=${VAULT_TOKEN}
+    # environment:
+    #   VAULT_TOKEN: ""
+    env_file:
+      - .env
     entrypoint: ["sh", "-c"]
 
   ansible:
-    image: alpine/ansible:2.18.6
+    image: ansible
     volumes:
       - .:/workspace
       - /tmp:/tmp
+      - /etc/kolla/:/etc/kolla/
     working_dir: /workspace
-    environment:
-      - VAULT_TOKEN=${VAULT_TOKEN}
+    # environment:
+    #   VAULT_TOKEN: ""
+    env_file:
+      - .env
     entrypoint: ["sh", "-c"]

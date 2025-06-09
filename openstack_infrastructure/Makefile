@@ -12,19 +12,27 @@ KOLLA_DIR=/etc/kolla
 KOLLA_INV=$(ENV_DIR)/kolla/multinode
 KOLLA_GLOBAL_YML=$(ENV_DIR)/kolla/globals.yml
 
+
 ######################################################################################################################
 
+### CHECK TERRAFORM & ANSIBLE MODULES ################################################################################
+# REPO_URL ?= https://gitlab.iij.com.vn/iijvn-randd/
+# REPO_ANSIBLE=openstack_ansible
+# REPO_TERRAFORM=terraform_vsphere
+
+# .PHONY: check_submodule
+
+# check_submodule:
+# 	docker compose -f docker-compose.yml run --rm terraform "\
+# 		./submodule_check.sh $(REPO_ANSIBLE) ansible && \
+# 		./submodule_check.sh $(REPO_TERRAFORM) terraform"
+		
 ### TERRAFORM PROVISIONING OPENSTACK INFRASTRUCTURE (GS) #############################################################
 .PHONY: terraform_deploy terraform_plan terraform_apply terraform_output terraform_clean
 
 terraform_deploy: terraform_apply terraform_output
 
 #===================== Executions =====================#
-# terraform_plan:
-# 	cd $(DEPLOY_DIR) && \
-# 		terraform workspace select -or-create $(ENV) && \
-# 		terraform fmt && terraform init && terraform validate && terraform plan -var-file=$(ROOT_DIR)/$(TF_VARS)
-
 terraform_plan:
 	docker compose -f docker-compose.yml run --rm terraform "\
 		cd $(DEPLOY_DIR) && \
@@ -44,7 +52,8 @@ terraform_output:
 terraform_clean:
 	docker compose -f docker-compose.yml run --rm terraform "\
 		cd $(DEPLOY_DIR) && \
-			terraform destroy -auto-approve -var-file=$(ROOT_DIR)/$(TF_VARS)
+			terraform workspace select $(ENV) && \
+			terraform destroy -var-file=$(ROOT_DIR)/$(TF_VARS) && \
 			rm -f $(ROOT_DIR)/$(TF_JSON)"
 
 ### ANSIBLE PREPARE FOR SETUP OPENSTACK ################################################################################
@@ -53,17 +62,22 @@ terraform_clean:
 #===================== Executions =====================#
 os_setup:
 	docker compose -f docker-compose.yml run --rm ansible "\
-		python3 ./$(ANSIBLE_DIR)/scripts/inventory.py --input-file $(TF_JSON) --output-file $(ENV_DIR)/dynamic_inv.ini && \
+		python3 ./$(ANSIBLE_DIR)/scripts/inventory.py \
+			--input-file $(TF_JSON) \
+			--template-file ./$(ANSIBLE_DIR)/templates/inventory.j2 \
+			--output-file $(ENV_DIR)/dynamic_inv.ini && \
 		ansible-playbook $(ANSIBLE_DIR)/playbooks/pre_setup_ops.yml \
 			-i $(ENV_DIR)/dynamic_inv.ini \
 			-e "vm_data_file=../$(ROOT_DIR)/$(TF_JSON)" \
 			$(if $(TAG),--tags "$(TAG)",) \
 			$(if $(LIMIT),--limit "$(LIMIT)",)"
 
-gen_config:
-	ansible-playbook $(ANSIBLE_DIR)/playbooks/pre/generate_config_files.yml \
-		-i $(ENV_DIR)/dynamic_inv.ini \
-		$(if $(TAG),--tags "$(TAG)",)
+gen_config: ## globals, cinder nfs, neutron ml2_config
+	docker compose -f docker-compose.yml run --rm ansible "\
+		ansible-playbook $(ANSIBLE_DIR)/playbooks/pre/generate_config_files.yml \
+			-i $(ENV_DIR)/dynamic_inv.ini \
+			-e "kolla_default_dir=$(KOLLA_DIR)/" \
+			$(if $(TAG),--tags "$(TAG)",)"
 
 ### KOLLA OPENSTACK ###################################################################################################################
 .PHONY: kolla_deps kolla_pre kolla_post kolla_add_node \

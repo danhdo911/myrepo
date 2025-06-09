@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PROJECTS="g1_migration_vcdconfig"
+PROJECTS="g1_migration_vcdconfig_ipset"
 TENANT_PATH=$1
 MODULES=$2
 

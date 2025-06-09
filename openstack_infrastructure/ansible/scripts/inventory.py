@@ -1,28 +1,20 @@
 import json
+from jinja2 import Template
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--input-file", required=True)
-parser.add_argument("--output-file", required=True)
+parser = argparse.ArgumentParser(description="Generate Ansible inventory from Terraform output JSON.")
+parser.add_argument("--input-file", "-i",required=True,help="Path to the Terraform JSON output file (e.g., vms_info.json)")
+parser.add_argument("--output-file", "-o",required=True,help="Path to save the rendered Ansible inventory file")
+parser.add_argument("--template-file", "-t",default="inventory.j2",help="Path to the Jinja2 template file (default: inventory.j2)")
 args = parser.parse_args()
 
-# Load Terraform output from JSON file
 with open(args.input_file) as f:
-    data = json.load(f)
+    vms = json.load(f)
 
-with open(args.output_file, "w") as inv_file:
-    # Group: [all]
-    inv_file.write("[all]\n")
-    # Inventory
-    for vm_id, vm_info in data.items():
-        ip = vm_info["networks"][0]["ip_address"].split("/")[0]
-        name = vm_info.get("name", vm_id)
-        line = f"{name} ansible_host={ip}\n"
-        print(line.strip())  # Print to stdout
-        inv_file.write(line)
-    inv_file.write("\n")
-    
-    # Group variables
-    inv_file.write("[all:vars]\n")
-    inv_file.write("ansible_user=ubuntu\n")
-    inv_file.write("ansible_ssh_private_key_file=/tmp/iij_danhdo\n")
+with open(args.template_file) as f:
+    template = Template(f.read())
+
+output = template.render(vms=vms)
+
+with open(args.output_file, "w") as f:
+    f.write(output)

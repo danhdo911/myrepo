@@ -11,6 +11,7 @@
 **/*.log
 **/*.out
 
+**/.env
 # Editor/IDE files (optional)
 *.swp
 *.swo

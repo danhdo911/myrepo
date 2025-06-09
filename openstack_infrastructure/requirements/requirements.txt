@@ -1,5 +1,6 @@
 # Ansible
 ansible-core >= 2.16.9
+passlib
 
 # HashiVault
 hvac >= 2.3.0

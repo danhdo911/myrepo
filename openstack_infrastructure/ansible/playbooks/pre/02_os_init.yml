@@ -85,11 +85,11 @@
         owner: root
         group: root
 
-    # - name: Copy SSH public key to authorized_keys
-    #   authorized_key:
-    #     user: root
-    #     key: "{{ ssh_private_key }}"
-    #     state: present
+    - name: Copy SSH public key to authorized_keys
+      authorized_key:
+        user: root
+        key: "{{ ssh_private_key }}"
+        state: present
 
     # - name: Reboot server to apply GRUB changes
     #   ansible.builtin.reboot:
