@@ -10,8 +10,6 @@ TF_JSON=output/$(ENV)-vms_info.json
 KOLLA_VENV=/root/kolla-venv/bin
 KOLLA_DIR=/etc/kolla
 KOLLA_INV=$(ENV_DIR)/kolla/multinode
-KOLLA_GLOBAL_YML=$(ENV_DIR)/kolla/globals.yml
-
 
 ######################################################################################################################
 
@@ -91,7 +89,7 @@ kolla_pre: kolla_certificates kolla_bootstrap kolla_precheck
 kolla_post: kolla_postdeploy kolla_addcert kolla_verify
 
 # Using for add new node - run with LIMIT SUBSET
-kolla_addnode: kolla_bootstrap kolla_precheck kolla_deploy kolla_postdeploy
+kolla_addnode: kolla_bootstrap kolla_precheck kolla_deploy kolla_postdeploy kolla_verify
 
 #===================== Executions =====================#
 kolla_install_deps:

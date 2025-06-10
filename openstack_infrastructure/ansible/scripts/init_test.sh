@@ -181,14 +181,6 @@ fi
 
 cat << EOF
 
-Done.
+Successfully created defaults: cirros image, security group, flavors. 
 
-To deploy a demo instance, run:
-
-openstack --os-cloud=kolla-admin server create \\
-    --image ${IMAGE_NAME} \\
-    --flavor m1.tiny \\
-    --key-name mykey \\
-    --network demo-net \\
-    demo1
 EOF

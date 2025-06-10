@@ -5,7 +5,7 @@ TENANT_PATH=$1
 MODULES=$2
 
 # Base directories
-TEMPLATE_DIR="../../templates"
+TEMPLATE_DIR="../../templates/vcd"
 CSV_DIR="../../projects/$PROJECTS/environments/$TENANT_PATH/csv_data"
 OUTPUT_DIR="../../projects/$PROJECTS"
 
