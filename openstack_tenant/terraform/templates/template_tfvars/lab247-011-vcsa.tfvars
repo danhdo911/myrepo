@@ -1,0 +1,31 @@
+vsphere_server         = "192.168.138.247"
+vsphere_user           = "Administrator@vsphere.local"
+vsphere_password       = "P@ssw0rd"
+vsphere_unverified_ssl = "true"
+
+vsphere_datacenter = "Auto-DC"
+vsphere_cluster    = "ClusterA01"
+vsphere_host       = "192.168.138.248"
+vsphere_datastore  = "TESTMIGRATE"
+vsphere_network    = "vDS-PG-VLAN138"
+
+vcenter_vm_name           = "terra-vcsa"
+vcenter_deployment_option = "tiny"
+local_ovf_path            = "/nfs/vcsa/VMware-vCenter-Server-Appliance-7.0.3.01700-22357613_OVF10.ova"
+
+vcenter_domain             = "dd-iaas.local"
+vcenter_fqdn_name          = "terra-vcsa.dd-iaas.local"
+vcenter_username           = "Administrator@vsphere.local"
+vcenter_password           = "P@ssw0rd"
+vcenter_appliance_username = "root"
+
+vcenter_net_addr_family = "ipv4"
+vcenter_net_mode        = "static"
+vcenter_ipv4_address    = "192.168.138.238"
+vcenter_net_prefix      = "24"
+vcenter_net_gateway     = "192.168.138.1"
+vcenter_net_dns_server  = "192.168.138.240"
+ntp_server_01           = "vn.pool.ntp.org"
+ntp_server_02           = "1.asia.pool.ntp.org"
+
+health_check_script = "./vcsa-provisioner.sh"

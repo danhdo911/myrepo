@@ -1,7 +1,7 @@
 #!/bin/sh
 
-REPO_NAME=${1:-'openstack_ansible'}
-PATH_NAME=${2:-'ansible'}
+REPO_NAME=${1:-'terraform_vsphere'}
+PATH_NAME=${2:-'terraform'}
 REPO_URL=${3:-'https://gitlab.iij.com.vn/iijvn-randd/'}
 
 

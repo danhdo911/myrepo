@@ -1,0 +1,4 @@
+mysql_root_password: "P@ssw0rd"
+keepalived_auth_pass: "P@ssw0rd"
+
+vip: ""

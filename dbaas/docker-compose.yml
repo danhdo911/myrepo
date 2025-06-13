@@ -1,0 +1,24 @@
+services:
+  terraform:
+    image: hashicorp/terraform:1.10.3
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    # environment:
+    #   VAULT_TOKEN: ""
+    env_file:
+      - .env
+    entrypoint: ["sh", "-c"]
+
+  ansible:
+    image: ansible
+    volumes:
+      - .:/workspace
+      - /tmp:/tmp
+      - /etc/kolla/:/etc/kolla/
+    working_dir: /workspace
+    # environment:
+    #   VAULT_TOKEN: ""
+    env_file:
+      - .env
+    entrypoint: ["sh", "-c"]

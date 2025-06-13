@@ -1,0 +1,23 @@
+################### Router Configurations ####################
+{% for router in routers %}
+module "{{ router.project_name }}_{{ router.router_name }}" {
+  source     = "../../terraform/modules/ops/network/network_router"
+  depends_on = [module.{{ router.external_network }},module.{{ router.external_network }}_{{ router.external_subnet }}]
+
+  tenant_id           = module.{{ router.project_name }}.id
+  router_name         = "{{ router.project_name }}_{{ router.router_name }}"
+  external_network_id = module.{{ router.external_network }}.id
+  external_subnet_id  = module.{{ router.external_network }}_{{ router.external_subnet }}.id
+  {% if router.external_ip_address %}
+  external_ip_address = "{{ router.external_ip_address }}"
+  {% endif %}
+}
+
+module "{{ router.project_name }}_{{ router.router_name }}_{{ router.local_network }}_{{ router.local_subnet }}_interface" {
+  source = "../../terraform/modules/ops/network/network_router_interface"
+  depends_on = [module.{{ router.project_name }}_{{ router.router_name }}]
+
+  router_id = module.{{ router.project_name }}_{{ router.router_name }}.id
+  subnet_id = module.{{ router.local_network }}_{{ router.local_subnet }}.id
+}
+{% endfor %}

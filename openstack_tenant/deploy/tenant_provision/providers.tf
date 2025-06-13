@@ -13,4 +13,5 @@ provider "openstack" {
   password    = "opgVQRBUZsnZorjjAHS0vEDmyfePtU3IA9luKYf9"
   auth_url    = "https://public.dd-iaas.local:5000"
   region      = "RegionOne"
+  insecure    = true
 }

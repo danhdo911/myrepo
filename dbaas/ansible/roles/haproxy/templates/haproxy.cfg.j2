@@ -1,0 +1,26 @@
+global
+  log /dev/log local0
+  maxconn 2000
+  user haproxy
+  group haproxy
+  daemon
+
+defaults
+  log     global
+  mode    tcp
+  option  tcplog
+  timeout connect 10s
+  timeout client 1m
+  timeout server 1m
+
+frontend mysql_front
+  bind *:3306
+  default_backend mysql_back
+
+backend mysql_back
+  balance roundrobin
+  mode tcp
+  option mysql-check user haproxy_checkserver mysql-01 192.168.137.23:3306 check
+  
+  server mysql-02 192.168.137.26:3306 check backup
+  server mysql-03 192.168.137.31:3306 check backup

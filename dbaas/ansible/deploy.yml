@@ -1,0 +1,16 @@
+---
+- name: Deploy DB instances
+  hosts: all
+  become: true
+  roles:
+    - common
+  tags:
+    - common
+
+- name: Setup MySQL
+  hosts: db
+  become: true
+  roles:
+    - mysql
+  tags:
+    - mysql

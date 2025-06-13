@@ -1,0 +1,4 @@
+[submodule "terraform"]
+	path = terraform
+	url = https://gitlab.iij.com.vn/iijvn-randd/terraform_vsphere.git
+	branch = main

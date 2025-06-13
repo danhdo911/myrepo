@@ -1,0 +1,30 @@
+---
+# - name: Create dbaas service user
+#   user:
+#     name: "{{ db_admin }}"
+#     password: "{{ db_password | password_hash('sha512') }}"
+#     groups: sudo
+#     shell: /bin/bash
+
+- name: Install MySQL
+  apt:
+    name: 
+      - mysql-server
+      - python3-pymysql
+    state: present
+
+- name: Ensure MySQL started and enabled
+  systemd:
+    name: mysql
+    enabled: yes
+    state: started
+
+- name: Secure MySQL root password
+  mysql_user:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    login_user: root
+    name: root
+    password: "{{ mysql_root_password }}"
+    password_expire: true
+    host_all: true
+    state: present

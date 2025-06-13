@@ -1,0 +1,10 @@
+version: '3.7'
+
+services:
+  terraform:
+    image: hashicorp/terraform:1.10.3
+    volumes:
+      - .:/terraform
+    working_dir: /terraform/projects/g1_migration_vcdconfig
+    environment:
+      - VAULT_TOKEN=${VAULT_TOKEN}
