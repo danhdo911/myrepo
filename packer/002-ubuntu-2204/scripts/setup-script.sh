@@ -1,8 +1,25 @@
 #!/bin/bash -ex
-# echo 'Removing cloud-int networking...'
-# rm /etc/netplan/50-cloud-init.yaml
 
-# Empty machine-id
+#=========================== Setup ===========================
+# echo "==> Set debconf to Noninteractive"
+# echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections
+
+# echo "==> Update packages list"
+# sudo apt-get update
+
+# echo "==> Upgradepacka list"
+# sudo apt-get dist-upgrade -y
+
+# echo "==> Installing common packages"
+# sudo apt-get install -y \
+#         openssh-server \
+#         nano \
+#         iputils-ping \
+#         curl \
+#         jq \
+#         glances
+
+#=========================== Post-setup ===========================
 echo "==> Empty machine-id"
 sudo truncate -s 0 /etc/machine-id
 sudo rm /var/lib/dbus/machine-id

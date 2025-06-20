@@ -1,20 +1,20 @@
 #!/bin/bash
 
-PROJECTS="g1_migration_vcdconfig"
-TENANT_PATH=$1
+PROJECTS=${3:-"g1_migration_vcdconfig"}
+TENANT_NAME=$1
 MODULES=$2
 
 # Base directories
-TEMPLATE_DIR="../../templates"
-CSV_DIR="../../projects/$PROJECTS/environments/$TENANT_PATH/csv_data"
+TEMPLATE_DIR="../../templates/vcd"
+CSV_DIR="../../projects/$PROJECTS/environments/$TENANT_NAME/csv_data"
 OUTPUT_DIR="../../projects/$PROJECTS"
 
 # Help and usage
 if [[ -z "$2" || "$1" == "-h" || "$1" == "--help" ]]; then
-    echo "❌ Usage: $0 <tenant_path> <modules|--all>"
+    echo "❌ Usage: $0 <tenant_name> <modules|--all> <project_name>"
     echo "Modules: networks, network_dhcp_binding, ip_set, app_port_profiles, nat_rules, firewall_rules"
-    echo "Example: $0 tenant_A networks,ip_set"
-    echo "Example: $0 tenant_A --all"
+    echo "Example: $0 tenant_A networks,ip_set g1_migration_vcdconfig"
+    echo "Example: $0 tenant_A --all g1_migration_vcdconfig"
     exit 1
 fi
 

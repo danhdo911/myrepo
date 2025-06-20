@@ -21,12 +21,13 @@ backend mysql_back
   balance roundrobin
   mode tcp
   option mysql-check user haproxy_check
+
   {% for vm in vms.values() -%}
   {%- if 'mysql' in vm.name -%}
   {%- if 'mysql-01' in vm.name -%}
   server {{ vm.name }} {{ vm.ip }}:3306 check
-  {% else %}
+  {% else -%}
   server {{ vm.name }} {{ vm.ip }}:3306 check backup
-  {%- endif -%}
+  {% endif -%}
   {%- endif -%}
   {%- endfor -%}

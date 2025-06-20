@@ -7,19 +7,19 @@
     when:
       - ansible_distribution == "Ubuntu"
 
-  # - name: Clean old cache
-  #   ansible.builtin.apt:
-  #     clean: yes
+  - name: Clean old cache
+    ansible.builtin.apt:
+      clean: yes
 
-  # - name: Update package list
-  #   ansible.builtin.apt:
-  #     update_cache: yes
+  - name: Update package list
+    ansible.builtin.apt:
+      update_cache: yes
 
-  # - name: Upgrade all packages
-  #   ansible.builtin.apt:
-  #     upgrade: dist
-  #     autoremove: yes
-  #     autoclean: yes
+  - name: Upgrade all packages
+    ansible.builtin.apt:
+      upgrade: dist
+      autoremove: yes
+      autoclean: yes
 
   - name: Install common packages
     ansible.builtin.apt:

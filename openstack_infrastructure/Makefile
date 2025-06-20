@@ -1,4 +1,5 @@
 ENV ?= lab199
+PROJECT ?= openstack_infras_provision
 
 ROOT_DIR= ../..
 DEPLOY_DIR=	deploy/$(PROJECT)
@@ -40,7 +41,7 @@ terraform_plan:
 terraform_apply:
 	docker compose -f docker-compose.yml run --rm terraform "\
 		cd $(DEPLOY_DIR) && \
-			terraform apply -auto-approve -var-file=$(ROOT_DIR)/$(TF_VARS)"
+			TF_LOG=DEBUG terraform apply -auto-approve -var-file=$(ROOT_DIR)/$(TF_VARS)"
 
 terraform_output:
 	docker compose -f docker-compose.yml run --rm terraform "\

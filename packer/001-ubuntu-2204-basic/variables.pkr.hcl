@@ -5,11 +5,13 @@ variable "vsphere_server" {
 
 variable "vsphere_user" {
   type    = string
+  sensitive = true
   default = ""
 }
 
 variable "vsphere_password" {
   type    = string
+  sensitive = true
   default = ""
 }
 

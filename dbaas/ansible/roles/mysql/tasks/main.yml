@@ -19,12 +19,31 @@
     enabled: yes
     state: started
 
+- name: Bind MySQL to external address
+  lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: '^bind-address'
+    line: "bind-address = {{ mysql_bind_address }}"
+  notify: Restart MySQL
+
+
 - name: Secure MySQL root password
   mysql_user:
     login_unix_socket: /var/run/mysqld/mysqld.sock
     login_user: root
+    login_password: ""
     name: root
     password: "{{ mysql_root_password }}"
-    password_expire: true
+    password_expire: never
     host_all: true
+    state: present
+  ignore_errors: yes
+
+- name: Allow root user to connect remotely
+  mysql_user:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    name: root
+    password: "{{ mysql_root_password }}"
+    priv: '*.*:ALL,GRANT'
     state: present

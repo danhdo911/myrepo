@@ -1,5 +1,5 @@
 ---
-- name: Configure server settings
+- name: Configure general settings
   hosts: all 
   become: true
 
@@ -20,11 +20,11 @@
       ansible.builtin.apt:
         update_cache: yes
 
-    - name: Upgrade all packages
-      ansible.builtin.apt:
-        upgrade: dist
-        autoremove: yes
-        autoclean: yes
+    # - name: Upgrade all packages
+    #   ansible.builtin.apt:
+    #     upgrade: dist
+    #     autoremove: yes
+    #     autoclean: yes
 
     # - name: Remove 127.0.1.1 controller entry from /etc/hosts
     #   ansible.builtin.lineinfile:
@@ -41,15 +41,15 @@
     #     - "{{ controller_ip }} {{ controller_name }}"
     #     - "{{ compute_ip }} {{ compute_name }}"
 
-    - name: Install common packages
-      ansible.builtin.apt:
-        name:
-          - nano
-          - iputils-ping
-          - glances
-          - curl
-          - jq
-        state: present
+    # - name: Install common packages
+    #   ansible.builtin.apt:
+    #     name:
+    #       - nano
+    #       - iputils-ping
+    #       - glances
+    #       - curl
+    #       - jq
+    #     state: present
 
     - name: Enable root login in SSH config
       lineinfile:

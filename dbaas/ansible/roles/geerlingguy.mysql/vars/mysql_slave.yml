@@ -1,0 +1,5 @@
+---
+# Replication settings for MySQL slave
+mysql_server_id: "{{ mysql_slave_id | default('99') }}"
+mysql_replication_role: 'slave'
+mysql_replication_master: "{{ mysql_replication_master_host }}"

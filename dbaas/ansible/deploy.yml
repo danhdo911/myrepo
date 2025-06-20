@@ -8,9 +8,25 @@
     - common
 
 - name: Setup MySQL
-  hosts: db
+  hosts: mysql
   become: true
   roles:
-    - mysql
+    - geerlingguy.mysql
   tags:
     - mysql
+
+- name: Setup HAProxy
+  hosts: haproxy
+  become: true
+  roles:
+    - geerlingguy.haproxy
+  tags:
+    - haproxy
+
+- name: Setup Keepalive
+  hosts: keepalive
+  become: true
+  roles:
+    - keepalive
+  tags:
+    - keepalive

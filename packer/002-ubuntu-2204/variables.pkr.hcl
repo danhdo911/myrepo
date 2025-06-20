@@ -2,13 +2,13 @@
 variable "vsphere_user" {
   type      = string
   sensitive = true
-  default   = "Administrator@vsphere.local"
+  default   = ""
 }
 
 variable "vsphere_password" {
   type      = string
   sensitive = true
-  default   = "P@ssw0rd"
+  default   = ""
 }
 
 variable "vsphere_server" {
@@ -25,7 +25,8 @@ variable "vspher_unverified_ssl" {
 variable "vsphere_datacenter" {}
 variable "vsphere_cluster" {}
 variable "vsphere_datastore" {}
-# variable "vcenter_folder" {}
+variable "vcenter_folder" {}
+variable "resource_pool" {}
 
 ### Cloud-init
 variable "iso_path" {}

@@ -16,8 +16,8 @@
 
 ```bash
 .
-├── ansible     # logic code
-├── terraform   # logic code
+├── ansible     # logic code - submodule
+├── terraform   # logic code - submodule
 ├── deploy
 │   └── openstack_infras_provision # provision openstack management nodes
 ├── environments
@@ -47,4 +47,4 @@
 
 ## Process
 
-![image](./docs/images/ops_provision.png)
+![image](./docs/images/openstack_provision.png)

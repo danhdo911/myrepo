@@ -2,7 +2,7 @@ vrrp_instance VI_1 {
     state {{ 'MASTER' if 'haproxy-01' in inventory_hostname else 'BACKUP' }}
     interface {{ interface }}
     virtual_router_id 51
-    priority {{ 100 if inventory_hostname == 'haproxy-node-01' else 90 }}
+    priority {{ 100 if 'haproxy-01' in inventory_hostname else 90 }}
     advert_int 1
 
     authentication {
