@@ -7,15 +7,15 @@ packer {
   }
 }
 
-# locals {
-#   vsphere_user   = vault("iijvn-ansiblevsphere/data/iijvn-dev01", "vcenter_username")
-#   vsphere_password = vault("iijvn-ansiblevsphere/data/iijvn-dev01", "vcenter_password")
-# }
+locals {
+  vsphere_user   = "${vault("${var.vault_data}", "${var.vsphere_user}")}"
+  vsphere_password = "${vault("${var.vault_data}", "${var.vsphere_password}")}"
+}
 
 source "vsphere-iso" "linux-ubuntu-server" {
   vcenter_server        = var.vsphere_server
-  username              = var.vsphere_user
-  password              = var.vsphere_password
+  username              = local.vsphere_user
+  password              = local.vsphere_password
   insecure_connection   = var.vspher_unverified_ssl
   datacenter            = var.vsphere_datacenter
   cluster               = var.vsphere_cluster

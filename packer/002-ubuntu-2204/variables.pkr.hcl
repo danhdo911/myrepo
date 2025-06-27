@@ -1,19 +1,25 @@
 ### vCenter Authenticate ###
-variable "vsphere_user" {
-  type      = string
+variable "vault_data" {
+  type    = string
   sensitive = true
-  default   = ""
-}
-
-variable "vsphere_password" {
-  type      = string
-  sensitive = true
-  default   = ""
+  default = env("VAULT_PACKER")
 }
 
 variable "vsphere_server" {
   type      = string
   sensitive = true
+}
+
+variable "vsphere_user" {
+  type      = string
+  sensitive = true
+  default   = "vcenter_username"
+}
+
+variable "vsphere_password" {
+  type      = string
+  sensitive = true
+  default   = "vcenter_password"
 }
 
 variable "vspher_unverified_ssl" {
@@ -34,7 +40,7 @@ variable "iso_path" {}
 # variable "user_data_file" { default = "./cloud-init/user-data" }
 variable "cloud_init_files" { default = "./cloud-init/*"}
 variable "cd_label" { default = "cidata" }
-variable "script_setup" { default = "./scripts/setup-script.sh" }
+variable "script_setup" { default = "../scripts/setup-script.sh" }
 
 ### VM Configurations ###
 variable "vm_version" {}

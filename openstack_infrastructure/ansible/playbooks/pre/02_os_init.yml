@@ -74,7 +74,7 @@
     - name: Set root password
       user:
         name: root
-        password: "{{ general_password | password_hash('sha512') }}"
+        password: "{{ root_passwd | password_hash('sha512') }}"
         update_password: always
 
     - name: Ensure .ssh directory exists
@@ -88,7 +88,7 @@
     - name: Copy SSH public key to authorized_keys
       authorized_key:
         user: root
-        key: "{{ ssh_private_key }}"
+        key: "{{ vm_ssh_public_key }}"
         state: present
 
     # - name: Reboot server to apply GRUB changes

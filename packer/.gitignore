@@ -1,0 +1,23 @@
+**/.vscode/
+**/.env
+**/.packer.d/
+
+# **/.terraform/
+# **/.terraform.lock.hcl
+
+# **/*.tfstate
+# **/*.tfstate.*
+
+# **/*.tfplan
+
+# **/*.log
+# **/*.out
+
+
+# Editor/IDE files (optional)
+*.swp
+*.swo
+*.bak
+*.tmp
+.vscode/
+.idea/

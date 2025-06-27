@@ -18,7 +18,6 @@ provider "vsphere" {
 }
 
 provider "vault" {
-  address          = var.vault_address
   skip_child_token = true
 }
 

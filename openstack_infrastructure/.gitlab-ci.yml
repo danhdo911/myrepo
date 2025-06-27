@@ -1,0 +1,65 @@
+#================================ Variables ================================#
+variables:
+  ENVIRONMENT: "dev02"
+  GIT_SUBMODULE_STRATEGY: "recursive"
+  PROJECT: "openstack_cgw_provision"
+
+  HARBOR_REGISTRY: "https://harbor.iij.com.vn/"
+  HARBOR_USER: "danh.do"
+
+  VAULT_ADDR: "https://vault.iij.com.vn"
+  VAULT_SECRET_PATH_BASE: "iijvn-ansiblevsphere/data"
+  VAULT_SECRET_PATH: "iijvn-ansiblevsphere"
+  VAULT_SECRET_DATA: "iijvn-dev01"
+
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
+  
+#================================ Defaults ================================#
+default:
+  image: docker:28.3.0-cli
+  services:
+    - name: harbor.iij.com.vn/customized-images/ci-deploy:1.0
+      alias: docker
+  tags: [dd-runner-dind]
+
+#================================ Jobs ================================#
+stages:
+  - pre-setup
+  - plan
+
+#======================#
+01-pull-code:
+  stage: pre-setup
+  environment: '$ENVIRONMENT'
+  script:
+    - git submodule status
+
+02-generate-env:
+  stage: pre-setup
+  environment: '$ENVIRONMENT'
+  script:
+    - |
+      cat > .env << EOF
+      VAULT_ADDR="$VAULT_ADDR"
+      VAULT_TOKEN="$VAULT_TOKEN"
+      TF_VAR_vault_path_base="$VAULT_SECRET_PATH_BASE"
+      TF_VAR_vault_secret_path="$VAULT_SECRET_PATH"
+      TF_VAR_vault_secret_data="$VAULT_SECRET_DATA"
+      PROJECT_DIR="$CI_PROJECT_DIR"
+      EOF
+  artifacts:
+    expire_in: 2 hour
+    paths:
+      - .env
+
+02-terraform-test02:
+  stage: plan
+  environment: '$ENVIRONMENT'
+  needs:
+    - 02-generate-env
+  before_script: 
+    - echo "$HARBOR_PASSWORD" | docker login -u $HARBOR_USER $HARBOR_REGISTRY --password-stdin
+  script:
+    - docker compose -f docker-compose-v2.yml run --rm terraform "ls -altr"

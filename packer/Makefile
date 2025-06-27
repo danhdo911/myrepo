@@ -4,13 +4,21 @@ TEMPLATE_CONFIG ?= 002-ubuntu-2204
 ROOT_DIR = ..
 PKR_VAR = environments/$(ENV)/template.pkrvars.hcl
 
-.PHONY: image validate
+.PHONY: init validate image
+
+init:
+	@echo "=> Initialing configurations..."
+	docker compose -f docker-compose.yml run --rm packer "\
+		cd $(TEMPLATE_CONFIG) && \
+			packer init ."
 
 validate:
-	@echo "=> Validate configurations..."
-	cd $(TEMPLATE_CONFIG) && \
-		packer validate --var-file=$(ROOT_DIR)/$(PKR_VAR) .
+	@echo "=> Validating configurations..."
+	docker compose -f docker-compose.yml run --rm packer "\
+		cd $(TEMPLATE_CONFIG) && \
+			packer validate --var-file=$(ROOT_DIR)/$(PKR_VAR) ."
 image:
 	@echo "=> Building image..."
-	cd $(TEMPLATE_CONFIG) && \
-		PACKER_LOG=1 packer build --var-file=$(ROOT_DIR)/$(PKR_VAR) .
+	docker compose -f docker-compose.yml run --rm packer "\
+		cd $(TEMPLATE_CONFIG) && \
+			PACKER_LOG=1 packer build --var-file=$(ROOT_DIR)/$(PKR_VAR) ."

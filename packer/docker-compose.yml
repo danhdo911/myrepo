@@ -1,0 +1,11 @@
+services:
+  packer:
+    image: harbor.iij.com.vn/customized-images/packer_vault:1.0
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    environment:
+      PACKER_PLUGIN_PATH: "/workspace/.packer.d/plugins"
+    env_file:
+      - .env
+    entrypoint: ["sh", "-c"]

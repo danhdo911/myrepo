@@ -2,10 +2,12 @@ ENV ?= lab199
 PROJECT ?= openstack_infras_provision
 
 ROOT_DIR= ../..
-DEPLOY_DIR=	deploy/$(PROJECT)
 ANSIBLE_DIR= ansible
 ENV_DIR=environments/$(ENV)
+
+DEPLOY_DIR=	deploy/$(PROJECT)
 TF_VARS=$(ENV_DIR)/vms_config.tfvars
+TF_PLAN=plan.tfplan
 TF_JSON=output/$(ENV)-vms_info.json
 
 KOLLA_VENV=/root/kolla-venv/bin
@@ -36,12 +38,12 @@ terraform_plan:
 	docker compose -f docker-compose.yml run --rm terraform "\
 		cd $(DEPLOY_DIR) && \
 			terraform workspace select -or-create $(ENV) && \
-			terraform fmt && terraform init && terraform validate && terraform plan -var-file=$(ROOT_DIR)/$(TF_VARS)"
+			terraform fmt && terraform init && terraform validate && terraform plan -var-file=$(ROOT_DIR)/$(TF_VARS) -out=$(TF_PLAN)"
 
 terraform_apply:
 	docker compose -f docker-compose.yml run --rm terraform "\
 		cd $(DEPLOY_DIR) && \
-			TF_LOG=DEBUG terraform apply -auto-approve -var-file=$(ROOT_DIR)/$(TF_VARS)"
+			TF_LOG=DEBUG terraform apply $(TF_PLAN)"
 
 terraform_output:
 	docker compose -f docker-compose.yml run --rm terraform "\

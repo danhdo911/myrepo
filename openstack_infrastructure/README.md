@@ -2,9 +2,11 @@
 
 ## Requirement
 
-- Install packages:
-  - docker
-  - docker-compose
+- Packages: docker, docker-compose
+
+- Docker Image:
+  - harbor.iij.com.vn/customized-images/ansible:2.0
+  - harbor.iij.com.vn/customized-images/terraform:1.10.3
 
 - Clone repo with submodule:
 
@@ -12,7 +14,7 @@
   git clone --recurse-submodules https://gitlab.iij.com.vn/iijvn-randd/openstack_infrastructure.git
   ```
 
-## Structure
+## Directories Structure
 
 ```bash
 .

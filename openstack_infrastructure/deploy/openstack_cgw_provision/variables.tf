@@ -1,11 +1,4 @@
 ### Hashi Vault ###
-variable "vault_address" {
-  type        = string
-  sensitive   = true
-  default     = "https://vault.iij.com.vn"
-  description = "Store all credentials"
-}
-
 variable "vault_secret_path" {
   type      = string
   sensitive = true
@@ -43,7 +36,7 @@ variable "vsphere_unverified_ssl" {
 variable "vsphere_datacenter" {}
 variable "vsphere_cluster" {}
 variable "vsphere_resource_pool" {}
-variable "vsphere_esxi_host" {}
+# variable "vsphere_esxi_host" {}
 variable "vsphere_folder" {}
 
 ### VM Authenticate ###
