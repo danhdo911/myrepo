@@ -2,8 +2,8 @@ services:
   terraform:
     image: harbor.iij.com.vn/customized-images/terraform:1.10.3
     volumes:
-      - .:/workspace
-    working_dir: /workspace
+      - ${PROJECT_DIR}:${WORK_DIR}
+    working_dir: ${WORK_DIR}
     env_file:
       - .env
     entrypoint: ["sh", "-c"]
@@ -11,10 +11,8 @@ services:
   ansible:
     image: harbor.iij.com.vn/customized-images/ansible:2.0
     volumes:
-      - .:/workspace
-      - /tmp:/tmp
-      - /etc/kolla/:/etc/kolla/
-    working_dir: /workspace
+      - ${PROJECT_DIR}:${WORK_DIR}
+    working_dir: ${WORK_DIR}
     env_file:
       - .env
     entrypoint: ["sh", "-c"]

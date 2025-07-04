@@ -47,6 +47,14 @@
   - For new deployment, please refer [new_deployment.md](./docs/new_deployment.md)
   - For add new node to exist system, please refer [add_new_node.md](./docs/add_new_node.md)
 
-## Process
+## Provision Process
 
 ![image](./docs/images/openstack_provision.png)
+
+## CI - Management Nodes Provision Diagram
+
+![image](./docs/images/ci-mgmtnodes-diagram.png)
+
+## CI - Management Nodes Provision Workflow
+
+![image](./docs/images/ci-mgmtnodes-workflow.png)

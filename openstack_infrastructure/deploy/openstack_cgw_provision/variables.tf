@@ -46,7 +46,12 @@ variable "vsphere_folder" {}
 
 ### VMs Specific Configurations
 variable "vm_template" {}
-variable "vm_ssh_public_key" {}
+variable "vm_ssh_public_key" {
+  type      = string
+  sensitive = true
+  default   = "vm_ssh_public_key"
+}
+
 variable "dns_server_list" {
   type = list(string)
 }

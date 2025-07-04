@@ -1,11 +1,18 @@
-ENV ?= lab199
-PROJECT ?= openstack_infras_provision
+### Include .env #############################################################
+ifneq ($(wildcard .env),)
+include .env
+endif
 
-ROOT_DIR= ../..
+### LOCAL VARIABLES #############################################################
+
+ENV ?= lab199
+ROOT_DIR ?= $(WORK_DIR)
+TF_PROJECT ?= $(TF_PROJECT)
+
 ANSIBLE_DIR= ansible
 ENV_DIR=environments/$(ENV)
 
-DEPLOY_DIR=	deploy/$(PROJECT)
+TERRAFORM_DIR = deploy/$(TF_PROJECT)
 TF_VARS=$(ENV_DIR)/vms_config.tfvars
 TF_PLAN=plan.tfplan
 TF_JSON=output/$(ENV)-vms_info.json
@@ -13,63 +20,63 @@ TF_JSON=output/$(ENV)-vms_info.json
 KOLLA_VENV=/root/kolla-venv/bin
 KOLLA_DIR=/etc/kolla
 KOLLA_INV=$(ENV_DIR)/kolla/multinode
-
-######################################################################################################################
-
-### CHECK TERRAFORM & ANSIBLE MODULES ################################################################################
-# REPO_URL ?= https://gitlab.iij.com.vn/iijvn-randd/
-# REPO_ANSIBLE=openstack_ansible
-# REPO_TERRAFORM=terraform_vsphere
-
-# .PHONY: check_submodule
-
-# check_submodule:
-# 	docker compose -f docker-compose.yml run --rm terraform "\
-# 		./submodule_check.sh $(REPO_ANSIBLE) ansible && \
-# 		./submodule_check.sh $(REPO_TERRAFORM) terraform"
 		
 ### TERRAFORM PROVISIONING OPENSTACK INFRASTRUCTURE (GS) #############################################################
-.PHONY: terraform_deploy terraform_plan terraform_apply terraform_output terraform_clean
+.PHONY: terraform_init terraform_plan terraform_apply terraform_output terraform_clean \
+		terraform_build terraform_deploy
 
+terraform_build: terraform_init terraform_plan
 terraform_deploy: terraform_apply terraform_output
 
 #===================== Executions =====================#
+terraform_init:
+	docker compose -f docker-compose.yml run --rm terraform "\
+		cd $(TERRAFORM_DIR) \
+			&& terraform fmt \
+			&& terraform init -reconfigure \
+			&& terraform validate"
+
 terraform_plan:
 	docker compose -f docker-compose.yml run --rm terraform "\
-		cd $(DEPLOY_DIR) && \
-			terraform workspace select -or-create $(ENV) && \
-			terraform fmt && terraform init && terraform validate && terraform plan -var-file=$(ROOT_DIR)/$(TF_VARS) -out=$(TF_PLAN)"
+		cd $(TERRAFORM_DIR) \
+			&& terraform workspace select -or-create $(ENV) \
+			&& terraform plan -input=false -var-file=$(ROOT_DIR)/$(TF_VARS) -out=$(TF_PLAN)"
 
 terraform_apply:
 	docker compose -f docker-compose.yml run --rm terraform "\
-		cd $(DEPLOY_DIR) && \
-			TF_LOG=DEBUG terraform apply $(TF_PLAN)"
+		cd $(TERRAFORM_DIR) \
+			&& terraform workspace select $(ENV) \
+			&& terraform apply -input=false $(TF_PLAN)"
 
 terraform_output:
 	docker compose -f docker-compose.yml run --rm terraform "\
-		cd $(DEPLOY_DIR) && \
-			terraform output -json vms_info > $(ROOT_DIR)/$(TF_JSON)"
+		cd $(TERRAFORM_DIR) \
+			&& terraform workspace select $(ENV) \
+			&& terraform output -json vms_info > $(ROOT_DIR)/$(TF_JSON)"
 
 terraform_clean:
 	docker compose -f docker-compose.yml run --rm terraform "\
-		cd $(DEPLOY_DIR) && \
-			terraform workspace select $(ENV) && \
-			terraform destroy -var-file=$(ROOT_DIR)/$(TF_VARS) && \
-			rm -f $(ROOT_DIR)/$(TF_JSON)"
+		cd $(TERRAFORM_DIR) \
+			&& terraform workspace select $(ENV) \
+			&& terraform destroy -auto-approve -var-file=$(ROOT_DIR)/$(TF_VARS) \
+			&& rm -f $(ROOT_DIR)/$(TF_JSON)"
 
 ### ANSIBLE PREPARE FOR SETUP OPENSTACK ################################################################################
-.PHONY: os_setup gen_config
+.PHONY: gen_inv os_setup gen_config
 
 #===================== Executions =====================#
-os_setup:
+gen_inv:
 	docker compose -f docker-compose.yml run --rm ansible "\
 		python3 ./$(ANSIBLE_DIR)/scripts/inventory.py \
 			--input-file $(TF_JSON) \
 			--template-file ./$(ANSIBLE_DIR)/templates/inventory.j2 \
-			--output-file $(ENV_DIR)/dynamic_inv.ini && \
+			--output-file $(ENV_DIR)/dynamic_inv.ini"
+
+os_setup:
+	docker compose -f docker-compose.yml run --rm ansible "\
 		ansible-playbook $(ANSIBLE_DIR)/playbooks/pre_setup_ops.yml \
 			-i $(ENV_DIR)/dynamic_inv.ini \
-			-e "vm_data_file=../$(ROOT_DIR)/$(TF_JSON)" \
+			-e "vm_data_file=$(ROOT_DIR)/$(TF_JSON)" \
 			$(if $(TAG),--tags "$(TAG)",) \
 			$(if $(LIMIT),--limit "$(LIMIT)",)"
 

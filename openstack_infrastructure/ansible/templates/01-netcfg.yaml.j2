@@ -6,6 +6,7 @@ network:
     {{ net.alias_name }}:
       dhcp4: false
       dhcp6: false
+      mtu: {{ 9000 if net.alias_name != 'ens33' else 1500 }}
 {% if 'eth' not in net.alias_name %}
       addresses:
         - {{ net.ip_address }}

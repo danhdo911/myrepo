@@ -7,6 +7,7 @@
 **/*.tfstate.*
 
 **/*.tfplan
+**/*tfplan*
 
 **/*.log
 **/*.out
@@ -19,3 +20,6 @@
 *.tmp
 .vscode/
 .idea/
+
+# test
+!deploy/openstack_cgw_provision/terraform.state.d/**/*.tfstate

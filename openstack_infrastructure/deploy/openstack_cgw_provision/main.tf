@@ -8,7 +8,7 @@ module "ops_vm" {
   vsphere_folder = var.vsphere_folder
 
   vm_template       = var.vm_template
-  vm_ssh_public_key = var.vm_ssh_public_key
+  vm_ssh_public_key = data.vault_kv_secret_v2.vault_vsphere.data["${var.vm_ssh_public_key}"]
   dns_server_list   = var.dns_server_list
 
   vm_configs = var.vm_configs

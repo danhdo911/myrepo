@@ -1,65 +1,145 @@
 #================================ Variables ================================#
+include: ${CI_PROJECT_DIR}/.gitlab-ci-vars.yml
+
 variables:
-  ENVIRONMENT: "dev02"
   GIT_SUBMODULE_STRATEGY: "recursive"
-  PROJECT: "openstack_cgw_provision"
+
+  TF_ROOT: "${CI_PROJECT_DIR}/deploy/${PROJECT}"
 
   HARBOR_REGISTRY: "https://harbor.iij.com.vn/"
   HARBOR_USER: "danh.do"
 
   VAULT_ADDR: "https://vault.iij.com.vn"
-  VAULT_SECRET_PATH_BASE: "iijvn-ansiblevsphere/data"
+  VAULT_SECRET_PATH_BASE: "iijvn-ansiblevsphere/data/"
   VAULT_SECRET_PATH: "iijvn-ansiblevsphere"
   VAULT_SECRET_DATA: "iijvn-dev01"
 
   DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ""
   DOCKER_DRIVER: overlay2
-  
+
 #================================ Defaults ================================#
 default:
-  image: docker:28.3.0-cli
+  image: harbor.iij.com.vn/customized-images/ci-deploy:1.0
+
   services:
     - name: harbor.iij.com.vn/customized-images/ci-deploy:1.0
       alias: docker
+
+  artifacts:
+    when: on_success
+    access: none
+    expire_in: "1 days"
+
+  cache:
+    key: cache-${ENVIRONMENT}-${PROJECT}
+    paths:
+      - ${TF_ROOT}/.terraform
+      - ${TF_ROOT}/.terraform.lock.hcl
+      - ${TF_ROOT}/.terraform/providers/
+    policy: pull-push
+
   tags: [dd-runner-dind]
+
+#================================ Workflow ================================#
+
 
 #================================ Jobs ================================#
 stages:
-  - pre-setup
-  - plan
+  - pre-build
+  - build
+  - deploy
+  - configure
+  - clean
 
 #======================#
-01-pull-code:
-  stage: pre-setup
-  environment: '$ENVIRONMENT'
-  script:
-    - git submodule status
+# update-code:
+#   stage: pre-build
+#   environment: ${ENVIRONMENT}
+#   script:
+#     - git submodule status
 
-02-generate-env:
-  stage: pre-setup
-  environment: '$ENVIRONMENT'
+generate-env:
+  stage: pre-build
+  environment: ${ENVIRONMENT}
   script:
     - |
       cat > .env << EOF
-      VAULT_ADDR="$VAULT_ADDR"
-      VAULT_TOKEN="$VAULT_TOKEN"
-      TF_VAR_vault_path_base="$VAULT_SECRET_PATH_BASE"
-      TF_VAR_vault_secret_path="$VAULT_SECRET_PATH"
-      TF_VAR_vault_secret_data="$VAULT_SECRET_DATA"
-      PROJECT_DIR="$CI_PROJECT_DIR"
+      VAULT_ADDR="${VAULT_ADDR}"
+      VAULT_TOKEN="${VAULT_TOKEN}"
+      PROJECT_DIR="${CI_PROJECT_DIR}"
+      WORK_DIR=/workspace
+      ANSIBLE_CONFIG=/workspace/ansible.cfg
+      TF_LOG=DEBUG
+      TF_PROJECT="${PROJECT}"
+      TF_VAR_vault_path_base="${VAULT_SECRET_PATH_BASE}"
+      TF_VAR_vault_secret_path="${VAULT_SECRET_PATH}"
+      TF_VAR_vault_secret_data="${VAULT_SECRET_DATA}"
+      AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
       EOF
   artifacts:
-    expire_in: 2 hour
     paths:
       - .env
 
-02-terraform-test02:
-  stage: plan
-  environment: '$ENVIRONMENT'
+terraform-build:
+  stage: build
+  environment: ${ENVIRONMENT}
   needs:
-    - 02-generate-env
+    - generate-env
   before_script: 
-    - echo "$HARBOR_PASSWORD" | docker login -u $HARBOR_USER $HARBOR_REGISTRY --password-stdin
+    - echo "${HARBOR_PASSWORD}" | docker login -u ${HARBOR_USER} ${HARBOR_REGISTRY} --password-stdin
   script:
-    - docker compose -f docker-compose-v2.yml run --rm terraform "ls -altr"
+    - make terraform_build ENV=${ENVIRONMENT} PROJECT=${PROJECT}
+  artifacts:
+    paths:
+      - ${TF_ROOT}/plan.tfplan
+
+terraform-deploy:
+  stage: deploy
+  environment: ${ENVIRONMENT}
+  needs:
+    - generate-env
+    - terraform-build
+  when: on_success
+  before_script: 
+    - echo "${HARBOR_PASSWORD}" | docker login -u ${HARBOR_USER} ${HARBOR_REGISTRY} --password-stdin
+  script:
+    - make terraform_deploy ENV=${ENVIRONMENT} PROJECT=${PROJECT}
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+  artifacts:
+    paths:
+      - output/${ENVIRONMENT}-vms_info.json
+
+setup-os:
+  stage: configure
+  environment: ${ENVIRONMENT}
+  needs:
+    - generate-env
+    - terraform-deploy
+  when: on_success
+  before_script: 
+    - echo "${HARBOR_PASSWORD}" | docker login -u ${HARBOR_USER} ${HARBOR_REGISTRY} --password-stdin
+    - echo "${VM_SSH_PRIVATE_KEY}" | base64 -d > ${CI_PROJECT_DIR}/vm_private_key
+    - chmod 600 ${CI_PROJECT_DIR}/vm_private_key
+  script:
+    - make gen_inv ENV=${ENVIRONMENT}
+    - make os_setup ENV=${ENVIRONMENT} TAG="netplan,os-init,ntp"
+  after_script:
+    - cat /dev/null > ${CI_PROJECT_DIR}/vm_private_key
+
+terraform-destroy:
+  stage: clean
+  environment: ${ENVIRONMENT}
+  needs:
+    - generate-env
+  before_script: 
+    - echo "${HARBOR_PASSWORD}" | docker login -u ${HARBOR_USER} ${HARBOR_REGISTRY} --password-stdin
+  script:
+    - make terraform_clean ENV=${ENVIRONMENT} PROJECT=${PROJECT}
+  rules:
+    - if: '$ENVIRONMENT =~ /^(dev|stage|lab)/'
+      when: manual
+    - when: never
