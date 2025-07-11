@@ -1,0 +1,29 @@
+---
+- name: Install and configure Memcached
+  hosts: all  # Target your specific host or group
+  become: true
+
+  vars:
+    memcached_bind_ip: "192.168.138.235"  # Update with your specific IP
+
+  tasks:
+    - name: Install Memcached and python-memcache
+      ansible.builtin.apt:
+        name:
+          - memcached
+          - python3-memcache
+        state: present
+        update_cache: true
+
+    - name: Configure Memcached to bind to a specific IP
+      ansible.builtin.lineinfile:
+        path: /etc/memcached.conf
+        regexp: '^-l '
+        line: "-l {{ memcached_bind_ip }}"
+        create: yes
+        backup: yes
+
+    - name: Restart Memcached service
+      ansible.builtin.service:
+        name: memcached
+        state: restarted

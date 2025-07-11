@@ -1,1 +1,218 @@
-{"compute01":{"name":"ddops-com01","networks":[{"alias_name":null,"ip_address":"192.168.138.239/24","ipv4_gateway":"192.168.138.1","mac_address":"00:50:56:bf:aa:60","port_group":"pgc_VL138"},{"alias_name":"ens1","ip_address":"172.20.20.14/24","ipv4_gateway":null,"mac_address":"00:50:56:bf:da:5f","port_group":"pgc_danh_20_internal"},{"alias_name":"ens3","ip_address":"172.20.22.14/24","ipv4_gateway":null,"mac_address":"00:50:56:bf:2a:e4","port_group":"pgc_danh_22_genenve"},{"alias_name":"ens4","ip_address":"172.20.23.14/24","ipv4_gateway":null,"mac_address":"00:50:56:bf:ee:01","port_group":"pgc_danh_23_storage"}]},"controller01":{"name":"ddops-ctrl01","networks":[{"alias_name":null,"ip_address":"192.168.138.236/24","ipv4_gateway":"192.168.138.1","mac_address":"00:50:56:bf:a3:54","port_group":"pgc_VL138"},{"alias_name":"ens1","ip_address":"172.20.20.11/24","ipv4_gateway":null,"mac_address":"00:50:56:bf:da:7f","port_group":"pgc_danh_20_internal"},{"alias_name":"ens2","ip_address":"172.20.21.11/24","ipv4_gateway":null,"mac_address":"00:50:56:bf:75:7c","port_group":"pgc_danh_21_public"},{"alias_name":"ens4","ip_address":"172.20.23.11/24","ipv4_gateway":null,"mac_address":"00:50:56:bf:03:92","port_group":"pgc_danh_23_storage"}]},"network01":{"name":"ddops-gw01","networks":[{"alias_name":null,"ip_address":"192.168.138.238/24","ipv4_gateway":"192.168.138.1","mac_address":"00:50:56:bf:20:63","port_group":"pgc_VL138"},{"alias_name":"ens1","ip_address":"172.20.20.13/24","ipv4_gateway":null,"mac_address":"00:50:56:bf:e1:0e","port_group":"pgc_danh_20_internal"},{"alias_name":"ens3","ip_address":"172.20.22.13/24","ipv4_gateway":null,"mac_address":"00:50:56:bf:07:73","port_group":"pgc_danh_22_genenve"},{"alias_name":"eth1","ip_address":null,"ipv4_gateway":null,"mac_address":"00:50:56:bf:e9:25","port_group":"pgc_danh_provider_flat"},{"alias_name":"eth2","ip_address":null,"ipv4_gateway":null,"mac_address":"00:50:56:bf:ac:ac","port_group":"pgc_danh_provider_vlan"},{"alias_name":"eth3","ip_address":null,"ipv4_gateway":null,"mac_address":"00:50:56:bf:96:be","port_group":"pgc_danh_provider_vlan"},{"alias_name":"eth4","ip_address":null,"ipv4_gateway":null,"mac_address":"00:50:56:bf:69:43","port_group":"pgc_danh_provider_vlan"},{"alias_name":"eth5","ip_address":null,"ipv4_gateway":null,"mac_address":"00:50:56:bf:bd:19","port_group":"pgc_danh_provider_vlan"},{"alias_name":"eth6","ip_address":null,"ipv4_gateway":null,"mac_address":"00:50:56:bf:ef:ff","port_group":"pgc_danh_provider_vlan"},{"alias_name":"eth7","ip_address":null,"ipv4_gateway":null,"mac_address":"00:50:56:bf:9d:81","port_group":"pgc_danh_provider_vlan"}]},"network02":{"name":"ddops-gw02","networks":[{"alias_name":null,"ip_address":"192.168.138.241/24","ipv4_gateway":"192.168.138.1","mac_address":"00:50:56:bf:d8:19","port_group":"pgc_VL138"},{"alias_name":"ens1","ip_address":"172.20.20.15/24","ipv4_gateway":null,"mac_address":"00:50:56:bf:dd:f5","port_group":"pgc_danh_20_internal"},{"alias_name":"ens3","ip_address":"172.20.22.15/24","ipv4_gateway":null,"mac_address":"00:50:56:bf:a7:f3","port_group":"pgc_danh_22_genenve"},{"alias_name":"eth1","ip_address":null,"ipv4_gateway":null,"mac_address":"00:50:56:bf:78:ca","port_group":"pgc_danh_provider_flat"},{"alias_name":"eth2","ip_address":null,"ipv4_gateway":null,"mac_address":"00:50:56:bf:37:01","port_group":"pgc_danh_provider_vlan"},{"alias_name":"eth3","ip_address":null,"ipv4_gateway":null,"mac_address":"00:50:56:bf:0e:0b","port_group":"pgc_danh_provider_vlan"},{"alias_name":"eth4","ip_address":null,"ipv4_gateway":null,"mac_address":"00:50:56:bf:fd:a1","port_group":"pgc_danh_provider_vlan"},{"alias_name":"eth5","ip_address":null,"ipv4_gateway":null,"mac_address":"00:50:56:bf:f5:56","port_group":"pgc_danh_provider_vlan"},{"alias_name":"eth6","ip_address":null,"ipv4_gateway":null,"mac_address":"00:50:56:bf:68:0c","port_group":"pgc_danh_provider_vlan"},{"alias_name":"eth7","ip_address":null,"ipv4_gateway":null,"mac_address":"00:50:56:bf:1e:57","port_group":"pgc_danh_provider_vlan"}]}}
+{
+    "compute01": {
+        "name": "ddops-com01",
+        "networks": [
+            {
+                "alias_name": null,
+                "ip_address": "192.168.138.239/24",
+                "ipv4_gateway": "192.168.138.1",
+                "mac_address": "00:50:56:bf:aa:60",
+                "port_group": "pgc_VL138"
+            },
+            {
+                "alias_name": "ens1",
+                "ip_address": "172.20.20.14/24",
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:da:5f",
+                "port_group": "pgc_danh_20_internal"
+            },
+            {
+                "alias_name": "ens3",
+                "ip_address": "172.20.22.14/24",
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:2a:e4",
+                "port_group": "pgc_danh_22_genenve"
+            },
+            {
+                "alias_name": "ens4",
+                "ip_address": "172.20.23.14/24",
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:ee:01",
+                "port_group": "pgc_danh_23_storage"
+            }
+        ]
+    },
+    "controller01": {
+        "name": "ddops-ctrl01",
+        "networks": [
+            {
+                "alias_name": null,
+                "ip_address": "192.168.138.236/24",
+                "ipv4_gateway": "192.168.138.1",
+                "mac_address": "00:50:56:bf:a3:54",
+                "port_group": "pgc_VL138"
+            },
+            {
+                "alias_name": "ens1",
+                "ip_address": "172.20.20.11/24",
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:da:7f",
+                "port_group": "pgc_danh_20_internal"
+            },
+            {
+                "alias_name": "ens2",
+                "ip_address": "172.20.21.11/24",
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:75:7c",
+                "port_group": "pgc_danh_21_public"
+            },
+            {
+                "alias_name": "ens4",
+                "ip_address": "172.20.23.11/24",
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:03:92",
+                "port_group": "pgc_danh_23_storage"
+            }
+        ]
+    },
+    "network01": {
+        "name": "ddops-gw01",
+        "networks": [
+            {
+                "alias_name": null,
+                "ip_address": "192.168.138.238/24",
+                "ipv4_gateway": "192.168.138.1",
+                "mac_address": "00:50:56:bf:20:63",
+                "port_group": "pgc_VL138"
+            },
+            {
+                "alias_name": "ens1",
+                "ip_address": "172.20.20.13/24",
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:e1:0e",
+                "port_group": "pgc_danh_20_internal"
+            },
+            {
+                "alias_name": "ens3",
+                "ip_address": "172.20.22.13/24",
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:07:73",
+                "port_group": "pgc_danh_22_genenve"
+            },
+            {
+                "alias_name": "eth1",
+                "ip_address": null,
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:e9:25",
+                "port_group": "pgc_danh_provider_flat"
+            },
+            {
+                "alias_name": "eth2",
+                "ip_address": null,
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:ac:ac",
+                "port_group": "pgc_danh_provider_vlan"
+            },
+            {
+                "alias_name": "eth3",
+                "ip_address": null,
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:96:be",
+                "port_group": "pgc_danh_provider_vlan"
+            },
+            {
+                "alias_name": "eth4",
+                "ip_address": null,
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:69:43",
+                "port_group": "pgc_danh_provider_vlan"
+            },
+            {
+                "alias_name": "eth5",
+                "ip_address": null,
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:bd:19",
+                "port_group": "pgc_danh_provider_vlan"
+            },
+            {
+                "alias_name": "eth6",
+                "ip_address": null,
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:ef:ff",
+                "port_group": "pgc_danh_provider_vlan"
+            },
+            {
+                "alias_name": "eth7",
+                "ip_address": null,
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:9d:81",
+                "port_group": "pgc_danh_provider_vlan"
+            }
+        ]
+    },
+    "network02": {
+        "name": "ddops-gw02",
+        "networks": [
+            {
+                "alias_name": null,
+                "ip_address": "192.168.138.241/24",
+                "ipv4_gateway": "192.168.138.1",
+                "mac_address": "00:50:56:bf:d8:19",
+                "port_group": "pgc_VL138"
+            },
+            {
+                "alias_name": "ens1",
+                "ip_address": "172.20.20.15/24",
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:dd:f5",
+                "port_group": "pgc_danh_20_internal"
+            },
+            {
+                "alias_name": "ens3",
+                "ip_address": "172.20.22.15/24",
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:a7:f3",
+                "port_group": "pgc_danh_22_genenve"
+            },
+            {
+                "alias_name": "eth1",
+                "ip_address": null,
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:78:ca",
+                "port_group": "pgc_danh_provider_flat"
+            },
+            {
+                "alias_name": "eth2",
+                "ip_address": null,
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:37:01",
+                "port_group": "pgc_danh_provider_vlan"
+            },
+            {
+                "alias_name": "eth3",
+                "ip_address": null,
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:0e:0b",
+                "port_group": "pgc_danh_provider_vlan"
+            },
+            {
+                "alias_name": "eth4",
+                "ip_address": null,
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:fd:a1",
+                "port_group": "pgc_danh_provider_vlan"
+            },
+            {
+                "alias_name": "eth5",
+                "ip_address": null,
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:f5:56",
+                "port_group": "pgc_danh_provider_vlan"
+            },
+            {
+                "alias_name": "eth6",
+                "ip_address": null,
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:68:0c",
+                "port_group": "pgc_danh_provider_vlan"
+            },
+            {
+                "alias_name": "eth7",
+                "ip_address": null,
+                "ipv4_gateway": null,
+                "mac_address": "00:50:56:bf:1e:57",
+                "port_group": "pgc_danh_provider_vlan"
+            }
+        ]
+    }
+}

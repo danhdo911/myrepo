@@ -1,3 +1,6 @@
 variables:
-  ENVIRONMENT: dev03
-  PROJECT: openstack_cgw_provision
+  ENVIRONMENT: dev02
+  PROJECT: openstack_cgw_provision_s3
+
+  AWS_DEFAULT_REGION: "ap-southeast-1"
+  AWS_ROLE_ARN: "arn:aws:iam::654654214706:role/higio-role-readonly"

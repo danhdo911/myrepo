@@ -29,20 +29,35 @@ default:
   artifacts:
     when: on_success
     access: none
-    expire_in: "1 days"
+    expire_in: 1 days
 
   cache:
-    key: cache-${ENVIRONMENT}-${PROJECT}
-    paths:
-      - ${TF_ROOT}/.terraform
-      - ${TF_ROOT}/.terraform.lock.hcl
-      - ${TF_ROOT}/.terraform/providers/
-    policy: pull-push
+    - key: cache-${ENVIRONMENT}-${PROJECT}
+      paths:
+        - ${TF_ROOT}/.terraform
+        - ${TF_ROOT}/.terraform.lock.hcl
+        - ${TF_ROOT}/.terraform/providers/
+      policy: pull-push
+    - key: cache-aws-creds
+      paths:
+        - ./aws_credentials
+        - ./aws_config
+      policy: pull
 
-  tags: [dd-runner-dind]
+  before_script: &registry_login
+    - echo "${HARBOR_PASSWORD}" | docker login -u ${HARBOR_USER} ${HARBOR_REGISTRY} --password-stdin
+
+  tags: ["${SERVER_RUNNER_TAG}"]
 
 #================================ Workflow ================================#
-
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && 
+           $CI_PIPELINE_SOURCE == "push"'
+      when: always
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - when: never
 
 #================================ Jobs ================================#
 stages:
@@ -53,42 +68,86 @@ stages:
   - clean
 
 #======================#
-# update-code:
-#   stage: pre-build
-#   environment: ${ENVIRONMENT}
-#   script:
-#     - git submodule status
-
 generate-env:
   stage: pre-build
   environment: ${ENVIRONMENT}
+  cache: []
+  before_script: []
   script:
     - |
       cat > .env << EOF
-      VAULT_ADDR="${VAULT_ADDR}"
-      VAULT_TOKEN="${VAULT_TOKEN}"
       PROJECT_DIR="${CI_PROJECT_DIR}"
       WORK_DIR=/workspace
       ANSIBLE_CONFIG=/workspace/ansible.cfg
-      TF_LOG=DEBUG
+      VAULT_ADDR="${VAULT_ADDR}"
+      VAULT_TOKEN="${VAULT_TOKEN}"
       TF_PROJECT="${PROJECT}"
+      TF_LOG=DEBUG
       TF_VAR_vault_path_base="${VAULT_SECRET_PATH_BASE}"
       TF_VAR_vault_secret_path="${VAULT_SECRET_PATH}"
       TF_VAR_vault_secret_data="${VAULT_SECRET_DATA}"
       AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}"
       AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
+      AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION}"
+      AWS_CONFIG_FILE="/workspace/aws_config"
+      AWS_SHARED_CREDENTIALS_FILE="/workspace/aws_credentials"
       EOF
   artifacts:
     paths:
       - .env
+
+aws-credentials:
+  stage: pre-build
+  environment: ${ENVIRONMENT}
+  cache: []
+  before_script: []
+  script:
+    - |
+      cat > aws_config << EOF
+      [default]
+      region = ap-southeast-1
+      output = json
+      EOF
+    - |
+      cat > aws_credentials << EOF
+      [default]
+      aws_access_key_id = ${AWS_ACCESS_KEY_ID}
+      aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}
+      mfa_serial = ${AWS_MFA_SERIAL}
+      mfa_seed = ${AWS_MFA_SEED}
+      
+      [default_mfa]
+
+      [default_dev_tfstate]
+      source_profile = default_mfa
+      role_arn = ${AWS_ROLE_ARN}
+      EOF
+  artifacts:
+    paths:
+      - aws_credentials
+      - aws_config
+
+aws-fetch-creds:
+  stage: pre-build
+  environment: ${ENVIRONMENT}
+  needs:
+    - generate-env
+    - aws-credentials
+  script:
+    - make aws_fetch_creds
+  cache:
+    key: cache-aws-creds
+    paths:
+      - ./aws_credentials
+      - ./aws_config
+    policy: pull-push
 
 terraform-build:
   stage: build
   environment: ${ENVIRONMENT}
   needs:
     - generate-env
-  before_script: 
-    - echo "${HARBOR_PASSWORD}" | docker login -u ${HARBOR_USER} ${HARBOR_REGISTRY} --password-stdin
+    - aws-fetch-creds
   script:
     - make terraform_build ENV=${ENVIRONMENT} PROJECT=${PROJECT}
   artifacts:
@@ -100,10 +159,9 @@ terraform-deploy:
   environment: ${ENVIRONMENT}
   needs:
     - generate-env
+    - aws-fetch-creds
     - terraform-build
   when: on_success
-  before_script: 
-    - echo "${HARBOR_PASSWORD}" | docker login -u ${HARBOR_USER} ${HARBOR_REGISTRY} --password-stdin
   script:
     - make terraform_deploy ENV=${ENVIRONMENT} PROJECT=${PROJECT}
   rules:
@@ -116,12 +174,13 @@ terraform-deploy:
 setup-os:
   stage: configure
   environment: ${ENVIRONMENT}
+  cache: []
   needs:
     - generate-env
     - terraform-deploy
   when: on_success
   before_script: 
-    - echo "${HARBOR_PASSWORD}" | docker login -u ${HARBOR_USER} ${HARBOR_REGISTRY} --password-stdin
+    - *registry_login
     - echo "${VM_SSH_PRIVATE_KEY}" | base64 -d > ${CI_PROJECT_DIR}/vm_private_key
     - chmod 600 ${CI_PROJECT_DIR}/vm_private_key
   script:
@@ -135,8 +194,7 @@ terraform-destroy:
   environment: ${ENVIRONMENT}
   needs:
     - generate-env
-  before_script: 
-    - echo "${HARBOR_PASSWORD}" | docker login -u ${HARBOR_USER} ${HARBOR_REGISTRY} --password-stdin
+    - aws-fetch-creds
   script:
     - make terraform_clean ENV=${ENVIRONMENT} PROJECT=${PROJECT}
   rules:

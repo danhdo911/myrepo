@@ -1,7 +1,7 @@
 resource "vsphere_virtual_machine" "vm" {
 
-  wait_for_guest_ip_timeout  = 10
-  wait_for_guest_net_timeout = 10
+  wait_for_guest_ip_timeout  = 0
+  wait_for_guest_net_timeout = 0
 
   for_each = var.vm_configs
 

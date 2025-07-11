@@ -13,6 +13,9 @@
 **/*.out
 
 **/.env
+
+**/*.old
+
 # Editor/IDE files (optional)
 *.swp
 *.swo

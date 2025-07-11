@@ -1,0 +1,96 @@
+---
+- name: Configure general settings
+  hosts: all 
+  become: true
+
+  tasks:
+    - name: Disable the ufw firewall (on Ubuntu, if configured).
+      service:
+        name: ufw
+        state: stopped
+        enabled: false
+      when:
+        - ansible_distribution == "Ubuntu"
+
+    - name: Clean old cache
+      ansible.builtin.apt:
+        clean: yes
+
+    - name: Update package list
+      ansible.builtin.apt:
+        update_cache: yes
+
+    # - name: Upgrade all packages
+    #   ansible.builtin.apt:
+    #     upgrade: dist
+    #     autoremove: yes
+    #     autoclean: yes
+
+    # - name: Remove 127.0.1.1 controller entry from /etc/hosts
+    #   ansible.builtin.lineinfile:
+    #     path: /etc/hosts
+    #     regexp: "^127\\.0\\.1\\.1\\s+controller$"
+    #     state: absent
+
+    # - name: Ensure required host entries are in /etc/hosts
+    #   ansible.builtin.lineinfile:
+    #     path: /etc/hosts
+    #     create: yes
+    #     line: "{{ item }}"
+    #   loop:
+    #     - "{{ controller_ip }} {{ controller_name }}"
+    #     - "{{ compute_ip }} {{ compute_name }}"
+
+    # - name: Install common packages
+    #   ansible.builtin.apt:
+    #     name:
+    #       - nano
+    #       - iputils-ping
+    #       - glances
+    #       - curl
+    #       - jq
+    #     state: present
+
+    - name: Enable root login in SSH config
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin yes'
+        state: present
+
+    - name: Allow password authentication in SSH
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication'
+        line: 'PasswordAuthentication yes'
+        state: present
+
+    - name: Restart SSH service
+      systemd:
+        name: ssh
+        state: restarted
+        enabled: yes
+
+    - name: Set root password
+      user:
+        name: root
+        password: "{{ root_passwd | password_hash('sha512') }}"
+        update_password: always
+
+    - name: Ensure .ssh directory exists
+      file:
+        path: /root/.ssh
+        state: directory
+        mode: '0700'
+        owner: root
+        group: root
+
+    - name: Copy SSH public key to authorized_keys
+      authorized_key:
+        user: root
+        key: "{{ vm_ssh_public_key }}"
+        state: present
+
+    # - name: Reboot server to apply GRUB changes
+    #   ansible.builtin.reboot:
+    #     reboot_timeout: 300

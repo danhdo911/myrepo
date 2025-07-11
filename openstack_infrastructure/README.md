@@ -4,9 +4,10 @@
 
 - Packages: docker, docker-compose
 
-- Docker Image:
+- Docker Images:
   - harbor.iij.com.vn/customized-images/ansible:2.0
   - harbor.iij.com.vn/customized-images/terraform:1.10.3
+  - harbor.iij.com.vn/customized-images/ci-deploy:1.0 (run with CI pipeline)
 
 - Clone repo with submodule:
 
@@ -21,7 +22,8 @@
 ├── ansible     # logic code - submodule
 ├── terraform   # logic code - submodule
 ├── deploy
-│   └── openstack_infras_provision # provision openstack management nodes
+│   ├── openstack_cgw_provision     # provision openstack cgw nodes
+│   └── openstack_infras_provision
 ├── environments
 │   ├── lab199
 │   │   ├── group_vars

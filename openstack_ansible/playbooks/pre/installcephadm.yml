@@ -1,0 +1,150 @@
+---
+- import_playbook: 02_os_init.yml
+- import_playbook: installdocker.yml
+
+- name: Add Ceph Repository
+  hosts: ceph
+  become: yes
+
+  vars:
+    ceph_bootstrap: "{{ groups['ceph'][0] }}"
+
+  tasks:
+    - name: Ensure required host entries are in /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        create: yes
+        line: "{{ hostvars[item].ansible_host }} {{ item }}"
+        state: present
+      loop: "{{ groups['ceph'] }}"
+
+    - name: Install required dependencies
+      apt:
+        name:
+          - wget
+          - gnupg
+          - iputils-ping
+        state: present
+      tags: [_bootstrap]
+
+    - name: Create keyrings directory (if not exists)
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+      when: inventory_hostname == ceph_bootstrap
+      tags: [_bootstrap]
+
+    - name: Download Ceph GPG key and convert to ASCII format
+      ansible.builtin.shell: |
+        wget -q -O- 'https://download.ceph.com/keys/release.asc' | gpg --dearmor -o /etc/apt/keyrings/cephadm.gpg
+      args:
+        creates: /etc/apt/keyrings/cephadm.gpg
+      when: inventory_hostname == ceph_bootstrap
+      tags: [_bootstrap]
+
+    - name: Add Ceph APT repository
+      ansible.builtin.copy:
+        content: "deb [signed-by=/etc/apt/keyrings/cephadm.gpg] https://download.ceph.com/debian-reef/ {{ ansible_distribution_release }} main\n"
+        dest: /etc/apt/sources.list.d/cephadm.list
+        mode: '0644'
+      when: inventory_hostname == ceph_bootstrap
+      tags: [_bootstrap]
+
+    - name: Update APT cache
+      apt:
+        update_cache: yes
+      when: inventory_hostname == ceph_bootstrap
+      tags: [_bootstrap]
+
+    - name: Check Cephadm package policy
+      command: apt-cache policy cephadm
+      register: cephadm_policy
+      changed_when: false
+      when: inventory_hostname == ceph_bootstrap
+      tags: [_bootstrap]
+
+    - name: Display Cephadm package policy
+      debug:
+        msg: "{{ cephadm_policy.stdout_lines }}"
+      when: inventory_hostname == ceph_bootstrap
+      tags: [_bootstrap]
+
+    - name: Install Cephadm
+      apt:
+        name: cephadm
+        state: present
+      when: inventory_hostname == ceph_bootstrap
+      tags: [_bootstrap]
+
+    - name: Initialize Ceph Cluster Monitor
+      shell: |
+        set -o pipefail
+        stdbuf -oL cephadm bootstrap --mon-ip={{ hostvars[ceph_bootstrap].ansible_host }} \
+        --cluster-network {{ ansible_default_ipv4.address | ansible.utils.ipaddr('cidr') }} \
+        --initial-dashboard-password="{{ ceph_admin_password }}" \
+        --dashboard-password-noupdate \
+        --allow-fqdn-hostname | tee {{ ceph_bootstrap_log }}
+        touch {{ ceph_bootstrap_done_flag }}
+      args:
+        executable: /bin/bash
+        creates: "{{ ceph_bootstrap_done_flag }}" 
+      when: inventory_hostname == ceph_bootstrap
+      tags: [_bootstrap]
+    
+    - name: Install Ceph common
+      shell: |
+        cephadm add-repo --release reef
+        cephadm install ceph-common
+      args:
+        executable: /bin/bash
+      when: inventory_hostname == ceph_bootstrap
+      tags: [_bootstrap]
+
+    - name: Read ceph.pub from bootstrap node
+      slurp:
+        src: /etc/ceph/ceph.pub
+      register: ceph_pub_raw
+      run_once: true
+      when: inventory_hostname == ceph_bootstrap
+      tags: [_addnodes]
+
+    - name: Decode ceph public key
+      set_fact:
+        ceph_pub_key: "{{ ceph_pub_raw.content | b64decode }}"
+      run_once: true
+      tags: [_addnodes]
+      
+    - name: Install ceph.pub into root's authorized_keys
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ ceph_pub_key }}"
+      tags: [_addnodes]
+
+    - name: Get list of hosts already in the cluster
+      command: cephadm shell -- ceph orch host ls --format=json
+      when: inventory_hostname == ceph_bootstrap
+      register: orch_hosts_raw
+      run_once: true
+      tags: [_addnodes]
+
+    - name: Extract hostnames that are already present
+      set_fact:
+        orch_hosts: "{{ (orch_hosts_raw.stdout | from_json) | map(attribute='hostname') | list }}"
+      run_once: true
+      tags: [_addnodes]
+
+    - name: Add missing Ceph hosts
+      command: cephadm shell -- ceph orch host add {{ item }}
+      loop: "{{ groups['ceph'] }}"
+      run_once: true
+      when: >
+        inventory_hostname == ceph_bootstrap and
+        item not in orch_hosts
+      tags: [_addnodes]
+
+    - name: Deploy OSD on all-available-devices
+      command: ceph orch apply osd --all-available-devices
+      delegate_to: "{{ ceph_bootstrap }}"
+      tags: [_deployosd]

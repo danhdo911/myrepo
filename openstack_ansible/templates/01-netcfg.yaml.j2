@@ -1,0 +1,26 @@
+network:
+  version: 2
+  ethernets:
+{% for net in vm_host_data.networks %}
+{% if net.alias_name is not none and net.alias_name | length > 0 %}
+    {{ net.alias_name }}:
+      dhcp4: false
+      dhcp6: false
+      mtu: {{ 9000 if net.alias_name != 'ens33' else 1500 }}
+{% if 'eth' not in net.alias_name %}
+      addresses:
+        - {{ net.ip_address }}
+{% if net.alias_name == 'ens33' %}
+      routes:
+        - to: default
+          via: {{ net.ipv4_gateway }}
+      nameservers:
+              addresses: {{ dns_servers | to_json }}
+{% endif %}
+{% endif %}
+      match:
+        macaddress: {{ net.mac_address }}
+      set-name: {{ net.alias_name }}
+{% endif %}
+
+{% endfor %}

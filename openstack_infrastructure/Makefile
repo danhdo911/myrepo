@@ -20,7 +20,13 @@ TF_JSON=output/$(ENV)-vms_info.json
 KOLLA_VENV=/root/kolla-venv/bin
 KOLLA_DIR=/etc/kolla
 KOLLA_INV=$(ENV_DIR)/kolla/multinode
-		
+
+.PHONY: aws_fetch_creds
+
+aws_fetch_creds:
+	docker compose -f docker-compose.yml run --rm terraform "\
+		/bin/sh update_aws_credentials.sh"
+
 ### TERRAFORM PROVISIONING OPENSTACK INFRASTRUCTURE (GS) #############################################################
 .PHONY: terraform_init terraform_plan terraform_apply terraform_output terraform_clean \
 		terraform_build terraform_deploy

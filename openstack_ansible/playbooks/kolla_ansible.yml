@@ -1,0 +1,130 @@
+---
+- name: Run kolla-ansible
+  hosts: localhost
+  gather_facts: no
+  become: true
+  become_user: root
+  connection: local
+
+  vars:
+    default_dir: "/root/"
+    kolla_dir: "/etc/kolla"
+    kolla_venv: "{{ default_dir }}kolla-venv/bin/activate"
+
+
+  tasks:
+    - name: Kolla install dependencies
+      shell: |
+        source {{ kolla_venv }}
+        kolla-ansible install-deps
+      args:
+        executable: /bin/bash
+      register: _dependencies
+      tags:
+        - dependencies
+        - predeploy
+
+    - name: Kolla generate password
+      shell: |
+        source {{ kolla_venv }}
+        kolla-genpwd
+      args:
+        executable: /bin/bash
+      register: _genpasswd
+      # when: >
+      #   _dependencies is succeeded
+      tags:
+        - rebuild
+        - predeploy
+        - genpwd
+
+    - name: Kolla create certificates
+      shell: |
+        source {{ kolla_venv }}
+        kolla-ansible certificates -i {{ default_dir }}multinode
+      args:
+        executable: /bin/bash
+      register: _certificates
+      # when: >
+      #   _dependencies is succeeded and 
+      #   _genpasswd is succeeded
+      tags:
+        - rebuild
+        - predeploy
+        - certificates
+
+    - name: Export CAs to /etc/ssl/certs/ca-certificates.crt
+      shell: |
+        cat /etc/kolla/certificates/ca/root.crt /etc/ssl/certs/ca-certificates.crt
+      tags:
+        - rebuild
+        - predeploy
+        - certificates
+
+    - name: Bootstrap servers with kolla deploy dependencies
+      shell: |
+        source {{ kolla_venv }}
+        kolla-ansible bootstrap-servers -i {{ default_dir }}multinode -vvv
+      args:
+        executable: /bin/bash
+      tags:
+        - rebuild
+        - predeploy
+        - bootstrap
+
+    - name: Pre-deployment checks for hosts
+      shell: |
+        source {{ kolla_venv }}
+        kolla-ansible precheck -i {{ default_dir }}multinode
+      args:
+        executable: /bin/bash
+      tags:
+        - rebuild
+        - predeploy
+        - precheck
+
+    - name: Proceed to actual OpenStack deployment
+      shell: |
+        set -o pipefail
+        source {{ kolla_venv }}
+        kolla-ansible deploy -i {{ default_dir }}multinode 2>&1 | tee /tmp/kolla_ansible.log
+      args:
+        executable: /bin/bash
+      environment:
+        ANSIBLE_FORCE_COLOR: "true"
+      tags:
+        - rebuild
+        - reconfigure
+        - deploy
+
+    - name: Post-deploy after OpenStack was successfuly deployed
+      shell: |
+        source {{ kolla_venv }}
+        kolla-ansible post-deploy -i {{ default_dir }}multinode
+      args:
+        executable: /bin/bash
+      tags:
+        - rebuild
+        - postdeploy
+
+    - name: Export CAs to /etc/kolla/admin-openrc.sh
+      shell: |
+        echo "export OS_CACERT=/etc/ssl/certs/ca-certificates.crt" >> /etc/kolla/admin-openrc.sh
+      tags:
+        - rebuild
+        - postdeploy
+
+    - name: Initial default image, sec group, flavors
+      shell: |
+        source {{ kolla_venv }}
+        source {{ kolla_dir }}/admin-openrc.sh
+        /iijvn/openstack/scripts/init_test.sh
+      tags:
+        - init
+    
+
+
+
+
+
+      

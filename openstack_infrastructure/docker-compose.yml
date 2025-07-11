@@ -6,7 +6,7 @@ services:
     working_dir: ${WORK_DIR}
     env_file:
       - .env
-    entrypoint: ["sh", "-c"]
+    entrypoint: ["/bin/sh", "-c"]
 
   ansible:
     image: harbor.iij.com.vn/customized-images/ansible:2.0
