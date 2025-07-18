@@ -38,7 +38,7 @@ default:
         - ${TF_ROOT}/.terraform.lock.hcl
         - ${TF_ROOT}/.terraform/providers/
       policy: pull-push
-    - key: cache-aws-creds
+    - key: cache-${ENVIRONMENT}-aws-creds
       paths:
         - ./aws_credentials
         - ./aws_config
@@ -96,10 +96,9 @@ generate-env:
     paths:
       - .env
 
-aws-credentials:
+aws-create-creds:
   stage: pre-build
   environment: ${ENVIRONMENT}
-  cache: []
   before_script: []
   script:
     - |
@@ -122,21 +121,23 @@ aws-credentials:
       source_profile = default_mfa
       role_arn = ${AWS_ROLE_ARN}
       EOF
-  artifacts:
+  cache:
+    key: cache-${ENVIRONMENT}-aws-creds
     paths:
-      - aws_credentials
-      - aws_config
+      - ./aws_credentials
+      - ./aws_config
+    policy: pull-push
 
 aws-fetch-creds:
   stage: pre-build
   environment: ${ENVIRONMENT}
   needs:
     - generate-env
-    - aws-credentials
+    - aws-create-creds
   script:
     - make aws_fetch_creds
   cache:
-    key: cache-aws-creds
+    key: cache-${ENVIRONMENT}-aws-creds
     paths:
       - ./aws_credentials
       - ./aws_config

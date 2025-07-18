@@ -1,8 +1,5 @@
 ---
-- import_playbook: 02_os_init.yml
-- import_playbook: installdocker.yml
-
-- name: Add Ceph Repository
+- name: Setup Ceph
   hosts: ceph
   become: yes
 
@@ -17,6 +14,7 @@
         line: "{{ hostvars[item].ansible_host }} {{ item }}"
         state: present
       loop: "{{ groups['ceph'] }}"
+      tags: [_bootstrap, _addnodes]
 
     - name: Install required dependencies
       apt:
@@ -25,6 +23,8 @@
           - gnupg
           - iputils-ping
         state: present
+        update_cache: true
+        cache_valid_time: 3600
       tags: [_bootstrap]
 
     - name: Create keyrings directory (if not exists)
@@ -51,11 +51,11 @@
       when: inventory_hostname == ceph_bootstrap
       tags: [_bootstrap]
 
-    - name: Update APT cache
-      apt:
-        update_cache: yes
-      when: inventory_hostname == ceph_bootstrap
-      tags: [_bootstrap]
+    # - name: Update APT cache
+    #   apt:
+    #     update_cache: yes
+    #   when: inventory_hostname == ceph_bootstrap
+    #   tags: [_bootstrap]
 
     - name: Check Cephadm package policy
       command: apt-cache policy cephadm
@@ -74,6 +74,8 @@
       apt:
         name: cephadm
         state: present
+        update_cache: true
+        cache_valid_time: 3600
       when: inventory_hostname == ceph_bootstrap
       tags: [_bootstrap]
 
@@ -145,6 +147,6 @@
       tags: [_addnodes]
 
     - name: Deploy OSD on all-available-devices
-      command: ceph orch apply osd --all-available-devices
+      command: ceph orch apply osd --all-available-devices --method raw
       delegate_to: "{{ ceph_bootstrap }}"
       tags: [_deployosd]

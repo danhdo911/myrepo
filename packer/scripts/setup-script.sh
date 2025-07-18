@@ -49,7 +49,17 @@ echo '==> Removing cloud-int networking...'
 sudo rm /etc/netplan/50-cloud-init.yaml
 
 echo "==> Disable cloud-init network"
+rm -f /etc/cloud/cloud.cfg.d/subiquity-disable-cloudinit-networking.cfg
+rm -f /etc/cloud/cloud.cfg.d/99-installer.cfg
+rm -f /etc/cloud/ds-identify.cfg
+rm -f /etc/netplan/00-installer-config.yaml
 sudo mkdir -p /etc/cloud/cloud.cfg.d
 sudo tee /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg > /dev/null <<EOF
 network: {config: disabled}
+EOF
+
+echo "==> Disable IPv6"
+sudo cat > /etc/sysctl.d/99-cloudimg-ipv6.conf <<EOF
+net.ipv6.conf.all.use_tempaddr = 0
+net.ipv6.conf.default.use_tempaddr = 0
 EOF

@@ -1,0 +1,9 @@
+---
+- ansible.builtin.import_playbook: pre/02_os_init.yml
+  tags: [_os_init]
+- ansible.builtin.import_playbook:  pre/04_chrony_setup.yml
+  tags: [ntp]
+- ansible.builtin.import_playbook: pre/installdocker.yml
+  tags: [_docker]
+- ansible.builtin.import_playbook: pre/installcephadm.yml
+  tags: [_bootstrap]

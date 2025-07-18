@@ -1,0 +1,29 @@
+#cloud-config
+autoinstall:
+    version: 1
+    locale: en_US
+    keyboard:
+        layout: us
+    packages: [open-vm-tools, openssh-server, nano, iputils-ping, curl, jq, glances]
+    user-data:
+        users:
+          - name: ubuntu
+            gecos: 'Ubuntu Admin'
+            passwd: '$y$j9T$/VqgGL5Kdu8g5nBKom/gj/$OLr1oqzq9QVElSKZzRezf5wm15/Pm3biPD8I1LANxg0'
+            shell: /bin/bash
+            lock_passwd: false
+            groups: [adm, sudo]
+            sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh:
+        install-server: yes
+        allow-pw: yes
+    apt:
+        primary:
+            - arches: [i386, amd64]
+              uri: "http://archive.ubuntu.com/ubuntu/"
+    late-commands: 
+      - sed -i -e 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/g' /target/etc/ssh/sshd_config
+      - lvresize -v -l +100%FREE /dev/mapper/ubuntu--vg-ubuntu--lv
+      - resize2fs -p /dev/mapper/ubuntu--vg-ubuntu--lv
+      - curtin in-target --target=/target -- apt-get update
+      - curtin in-target --target=/target -- apt-get upgrade --yes

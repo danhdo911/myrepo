@@ -44,7 +44,10 @@ hashi_vault_query_base: >-
 hashi_vault_datapath: "{{ lookup('ansible.builtin.env', 'TF_VAR_vault_secret_data') }}"
 hv: "{{ lookup(hashi_vault, hashi_vault_query_base+hashi_vault_datapath) }}"
 
-root_passwd: "P@ssw0rd"
+ntp_server: "192.168.138.235"
+timezone: "Asia/Ho_Chi_Minh"
+
+root_passwd: "{{ hv.root_passwd }}"
 vm_ssh_public_key: "{{ hv.vm_ssh_public_key }}"
 
 ceph_admin_password: "P@ssw0rd"
