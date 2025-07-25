@@ -64,6 +64,12 @@ variable "vm_network_card_type" { default = "vmxnet3" }
 # variable "vm_remote_type" {}
 variable "vm_ssh_port" { default = "22" }
 variable "vm_ssh_wait_timeout" { default = "30m" }
-variable "vm_user_login" {}
-variable "vm_user_password" {}
+variable "vm_user_login" { 
+  sensitive = true
+  default = "ubuntu" 
+}
+variable "vm_user_password" { 
+  sensitive = true
+  default = "ubuntu" 
+}
 # variable "vm_user_ssh_public_key" {}

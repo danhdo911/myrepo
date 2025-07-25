@@ -1,0 +1,20 @@
+---
+  - name: Check Kickstart connection
+    hosts: kickstart
+    gather_facts: false
+
+    tasks:
+      - name: Print connected host
+        debug:
+          msg: "Connected to host: {{ inventory_hostname }}"
+
+  - name: Checking HashiVault connection
+    hosts: localhost
+    connection: local
+    gather_facts: false
+
+    tasks:
+      - name: Show secret on HashiVault
+        ansible.builtin.debug:
+          msg: "vCenter username: {{ hv.vcenter_username }}"
+        ignore_errors: true

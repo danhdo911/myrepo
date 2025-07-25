@@ -1,0 +1,32 @@
+# inventory_directory: "{{ lookup('ansible.builtin.env', 'ANSIBLE_ENVIRONMENT_DIR') }}/{{ env_deployment }}/{{ env_inventory }}/"
+inventory_directory: "{{ lookup('ansible.builtin.env', 'ANSIBLE_ENVIRONMENT_DIR') }}/lab/lab247_gen18rs/"
+
+# vSphere tasks
+vsphere_role_directory: playbooks/roles/vsphere_setup/tasks/
+
+# Using for generate_var_env.yml
+script_path: "scripts/"
+generate_vars_script: "00_generate_vars.py"
+
+group_vars_path: "{{ inventory_directory }}group_vars/"
+data_dir: "{{ inventory_directory }}csvdata/"
+template_file_dir: "templates/"
+output_file_name: "vsphere_vars"
+
+# Output
+output_dir: "output/"
+
+# HashiVault
+hashi_vault: 'community.hashi_vault.hashi_vault'
+hashi_vault_query_base: >-
+  token_file={{ lookup('ansible.builtin.env', 'ANSIBLE_HASHI_VAULT_TOKEN_FILE') }}
+  secret={{ lookup('ansible.builtin.env', 'ANSIBLE_HASHI_VAULT_PATH_BASE') }}
+hashi_vault_datapath: "{{ lookup('ansible.builtin.env', 'ANSIBLE_HASHI_VAULT_DATAPATH') }}"
+hv: "{{ lookup(hashi_vault, hashi_vault_query_base+hashi_vault_datapath) }}"
+
+# Custom Attributes
+custom_attributes:
+  - name: "GitID"
+    value: "{{ lookup('ansible.builtin.env', 'CI_COMMIT_SHA_SHORT') }}"
+  - name: "GitTag"
+    value: "{{ lookup('ansible.builtin.env', 'CI_COMMIT_TAG') }}"

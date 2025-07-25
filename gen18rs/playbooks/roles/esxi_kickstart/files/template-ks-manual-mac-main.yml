@@ -1,0 +1,52 @@
+---
+# tasks file for esxi-kickstart
+## Manual declare MAC var and generate kickstart file
+
+- name: Create Kickstart file for ESXi hosts
+  copy:
+    content: |
+        ###Install ESXi Hypervisor
+        vmaccepteula
+        install --firstdisk=local --overwritevmfs --ignoreprereqwarnings --ignoreprereqerrors --forceunsupportedinstall
+
+        network --bootproto=static --ip={{ item.esxi_mgmt_ip }} --netmask={{ global_netmask }} --gateway={{ global_gw }} --nameserver={{ global_dns1 }} --hostname={{ item.esxi_hostname }}
+        rootpw {{ esxi_password }}
+        keyboard 'US Default'
+
+        reboot
+
+        ###Configurations at first boot
+        %firstboot --interpreter=busybox
+
+        # enable & start SSH
+        vim-cmd hostsvc/enable_ssh
+        vim-cmd hostsvc/start_ssh
+
+        # enable & start ESXi Shell
+        vim-cmd hostsvc/enable_esx_shell
+        vim-cmd hostsvc/start_esx_shell
+
+        # Suppress ESXi Shell warning
+        esxcli system settings advanced set -o /UserVars/SuppressShellWarning -i 1
+
+        # Disable ipv6
+        esxcli system module parameters set -m tcpip4 -p ipv6=0
+        esxcli network ip set --ipv6-enabled=false
+
+        # NTP
+        esxcli system ntp set --server={{ global_ntp1 }}
+        esxcli system ntp set --enabled=true
+
+        # Place ESXi host to maintenance mode
+        esxcli system maintenanceMode set --enable true
+
+        #Reboot
+        #esxcli system shutdown reboot --reason "OS installation finished"
+        reboot
+    dest: "{{ global_path_kickstart }}/{{ item.esxi_hostname }}.cfg"
+  with_items:
+        - "{{ esxi_inventory }}"
+  
+#   register: files_output
+
+# - debug: var=files_output

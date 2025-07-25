@@ -1,0 +1,23 @@
+---
+  - name: Ensure the Python script exists
+    ansible.builtin.stat:
+      path: "{{ script_path }}{{ generate_vars_script }}"
+    register: script_check
+  
+  - name: Print a debug message
+    ansible.builtin.debug:
+      var: script_check.stat.exists
+
+  - name: Run the Python script to generate variables file
+    ansible.builtin.command: python3 {{ script_path }}{{ generate_vars_script }} --output_file {{ group_vars_path }}{{ output_file_name }} --data_dir {{ data_dir }} --template_file_dir {{ template_file_dir }}
+    when: script_check.stat.exists
+
+  - name: Verify if the file was copied successfully
+    ansible.builtin.stat:
+      path: "{{ group_vars_path }}{{ output_file_name }}"
+    register: vars_file_check
+
+  - name: Display result of variable file
+    ansible.builtin.debug:
+      msg: "The file was generated successfully to {{ group_vars_path }}{{ output_file_name }}"
+    when: vars_file_check.stat.exists

@@ -1,0 +1,94 @@
+---
+# - name: Create dvSwitch "{{ vds_mgmt_pg_name }}" portgroup
+#   community.vmware.vmware_dvs_portgroup:
+#     hostname: "{{ vcenter_hostname }}"
+#     username: "{{ vcenter_username }}"
+#     password: "{{ vcenter_password }}"
+#     validate_certs: "{{ vcenter_validate_certs }}"
+#     portgroup_name: "{{ vds_mgmt_pg_name }}"
+#     switch_name: "{{ vds_switch01 }}"
+#     vlan_id: "{{ vds_mgmt_pg_vlanid }}"
+#     num_ports: 48
+#     port_binding: static
+#     state: present
+#   when: >
+#     vds_switch01 is defined and
+#     vds_mgmt_pg_name is defined and
+#     vds_mgmt_pg_vlanid is defined
+#   delegate_to: localhost
+
+- name: Add Host to dvSwitch - Step 1 (Add {{ item.esxi_vmnic_uplink2 }})
+  community.vmware.vmware_dvs_host:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    esxi_hostname: "{{ item.esxi_hostname }}"
+    validate_certs: "{{ vcenter_validate_certs }}"
+    # Specific Configuration
+    switch_name: "{{ vds_switch01 }}"
+    vmnics:
+        - "{{ item.esxi_vmnic_uplink2 }}"
+    state: present
+  # loop: "{{ esxi_info }}"
+  when: >
+    vds_switch01 is defined and
+    item.esxi_vmnic_uplink1 is defined and
+    item.esxi_vmnic_uplink2 is defined
+  delegate_to: localhost
+
+- name: Add Host to dvSwitch - Step 2 (Migrate vmkernel)
+  community.vmware.vmware_vmkernel:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    esxi_hostname: "{{ item.esxi_hostname }}"
+    validate_certs: "{{ vcenter_validate_certs }}"
+    # Specific Configuration
+    dvswitch_name: "{{ vds_switch01 }}"
+    portgroup_name: "{{ vds_mgmt_pg_name }}"
+    mtu: "{{ mtu_vmkernel | default(9000) }}"
+    network:
+      type: "static"
+      ip_address: "{{ item.esxi_mgmt_ip }}"
+      subnet_mask: "{{ default_netmask }}"
+    state: present
+    enable_mgmt: true
+  # loop: "{{ esxi_info }}"
+  when: >
+    vds_switch01 is defined and
+    vds_mgmt_pg_name is defined and
+    item.esxi_mgmt_ip is defined
+  delegate_to: localhost
+
+- name: Add Host to dvSwitch - Step 3 (Remove Standard Switch)
+  community.vmware.vmware_vswitch:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    esxi_hostname: "{{ item.esxi_hostname }}"
+    validate_certs: "{{ vcenter_validate_certs }}"
+    # Specific Configuration
+    switch_name: "{{ vss_default }}"
+    state: absent
+  # loop: "{{ esxi_info }}"
+  delegate_to: localhost
+
+- name: Add Host to dvSwitch - Step 4 (Add {{ item.esxi_vmnic_uplink1 }})
+  community.vmware.vmware_dvs_host:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    esxi_hostname: "{{ item.esxi_hostname }}"
+    validate_certs: "{{ vcenter_validate_certs }}"
+    # Specific Configuration
+    switch_name: "{{ vds_switch01 }}"
+    vmnics:
+        - "{{ item.esxi_vmnic_uplink1 }}"
+        - "{{ item.esxi_vmnic_uplink2 }}"
+    state: present
+  # loop: "{{ esxi_info }}"
+  when: >
+    vds_switch01 is defined and
+    item.esxi_vmnic_uplink1 is defined and
+    item.esxi_vmnic_uplink2 is defined
+  delegate_to: localhost

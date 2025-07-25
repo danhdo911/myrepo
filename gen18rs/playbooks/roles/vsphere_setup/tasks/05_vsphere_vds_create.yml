@@ -1,0 +1,34 @@
+---
+- name: Create dvSwitch
+  community.vmware.vmware_dvswitch:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: "{{ vcenter_validate_certs }}"
+    datacenter: "{{ datacenter_name }}"
+    switch: "{{ vds_name }}"
+    version: "{{ vds_version }}"
+    mtu: "{{ vds_mtu }}"
+    uplink_quantity: "{{ vds_uplinks }}"
+    discovery_protocol: lldp
+    discovery_operation: both
+    state: present
+  when: >
+    vds_name is defined
+  delegate_to: localhost
+
+# - name: Assign uplinks
+#   community.vmware.vmware_dvs_host:
+#     hostname: "{{ vcenter_hostname }}"
+#     username: "{{ vcenter_username }}"
+#     password: "{{ vcenter_password }}"
+#     esxi_hostname: "{{ item.esxi_mgmt_ip }}"
+#     validate_certs: "{{ vcenter_validate_certs }}"
+#     # Specific Configuration
+#     switch_name: "{{ vds_name }}"g
+#     vmnics:
+#         - "{{ esxi_vmnic_uplink1 }}"
+#         - "{{ esxi_vmnic_uplink2 }}"
+#     state: present
+#   loop: "{{ esxi_info }}"
+#   delegate_to: localhost

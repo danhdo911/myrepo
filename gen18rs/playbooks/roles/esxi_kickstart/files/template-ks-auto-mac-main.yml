@@ -1,0 +1,62 @@
+---
+# tasks file for esxi-kickstart
+## Get MAC from iDRAC and generate kickstart file
+    - name: Combine ESXi info with MAC addresses
+      set_fact:
+        combined_list: >-
+          {%- set combined = [] -%}
+          {%- for host, mac in esxi_info | zip(mac_addresses) -%}
+            {%- set _ = combined.append({'esxi_hostname': host.esxi_hostname, 'esxi_mgmt_ip': host.esxi_mgmt_ip, 'esxi_mac': mac}) -%}
+          {%- endfor -%}
+          {{ combined }}
+
+    - name: Debug combined list
+      debug:
+        var: combined_list
+
+    - name: Create Kickstart file for ESXi hosts
+      copy:
+        content: |
+            ###Install ESXi Hypervisor
+            vmaccepteula
+            install --firstdisk=local --overwritevmfs --ignoreprereqwarnings --ignoreprereqerrors --forceunsupportedinstall
+
+            network --bootproto=static --ip={{ item.esxi_mgmt_ip }} --netmask={{ global_netmask }} --gateway={{ global_gw }} --nameserver={{ global_dns1 }} --hostname={{ item.esxi_hostname }}
+            rootpw {{ esxi_password }}
+            keyboard 'US Default'
+
+            reboot
+
+            ###Configurations at first boot
+            %firstboot --interpreter=busybox
+
+            # enable & start SSH
+            vim-cmd hostsvc/enable_ssh
+            vim-cmd hostsvc/start_ssh
+
+            # enable & start ESXi Shell
+            vim-cmd hostsvc/enable_esx_shell
+            vim-cmd hostsvc/start_esx_shell
+
+            # Suppress ESXi Shell warning
+            esxcli system settings advanced set -o /UserVars/SuppressShellWarning -i 1
+
+            # Disable ipv6
+            esxcli system module parameters set -m tcpip4 -p ipv6=0
+            esxcli network ip set --ipv6-enabled=false
+
+            # NTP
+            esxcli system ntp set --server={{ global_ntp1 }}
+            esxcli system ntp set --enabled=true
+
+            # Place ESXi host to maintenance mode
+            esxcli system maintenanceMode set --enable true
+
+            #Reboot
+            #esxcli system shutdown reboot --reason "OS installation finished"
+            reboot
+        dest: "{{ global_path_kickstart }}/{{ item.esxi_mac }}.cfg"
+      loop: "{{ combined_list }}"
+
+  
+

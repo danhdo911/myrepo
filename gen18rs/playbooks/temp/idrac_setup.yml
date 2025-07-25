@@ -1,0 +1,44 @@
+---
+  - hosts: ansible
+    gather_facts: false
+    collections:
+      - dellemc.openmanage
+
+    tasks:
+        # - name: Gather iDRAC Info
+        #   dellemc.openmanage.idrac_system_info:
+        #     idrac_ip: "{{ idrac_ip }}"
+        #     idrac_user: "{{ idrac_user }}"
+        #     idrac_password: "{{ idrac_password }}"
+        #     validate_certs: "{{ idrac_validate_certs }}"
+        #   register: idrac_facts
+        #   delegate_to: localhost
+
+        # - debug:
+        #     var: idrac_facts
+
+      - name: Setup iDRAC Management
+        dellemc.openmanage.idrac_attributes:
+          idrac_ip: "{{ idrac_ip }}"
+          idrac_user: "{{ idrac_user }}"
+          idrac_password: "{{ idrac_password }}"
+          validate_certs: "{{ idrac_validate_certs }}"
+          system_attributes:
+            ServerOS.1.HostName: "{{ idrac_os_hostname }}"
+          idrac_attributes:
+            # NTP
+            NTPConfigGroup.1.NTPEnable: Enabled
+            NTPConfigGroup.1.NTP1: "{{ idrac_ntp1 }}"
+            NTPConfigGroup.1.NTP2: "{{ idrac_ntp2 }}"
+            NTPConfigGroup.1.NTP3: "{{ idrac_ntp3 }}"
+            # SNMP
+            SNMP.1.AgentEnable: Enabled
+            SNMP.1.AgentCommunity: "{{ idrac_snmp_CommunityString }}"
+            SNMP.1.SNMPProtocol: "{{ idrac_snmp_Protocol }}"
+            SNMP.1.DiscoveryPort: "{{ idac_snmp_DiscoveryPort }}"
+            SNMP.1.TrapFormat: "{{ idrac_snmp_TrapFormat }}"
+            SNMP.1.AlertPort: "{{ idrac_snmp_AlertPort }}"
+
+
+
+            

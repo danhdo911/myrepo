@@ -1,0 +1,16 @@
+DEFAULT menu.c32
+MENU TITLE {{ item.esxi_version }} Boot Menu - {{ item.esxi_macaddr }}
+NOHALT 1
+PROMPT 0
+TIMEOUT 300
+LABEL {{ item.esxi_version }}-interactive
+    KERNEL {{ item.esxi_version }}/mboot.c32
+    APPEND -c {{ item.esxi_version }}/boot.cfg
+    MENU LABEL ^Interactive {{ item.esxi_version }} installer
+LABEL {{ item.esxi_version }}-scripted
+    KERNEL {{ item.esxi_version }}/mboot.c32
+    APPEND -c {{ item.esxi_version }}/boot.cfg ks={{ global_http_ksconfig }}/{{ item.esxi_macaddr }}.cfg ip={{ item.esxi_mgmt_ip }} netmask={{ dhcp_mask }}{% if dhcp_vlanid is defined and dhcp_vlanid | string | default('', true) | length > 0 %} vlanid={{ dhcp_vlanid }}{% endif %}{{'\n'}}
+    MENU LABEL ^Automation {{ item.esxi_version }} installer - MACBOUND
+LABEL hddboot
+    LOCALBOOT 0x80
+    MENU LABEL ^Boot from local disk

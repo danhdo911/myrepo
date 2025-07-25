@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     vsphere = {
-      source = "vmware/vsphere"
+      source  = "vmware/vsphere"
       version = "~> 2.14.0"
     }
     vault = {
@@ -9,7 +9,7 @@ terraform {
       version = "~> 4.6.0"
     }
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
       version = "~> 6.2.0"
     }
   }

@@ -1,0 +1,231 @@
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && 
+           $CI_PIPELINE_SOURCE == "push" &&
+           $TAG_TO_DEPLOYMENT =~ /^v\d+\.\d+\.\d+(-[a-zA-Z0-9._-]+)?$/'
+      when: always  # Run only when the merge to main is successful with valid tag
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never  # Prevent pipeline from running on MR creation
+    - when: never  # Prevent all other cases
+
+# The specific environment to deployment
+include: /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/group_vars/.gitlab-ci-env.yml
+
+##################################################################
+image: harbor.iij.com.vn/customized-images/ci-deploy:1.0
+
+## Anchor templates - using this configure for all jobs such as: ssh cmd, after_script cmd, run manual job, tags, specific branch
+## Using ansible_key - Set permissions on the SSH private key file
+.ssh-script: &ssh-script
+  - umask 077
+  - echo "$SSH_PRIVATE_KEY" > /tmp/private_key
+  - chmod 600 /tmp/private_key
+
+## Common configuration for all jobs
+.common-option: &common-option
+  environment: '$ANSIBLE_ENVIRONMENT_INVENTORY'
+  before_script:
+    - *ssh-script
+  after_script:
+    # Remove the temporary key file
+    - rm -f /tmp/private_key
+  tags: [$SERVER_RUNNER_TAG]
+
+## Jobs
+stages:
+  - Pre-setup
+  - ESXi-install
+  - vSphere-setup
+  - Post-setup
+
+01-Update-Lastest-Code:
+  stage: Pre-setup
+  script:
+    # SSH into the server and execute commands
+    # - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER
+    #     "docker image ls | grep harbor.iij.com.vn/customized-images/ansible"
+    ### Update latest deployment repository
+    ### Update latest specific version code to use to depoyment (TAG)
+    ### Synce environment and group_vars
+    - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER
+        "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR && 
+          git fetch --all &&
+          git switch $CI_DEFAULT_BRANCH	&&
+          git pull origin $CI_DEFAULT_BRANCH &&
+          ./clone_repo.sh https://$GIT_USER:$GIT_TOKEN@gitlab.iij.com.vn/iijvn-randd/$REPO_MAIN_CODE_DIR.git $REPO_MAIN_CODE_DIR"       
+    - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER
+        "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR &&
+          git reset --hard HEAD &&
+          git fetch --all --tags --force &&
+          git checkout $TAG_TO_DEPLOYMENT &&
+          git pull origin $TAG_TO_DEPLOYMENT"
+    - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER
+        "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR && 
+          rsync -av . $REPO_MAIN_CODE_DIR/ --exclude={'.git','$REPO_MAIN_CODE_DIR'}"
+  <<: [*common-option]
+
+02-Prepare-Local-env:
+  stage: Pre-setup
+  needs:
+    - 01-Update-Lastest-Code
+  rules:
+    - if: '$TAG_TO_DEPLOYMENT =~ /^v\d+\.\d+\.\d+(-[a-zA-Z0-9._-]+)?$/'
+  script:
+    - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER
+        "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR && 
+          echo CI_COMMIT_SHA_SHORT=$(echo "$CI_COMMIT_SHA" | cut -c1-8) >> .env &&
+          ./scripts/verify_tag.sh $TAG_TO_DEPLOYMENT"
+  <<: [*common-option]
+
+03-Generate-vSphere-Variables:
+  stage: Pre-setup
+  needs:
+    - 01-Update-Lastest-Code
+  script:
+    - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER 
+        "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR &&
+          ./scripts/run_playbook.sh docker-compose.esxi.yml generate_vars_env.yml $ANSIBLE_ENVIRONMENT_DEPLOYMENT $ANSIBLE_ENVIRONMENT_INVENTORY"
+          #./scripts/run_playbook.sh <docker-compose file> <playbook> <env_deployment> <env_inventory>
+  <<: [*common-option]
+  # when: manual
+  allow_failure: false
+
+04-Check-Connections:
+  stage: Pre-setup
+  needs:
+    - 03-Generate-vSphere-Variables
+  script:
+    - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER 
+        "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR &&
+          ./scripts/run_playbook.sh docker-compose.esxi.yml check_connections.yml $ANSIBLE_ENVIRONMENT_DEPLOYMENT $ANSIBLE_ENVIRONMENT_INVENTORY" 
+  <<: [*common-option]
+  allow_failure: true
+
+# 01-Generate-Boot-and-Kickstart-Files:
+#   stage: ESXi-install
+#   needs:
+#     - 03-Generate-vSphere-Variables
+#   script:
+#     - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER 
+#         "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR &&
+#           ./scripts/run_playbook.sh docker-compose.esxi.yml generate_boot_and_ks_files.yml $ANSIBLE_ENVIRONMENT_DEPLOYMENT $ANSIBLE_ENVIRONMENT_INVENTORY" 
+#   <<: [*common-option]
+#   when: manual
+#   allow_failure: true #to accomplish the CI, the tasks would be failed due to the IPs is reachable after installed ESXi hosts  
+
+# 02-Export-ESXi-Inventory:
+#   stage: ESXi-install
+#   needs:
+#     - 03-Generate-vSphere-Variables
+#   script:
+#     - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER 
+#         "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR &&
+#           ./scripts/run_playbook.sh docker-compose.vsphere.yml pre_esxi_inventory.yml $ANSIBLE_ENVIRONMENT_DEPLOYMENT $ANSIBLE_ENVIRONMENT_INVENTORY"
+#   <<: [*common-option]
+#   when: manual
+#   allow_failure: false
+
+# 01-Add-ESXi-To-Datacenter:
+#   stage: vSphere-setup
+#   needs:
+#     - 03-Generate-vSphere-Variables
+#     - 02-Export-ESXi-Inventory
+#   script:
+#     - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER 
+#         "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR &&
+#           ./scripts/run_playbook.sh docker-compose.vsphere.yml site01.yml $ANSIBLE_ENVIRONMENT_DEPLOYMENT $ANSIBLE_ENVIRONMENT_INVENTORY"
+#   <<: [*common-option]
+#   when: manual
+#   allow_failure: false
+
+# 02-Assign-ESXi-License:
+#   stage: vSphere-setup
+#   needs:
+#     - 01-Add-ESXi-To-Datacenter
+#     - 02-Export-ESXi-Inventory
+#   script:
+#     - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER 
+#         "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR &&
+#           ./scripts/run_playbook.sh docker-compose.vsphere.yml site02.yml $ANSIBLE_ENVIRONMENT_DEPLOYMENT $ANSIBLE_ENVIRONMENT_INVENTORY"
+#   <<: [*common-option]
+#   when: manual
+
+# 03-Migrate-vSS-To-vDS:
+#   stage: vSphere-setup
+#   needs:
+#     - 01-Add-ESXi-To-Datacenter
+#     - 02-Export-ESXi-Inventory
+#   script:
+#     - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER 
+#         "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR &&
+#           ./scripts/run_playbook.sh docker-compose.vsphere.yml site03.yml $ANSIBLE_ENVIRONMENT_DEPLOYMENT $ANSIBLE_ENVIRONMENT_INVENTORY"
+#   <<: [*common-option]
+#   when: manual
+#   allow_failure: false
+
+# 04-Create-VMKernel-Services:
+#   stage: vSphere-setup
+#   needs:
+#     - 03-Migrate-vSS-To-vDS
+#     - 02-Export-ESXi-Inventory
+#   script:
+#     - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER 
+#         "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR &&
+#           ./scripts/run_playbook.sh docker-compose.vsphere.yml site04.yml $ANSIBLE_ENVIRONMENT_DEPLOYMENT $ANSIBLE_ENVIRONMENT_INVENTORY"
+#   <<: [*common-option]
+#   when: manual
+#   allow_failure: false
+
+# 01-Add-Custom-Attributes:
+#   stage: Post-setup
+#   needs:
+#     - 02-Prepare-Local-env
+#     - 02-Export-ESXi-Inventory
+#     - 04-Create-VMKernel-Services
+#   script:
+#     - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER 
+#         "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR &&
+#           ./scripts/run_playbook.sh docker-compose.vsphere.yml post_add_customattributes.yml $ANSIBLE_ENVIRONMENT_DEPLOYMENT $ANSIBLE_ENVIRONMENT_INVENTORY"
+#           #./scripts/run_playbook.sh <docker-compose file> <playbook> <env_deployment> <env_inventory>
+#     - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER
+#         "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR && 
+#           sed -i '/^CI_COMMIT_/d' .env"
+#   <<: [*common-option]
+#   when: manual
+
+# # 02-Check-SecureBoot-ESXi:
+# #   stage: Post-setup
+# #   needs:
+# #     - 02-Export-ESXi-Inventory
+# #     - 04-Create-VMKernel-Services
+# #   script:
+# #     - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER 
+# #         "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR &&
+# #           ./scripts/run_playbook_test.sh docker-compose.vsphere_custom.yml post_check_secureboot.yml output/esxi_dynamic_inventory.ini"
+# #           #./scripts/run_playbook.sh <docker-compose file> <playbook> <inventory>
+# #   <<: [*common-option]
+# #   when: manual
+
+# 03-Clean-ESXi-Inventory:
+#   stage: Post-setup
+#   needs:
+#     - 01-Add-Custom-Attributes
+#     # - 02-Check-SecureBoot-ESXi
+#   script:
+#     - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER
+#         "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR && 
+#           rm -f output/*.json &&
+#           rm -f output/*.ini"
+#   <<: [*common-option]
+#   when: manual
+
+# # 00-Clean-Vault-Token:
+#   # stage: Post-setup
+#   # before_script:
+#   #   - *ssh-script
+#   # script:
+#   #   # SSH into the runner server and execute commands
+#   #   - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER
+#   #       "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR && cat /dev/null > .vault-token"
+#   # <<: *common-option
+#   # when: manual

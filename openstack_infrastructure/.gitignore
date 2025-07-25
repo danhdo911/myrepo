@@ -16,6 +16,10 @@
 
 **/*.old
 
+**/*aws_*
+
+**/*private_key*
+
 # Editor/IDE files (optional)
 *.swp
 *.swo

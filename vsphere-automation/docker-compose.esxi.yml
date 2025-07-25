@@ -7,6 +7,7 @@ services:
     volumes:
       # mount repo
       - .:/iijvn/vsphere-automation
+    working_dir: /iijvn/vsphere-automation
     environment:
       ANSIBLE_ENVIRONMENT_DEPLOYMENT: ""
       ANSIBLE_ENVIRONMENT_INVENTORY: ""

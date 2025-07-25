@@ -1,0 +1,93 @@
+---
+- hosts: localhost 
+  name: Deploy the VCSA to an ESXi Host
+  gather_facts: false
+  connection: local
+
+  vars: 
+    esxi_address: 'vcenter199.lab.local'
+    esxi_username: 'danh.do@vsphere.local'
+    esxi_password: ''
+    datacenter: 'Datacenter'
+    cluster: 'IIJVN-vSAN'
+    datastore: 'IIJVN-vSAN'
+    resource_pool: 'DanhDo'
+
+    vcenter_hostname: 'dd-vcsa-247'
+    vcenter_address: '192.168.138.247'
+    vcenter_password: 'P@ssw0rd'
+    net_prefix: '24'
+    net_gateway: '192.168.138.1'
+    dns_servers: '192.168.138.240'
+    domain: 'dd-iaas.local'
+    searchpath: "dd-iaas.local"
+    vcsa_size: 'tiny'
+    vcsa_ova_file: '/data/sources/vcsa70u3/VCSA-70u3.ova'
+    vcsa_portgroup: 'pgc_VL138'
+
+    # esxi_address: '172.20.0.2'
+    # esxi_username: 'root'
+    # esxi_password: 'P@ssw0rd'
+
+    # vcenter_hostname: 'dd-vcsa-auto'
+    # vcenter_address: '172.20.0.10'
+    # vcenter_password: 'P@ssw0rd'
+    # net_prefix: '24'
+    # net_gateway: '172.20.0.1'
+    # dns_servers: '192.168.138.94'
+    # domain: 'dd-iaas.local'
+    # searchpath: "dd-iaas.local"
+    # vcsa_size: 'tiny'
+    # vcsa_portgroup: 'VM Network'
+    # vcsa_ova_file: '/data/sources/vcsa70u3/VCSA-70u3.ova'
+
+
+  tasks:
+  - name: Provisioning vCenter
+    vmware_deploy_ovf:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ esxi_password }}'
+      datacenter: '{{ datacenter }}'
+      cluster: '{{ cluster }}'
+      resource_pool: '{{ resource_pool }}'
+      datastore: '{{ datastore }}'
+      name: '{{ vcenter_hostname }}' 
+      ovf: '{{ vcsa_ova_file }}' 
+      wait_for_ip_address: true
+      validate_certs: no
+      inject_ovf_env: true
+      disk_provisioning: "thin"
+      networks:
+          "Network 1": "{{ vcsa_portgroup }}" 
+      properties:
+        DeploymentOption.value: '{{ vcsa_size }}'
+        guestinfo.cis.appliance.net.addr.family: 'ipv4'
+        guestinfo.cis.appliance.net.mode: 'static'
+        guestinfo.cis.appliance.net.addr: '{{ vcenter_address }}' 
+        guestinfo.cis.appliance.net.pnid: "{{ vcenter_hostname }}.{{ domain }}" 
+        guestinfo.cis.appliance.net.prefix: '{{ net_prefix }}' 
+        guestinfo.cis.appliance.net.gateway: '{{ net_gateway }}' 
+        guestinfo.cis.appliance.net.dns.servers: '{{ dns_servers }}' 
+        guestinfo.cis.appliance.root.passwd: '{{ vcenter_password }}' 
+        guestinfo.cis.ceip_enabled: false
+        # guestinfo.cis.deployment.autoconfig: true
+        guestinfo.cis.vmdir.password: '{{ vcenter_password }}' 
+        domain: '{{ domain }}'
+        searchpath: '{{ searchpath }}'
+    delegate_to: localhost
+    
+  - name: Wait for vCenter
+    community.vmware.vmware_about_info:
+      hostname: '{{ vcenter_address }}'
+      username: 'administrator@vsphere.local'
+      password: '{{ vcenter_password }}'
+      validate_certs: no
+    delegate_to: localhost
+    retries: 20
+    delay: 60
+    register: result           
+    until: result is succeeded
+
+  - debug:
+     var: result

@@ -1,0 +1,157 @@
+import csv
+from jinja2 import Template
+import os
+import argparse
+
+# Load the template from the .j2 file
+def load_template(file_path):
+    with open(file_path, 'r') as template_file:
+        return Template(template_file.read())
+
+# Parse general data CSV
+def parse_general_csv(file_path):
+    general_data = {}
+    with open(file_path, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            general_data = {
+                'esxi_username': row['esxi_username'],
+                'esxi_password': row['esxi_password'],
+                'esxi_validate_certs': row['esxi_validate_certs'],
+                'default_netmask': row['default_netmask'],
+                'default_gateway': row['default_gateway'],
+                'default_dns1': row['default_dns1'],
+                'default_dns2': row['default_dns2'],
+                'default_ntp1': row['default_ntp1'],
+                'default_ntp2': row['default_ntp2'],
+                'esxi_license': row['esxi_license']
+            }
+    return general_data
+
+# Parse ESXi-specific data CSV
+def parse_esxi_csv(file_path):
+    esxi_info = []
+    with open(file_path, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            # Convert MAC address from colons (:) to hyphens (-)
+            esxi_mac_address = row['esxi_macaddr'].replace(':', '-').lower()
+
+            esxi_info.append({
+                'esxi_version': row['esxi_version'],
+                'esxi_hostname': row['esxi_hostname'],
+                'esxi_mgmt_ip': row['esxi_mgmt_ip'],
+                'esxi_macaddr': esxi_mac_address,
+                'esxi_vmotion_ip': row['esxi_vmotion_ip'],
+                'esxi_backupnfc_ip': row['esxi_backupnfc_ip'],
+                'esxi_iscsi_ip1': row['esxi_iscsi_ip1'],
+                'esxi_iscsi_ip2': row['esxi_iscsi_ip2'],
+                'esxi_replication_ip': row['esxi_replication_ip'],
+                # 'esxi_replication_backup_ip': row['esxi_replication_backup_ip'],
+                'esxi_vmnic_uplink1': row['esxi_vmnic_uplink1'],
+                'esxi_vmnic_uplink2': row['esxi_vmnic_uplink2'],
+                'esxi_vmnic_uplink3': row['esxi_vmnic_uplink3'],
+                'esxi_vmnic_uplink4': row['esxi_vmnic_uplink4']
+            })
+    return esxi_info
+
+# Parse vCenter-specific data CSV
+def parse_vcenter_csv(file_path):
+    vcenter_data = {}
+    with open(file_path, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            vcenter_data = {
+                'vcenter_hostname': row['vcenter_hostname'],
+                'vcenter_username': row['vcenter_username'],
+                'vcenter_password': row['vcenter_password'],
+                'vcenter_validate_certs': row['vcenter_validate_certs'],
+                # 'vcenter_timezone': row['vcenter_timezone'],
+                # 'vcenter_snmp_url': row['vcenter_snmp_url'],
+                # 'vcenter_snmp_port': row['vcenter_snmp_port'],
+                # 'vcenter_snmp_community': row['vcenter_snmp_community'],
+                'datacenter_name': row['datacenter_name'],
+                'cluster_name': row['cluster_name'],
+                # 'evc_mode': row['evc_mode'],
+                # 'automation_level': row['automation_level'],
+                # 'migration_threshold': row['migration_threshold'],
+                # 'predictive_drs': row['predictive_drs'],
+                'vss_default': row['vss_default'],
+                # 'vss_default_pg_name': row['vss_default_pg_name'],
+                # 'vss_default_nic': row['vss_default_nic'],
+                # 'vss_default_vlanid': row['vss_default_vlanid'],
+                # 'vds_version': row['vds_version'],
+                # 'vds_mtu': row['vds_mtu'],
+                # 'vds_uplinks': row['vds_uplinks'],
+                'vds_switch01': row['vds_switch01'],
+                'vds_switch02': row['vds_switch02'],
+                'vds_mgmt_pg_name': row['vds_mgmt_pg_name'],
+                'vds_mgmt_pg_vlanid': row['vds_mgmt_pg_vlanid'],
+                'vds_vmotion_pg_name': row['vds_vmotion_pg_name'],
+                'vds_vmotion_pg_vlanid': row['vds_vmotion_pg_vlanid'],
+                'vds_vmotion_gateway': row['vds_vmotion_gateway'],
+                'vds_vmotion_netmask': row['vds_vmotion_netmask'],
+                'vds_backupnfc_pg_name': row['vds_backupnfc_pg_name'],
+                'vds_backupnfc_pg_vlanid': row['vds_backupnfc_pg_vlanid'],
+                'vds_backupnfc_gateway': row['vds_backupnfc_gateway'],
+                'vds_backupnfc_netmask': row['vds_backupnfc_netmask'],
+                'vds_iscsi_pg_name_1': row['vds_iscsi_pg_name_1'],
+                'vds_iscsi_pg_vlanid_1': row['vds_iscsi_pg_vlanid_1'],
+                'vds_iscsi_gateway_1': row['vds_iscsi_gateway_1'],
+                'vds_iscsi_netmask_1': row['vds_iscsi_netmask_1'],
+                'vds_iscsi_pg_name_2': row['vds_iscsi_pg_name_2'],
+                'vds_iscsi_pg_vlanid_2': row['vds_iscsi_pg_vlanid_2'],
+                'vds_iscsi_gateway_2': row['vds_iscsi_gateway_2'],
+                'vds_iscsi_netmask_2': row['vds_iscsi_netmask_2'],
+                'vds_replication_pg_name': row['vds_replication_pg_name'],
+                'vds_replication_pg_vlanid': row['vds_replication_pg_vlanid'],
+                'vds_replication_gateway': row['vds_replication_gateway'],
+                'vds_replication_netmask': row['vds_replication_netmask']
+                # 'vds_replication_backup_pg_name': row['vds_replication_backup_pg_name'],
+                # 'vds_replication_backup_pg_vlanid': row['vds_replication_backup_pg_vlanid'],
+                # 'vds_replication_backup_gateway': row['vds_replication_backup_gateway'],
+                # 'vds_replication_backup_netmask': row['vds_replication_backup_netmask']
+            }
+    return vcenter_data
+
+# Render the template with the combined data
+def render_template(template, general_data, esxi_info, vcenter_data):
+    general_data['esxi_info'] = esxi_info
+    combined_data = {**general_data, **vcenter_data}  # Combine general and vCenter data
+    return template.render(combined_data)
+
+# Main function
+if __name__ == "__main__":
+    # root_path = os.path.dirname(os.path.abspath(__file__))
+    
+    # Parse arguments to accept the output file name from the command line
+    parser = argparse.ArgumentParser(description="Generate a filled template from CSV files.")
+    parser.add_argument("--output_file", type=str, required=True, help="Path to the output YAML file.")
+    parser.add_argument("--data_dir", type=str, required=True, help="Path to the directory containing the CSV files and Template.")
+    args = parser.parse_args()
+
+    # Use the custom directory for CSV files
+    data_dir = os.path.abspath(args.data_dir)
+
+    # File paths
+    general_csv_file = os.path.join(data_dir, '01_general_data.csv')
+    esxi_csv_file = os.path.join(data_dir, '02_esxi_data.csv')
+    vcenter_csv_file = os.path.join(data_dir, '03_vcenter_data.csv')
+    template_file_path = os.path.join(data_dir, '10_template_vars.j2')
+    
+    # Load the template from the .j2 file
+    template = load_template(template_file_path)
+    
+    # Parse the CSV files
+    general_data = parse_general_csv(general_csv_file)
+    esxi_info = parse_esxi_csv(esxi_csv_file)
+    vcenter_data = parse_vcenter_csv(vcenter_csv_file)
+    
+    # Render the template
+    rendered_output = render_template(template, general_data, esxi_info, vcenter_data)
+    
+    # Write the output to a file (using the argument passed from the playbook)
+    with open(args.output_file, 'w') as f:
+        f.write(rendered_output)
+
+    print(f"Template filled and saved to '{args.output_file}'")

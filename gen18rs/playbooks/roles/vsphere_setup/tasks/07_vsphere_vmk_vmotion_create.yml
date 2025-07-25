@@ -1,0 +1,45 @@
+---
+  - block:
+      # - name: Create vDS vMotion portgroup
+      #   community.vmware.vmware_dvs_portgroup:
+      #     hostname: "{{ vcenter_hostname }}"
+      #     username: "{{ vcenter_username }}"
+      #     password: "{{ vcenter_password }}"
+      #     validate_certs: "{{ vcenter_validate_certs }}"
+      #     portgroup_name: "{{ vds_vmotion_pg_name }}"
+      #     switch_name: "{{ vds_switch02 | default({{ vds_switch01 }}) }}"
+      #     vlan_id: "{{ vds_vmotion_pg_vlanid }}"
+      #     num_ports: 48
+      #     port_binding: static
+      #     state: present
+      #   delegate_to: localhost
+
+      - name: Add vMotion vmkernel port with vMotion TCP/IP stack
+        community.vmware.vmware_vmkernel:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          esxi_hostname: "{{ item.esxi_hostname }}"
+          # Specific Configuration
+          dvswitch_name: "{% if vds_switch02 | default(None) not in [None, ''] %}{{ vds_switch02 }}{% else %}{{ vds_switch01 }}{% endif %}"
+          portgroup_name: "{{ vds_vmotion_pg_name }}"
+          mtu: "{{ mtu_vmkernel | default(9000) }}"
+          enable_vmotion: true
+          network:
+            type: "static"
+            ip_address: "{{ item.esxi_vmotion_ip }}"
+            subnet_mask: "{{ vds_vmotion_netmask }}"
+            default_gateway: "{{ vds_vmotion_gateway }}"
+            # tcpip_stack: vmotion
+          state: present
+        loop: "{{ esxi_info }}"
+        when: >
+          item.esxi_vmotion_ip is defined         
+        delegate_to: localhost
+  
+    when: >
+      vds_vmotion_pg_name is defined and
+      vds_vmotion_gateway is defined and
+      vds_vmotion_netmask is defined and
+      vds_vmotion_pg_vlanid is defined

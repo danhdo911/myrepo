@@ -1,0 +1,52 @@
+---
+  - name: Gather all IPs into a list
+    set_fact:
+      all_ips: "{{ all_ips | default([]) + [item.esxi_mgmt_ip, item.esxi_vmotion_ip, item.esxi_backupnfc_ip, item.esxi_iscsi_ip1, item.esxi_iscsi_ip2, item.esxi_replication_ip] }}"
+    loop: "{{ esxi_inventory }}"
+  
+  - name: Remove duplicate IPs from the list
+    set_fact:
+      all_ips: "{{ all_ips | flatten | unique }}"
+
+  - name: Debug all IPs
+    debug:
+      msg: "All IPs: {{ all_ips }}"
+
+  - name: Validate IP address format
+    assert:
+      that:
+        - item is match("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")
+      fail_msg: "Invalid IP address format: {{ item }}"
+      success_msg: "Valid IP address format: {{ item }}"
+    loop: "{{ all_ips }}"
+    loop_control:
+      label: "{{ item }}"
+
+  - name: Ping each IP address
+    command: ping -c 3 {{ item }}
+    register: ping_results
+    ignore_errors: true
+    loop: "{{ all_ips }}"
+    loop_control:
+      label: "{{ item }}"
+
+  - name: Extract Available IPs
+    set_fact:
+      available_ips: "{{ ping_results.results | selectattr('rc', 'equalto', 1) | map(attribute='item') | list }}"
+
+  - name: Extract Used IPs
+    set_fact:
+      used_ips: "{{ ping_results.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
+
+
+  # - name: Debug available IPs
+  #   debug:
+  #     msg: 
+  #       - "Available IPs: {{ available_ips }}"
+  #       - "Used IPs: {{ used_ips }}"
+
+  # - name: Fail the playbook if any IP is reachable
+  #   fail:
+  #     msg: "One or more IPs are reachable: {{ used_ips }}"
+  #   when: used_ips | length > 0
+    

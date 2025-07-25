@@ -1,0 +1,9 @@
+---
+# tasks file for esxi-kickstart
+## Manual declare MAC var and generate kickstart file
+
+- name: Create Kickstart file for ESXi hosts
+  template:
+    src: ks.j2
+    dest: "{{ global_path_kickstart }}/{{ item.esxi_macaddr }}.cfg"
+  loop: "{{ esxi_inventory }}"

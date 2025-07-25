@@ -1,0 +1,12 @@
+---
+  - name: Check whether ESXi is added in VDS
+    block:
+      - name: Check if ESXi hosts are already on the vDS
+        community.vmware.vmware_dvswitch_info:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          switch_name: "{{ vds_switch01 }}"
+        register: _vds_esxi_info
+

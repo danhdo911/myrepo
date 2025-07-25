@@ -1,0 +1,8 @@
+---
+- name: Check vCenter connection
+  hosts: localhost
+  gather_facts: false
+  connection: local
+
+  tasks:
+    - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}43_vcenter_checkconnection.yml"

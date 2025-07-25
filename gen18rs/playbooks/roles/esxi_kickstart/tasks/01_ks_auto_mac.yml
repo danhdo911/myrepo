@@ -1,0 +1,26 @@
+---
+# tasks file for esxi-kickstart
+## Get MAC from iDRAC and generate kickstart file
+    - name: Combine ESXi info with MAC addresses
+      set_fact:
+        combined_list: >-
+          {%- set combined = [] -%}
+          {%- for host, mac in esxi_info | zip(mac_addresses) -%}
+            {%- set _ = combined.append({'esxi_hostname': host.esxi_hostname, 'esxi_mgmt_ip': host.esxi_mgmt_ip, 'esxi_mac': mac}) -%}
+          {%- endfor -%}
+          {{ combined }}
+
+    - name: Debug combined list
+      debug:
+        var: combined_list
+
+    - name: Create Kickstart file for ESXi hosts
+      template:
+        src: ks.j2
+        dest: "{{ global_path_kickstart }}/{{ item.esxi_mac}}.cfg"
+      loop: "{{ combined_list }}"
+
+
+
+  
+

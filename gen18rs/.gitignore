@@ -1,0 +1,5 @@
+.env
+.vault-*
+id_rsa
+
+**/group_vars/vsphere_vars

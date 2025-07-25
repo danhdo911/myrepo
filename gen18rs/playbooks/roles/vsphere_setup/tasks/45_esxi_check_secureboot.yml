@@ -1,0 +1,4 @@
+---
+  - name: Run secure boot check command
+    ansible.builtin.shell: /usr/lib/vmware/secureboot/bin/secureBoot.py -s
+    register: secureboot_result

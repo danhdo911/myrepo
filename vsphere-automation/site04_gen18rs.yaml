@@ -1,0 +1,34 @@
+---
+  - hosts: localhost
+    gather_facts: false
+    connection: local
+
+    tasks:
+      - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}63_load_esxi_hosts.yml"
+  
+      # Add ESXi hosts to vDS if these hosts are missing.
+      - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}52_vsphere_host_add_to_vds.yml"
+        when: >
+          esxi_info | length > 0 and
+          vds_switch02 is defined and
+          vds_switch02 | default(None) not in [None, '']
+
+      # Create vmk1 - vSphere vMotion
+      - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}07_vsphere_vmk_vmotion_create.yml"
+        when: >
+          esxi_info | length > 0
+
+      # # Create vmk2 - vSphere Backup NFC
+      # - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}08_vsphere_vmk_backupnfc_create.yml"
+      #   when: >
+      #     esxi_info | length > 0
+
+      # 6 - Create vmk3, vmk4 - iSCSI
+      - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}09_vsphere_vmk_iscsi_create.yml"
+        when: >
+          esxi_info | length > 0
+
+      # 7 - Create vmk5 - vSphere Replication, vSphere Replication NFC 
+      - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}11_vsphere_vmk_replication_backup_create.yml"
+        when: >
+          esxi_info | length > 0

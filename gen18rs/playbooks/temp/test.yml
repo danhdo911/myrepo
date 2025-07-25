@@ -1,0 +1,26 @@
+---
+  - name: playbook custom 
+    hosts: localhost
+    gather_facts: false
+    connection: local
+
+    vars:
+      ovf_role_directory: roles/ovf/tasks/
+      vsphere_role_directory: roles/vsphere_setup/tasks/
+      inventory_hostname_short: vmtest
+
+      send_target_address: 192.168.138.242
+
+    tasks:
+      - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}{{ vspheretask }}"
+        loop:
+          - 52_vsphere_host_add_to_vds.yml
+        loop_control:
+          loop_var: vspheretask
+
+      # - ansible.builtin.include_tasks: "{{ ovf_role_directory }}{{ ovftask }}"
+      #   loop:
+      #     - pre.yml
+      #   loop_control:
+      #     loop_var: ovftask
+

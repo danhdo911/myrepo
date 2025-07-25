@@ -1,0 +1,6 @@
+---
+- hosts: kickstart
+  gather_facts: yes
+  
+  roles:
+    - server_pxeboot

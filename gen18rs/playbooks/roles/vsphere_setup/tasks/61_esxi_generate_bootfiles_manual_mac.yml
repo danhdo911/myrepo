@@ -1,0 +1,12 @@
+---
+  - name: Generate Kickstart File
+    include_role:
+      name: esxi_kickstart
+
+  - name: Generate Custom Boot
+    include_role:
+      name: esxi_custom_boot
+
+  - name: Update DHCP Configuration
+    include_role:
+      name: server_pxeboot

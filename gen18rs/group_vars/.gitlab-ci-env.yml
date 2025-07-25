@@ -1,0 +1,31 @@
+# Directories structure for specific environment
+# environments/
+# ├── lab/                  ==> ANSIBLE_ENVIRONMENT_DEPLOYMENT
+# │   ├── lab247_onesw/     ==> ANSIBLE_ENVIRONMENT_INVENTORY
+# │   │   ├── csvdata/
+# │   │   ├── group_vars/
+# │   │   ├── hosts
+# │   ├── lab247_twosw/
+# │   │   ├── ...
+# ├── production/
+# │   ├── prd_hcm10gen20/
+# │   │   ├── csvdata/
+# │   │   ├── group_vars/
+# │   │   ├── hosts
+# │   ├── prd_fhn05gen20/
+# │   │   ├── csvdata/
+# │   │   ├── group_vars/
+# │   │   ├── hosts
+# │   ├── ...
+# ├── ...
+##########################################################################################
+# Please change the specific environment and inventory directories that you want to setup.
+variables:
+  ROOT_PATH: iijvn
+  REPO_MAIN_CODE_DIR: vsphere-automation
+  REPO_DEPLOYMENT_DIR: vsphere_deployment
+
+  ANSIBLE_ENVIRONMENT_DEPLOYMENT: prod
+  ANSIBLE_ENVIRONMENT_INVENTORY: prd_hcm07gen18rs
+  
+  TAG_TO_DEPLOYMENT: v1.0.4

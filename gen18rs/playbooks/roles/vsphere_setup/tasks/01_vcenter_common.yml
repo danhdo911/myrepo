@@ -1,0 +1,32 @@
+---
+      - name: Set Timezone
+        vmware.vmware_rest.appliance_system_time_timezone:
+          vcenter_hostname: "{{ vcenter_hostname }}"
+          vcenter_username: "{{ vcenter_username }}"
+          vcenter_password: "{{ vcenter_password }}"
+          vcenter_validate_certs: "{{ vcenter_validate_certs }}"
+          name: "{{ vcenter_timezone }}"
+
+      - name: Set NTP servers
+        vmware.vmware_rest.appliance_ntp:
+          vcenter_hostname: "{{ vcenter_hostname }}"
+          vcenter_username: "{{ vcenter_username }}"
+          vcenter_password: "{{ vcenter_password }}"
+          vcenter_validate_certs: "{{ vcenter_validate_certs }}"
+          state: set
+          servers:
+            - "{{ default_ntp1 }}"
+            - "{{ default_ntp2 }}"
+
+      - name: Configure vCenter general settings
+        community.vmware.vmware_vcenter_settings:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          snmp_receivers:
+            snmp_receiver_1_url: "{{ vcenter_snmp_url }}"
+            snmp_receiver_1_enabled: true
+            snmp_receiver_1_port: "{{ vcenter_snmp_port }}"
+            snmp_receiver_1_community: "{{ vcenter_snmp_community }}"
+        delegate_to: localhost

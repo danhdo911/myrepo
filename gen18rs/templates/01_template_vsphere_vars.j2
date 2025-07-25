@@ -1,0 +1,150 @@
+################# vSphere ESXi ########################
+### ESXi auth
+esxi_username: {{ esxi_username }}
+esxi_password: {{ esxi_password }}
+esxi_validate_certs: {{ esxi_validate_certs }}
+
+### ESXi default network
+default_netmask: {{ default_netmask }}
+default_gateway: {{ default_gateway }}
+default_dns1: {{ default_dns1 }}
+default_dns2: {{ default_dns2 }}
+default_ntp1: {{ default_ntp1 }}
+default_ntp2: {{ default_ntp2 }}
+
+### ESXi Uplinks
+#esxi_vmnic_uplink1: {{ esxi_vmnic_uplink1 }}
+#esxi_vmnic_uplink2: {{ esxi_vmnic_uplink2 }}
+#esxi_vmnic_uplink3: {{ esxi_vmnic_uplink3 }}
+#esxi_vmnic_uplink4: {{ esxi_vmnic_uplink4 }}
+
+### ESXi info specific
+esxi_inventory:
+{% for esxi in esxi_info %}
+{% if esxi.esxi_backupnfc_ip is defined and esxi.esxi_replication_ip is defined %}
+  - esxi_version: {{ esxi.esxi_version }}
+    esxi_hostname: {{ esxi.esxi_hostname }}
+    esxi_mgmt_ip: {{ esxi.esxi_mgmt_ip }}
+    esxi_macaddr: {{ esxi.esxi_macaddr }}
+    esxi_vmotion_ip: {{ esxi.esxi_vmotion_ip }}
+    esxi_backupnfc_ip: {{ esxi.esxi_backupnfc_ip }}
+    esxi_iscsi_ip1: {{ esxi.esxi_iscsi_ip1 }}
+    esxi_iscsi_ip2: {{ esxi.esxi_iscsi_ip2 }}
+    esxi_replication_ip: {{ esxi.esxi_replication_ip }}
+    esxi_vmnic_uplink1: {{ esxi.esxi_vmnic_uplink1 }}
+    esxi_vmnic_uplink2: {{ esxi.esxi_vmnic_uplink2 }}
+    esxi_vmnic_uplink3: {{ esxi.esxi_vmnic_uplink3 }}
+    esxi_vmnic_uplink4: {{ esxi.esxi_vmnic_uplink4 }}
+{% else %}
+  - esxi_version: {{ esxi.esxi_version }}
+    esxi_hostname: {{ esxi.esxi_hostname }}
+    esxi_mgmt_ip: {{ esxi.esxi_mgmt_ip }}
+    esxi_macaddr: {{ esxi.esxi_macaddr }}
+    esxi_vmotion_ip: {{ esxi.esxi_vmotion_ip }}
+    esxi_iscsi_ip1: {{ esxi.esxi_iscsi_ip1 }}
+    esxi_iscsi_ip2: {{ esxi.esxi_iscsi_ip2 }}
+    esxi_replication_backup_ip: {{ esxi.esxi_replication_backup_ip }}
+    esxi_vmnic_uplink1: {{ esxi.esxi_vmnic_uplink1 }}
+    esxi_vmnic_uplink2: {{ esxi.esxi_vmnic_uplink2 }}
+    esxi_vmnic_uplink3: {{ esxi.esxi_vmnic_uplink3 }}
+    esxi_vmnic_uplink4: {{ esxi.esxi_vmnic_uplink4 }}
+{% endif %}
+{% endfor %}
+
+### License 
+esxi_license: {{ esxi_license }}
+
+################# vSphere vCenter ########################
+### Authenticate SSO
+vcenter_hostname: {{ vcenter_hostname }}
+vcenter_username: {{ vcenter_username }}
+vcenter_password: {{ vcenter_password }}
+vcenter_validate_certs: {{ vcenter_validate_certs }}
+
+### vCenter Appliance Setting
+#vcenter_timezone: {{ vcenter_timezone }}
+
+### vCenter General Setting
+#vcenter_snmp_url: {{ vcenter_snmp_url }}
+#vcenter_snmp_port: {{ vcenter_snmp_port }}
+#vcenter_snmp_community: {{ vcenter_snmp_community }}
+
+#DC name
+datacenter_name: {{ datacenter_name }}
+
+#Cluster name
+cluster_name: {{ cluster_name }}
+
+###Cluster configurations
+#EVC Mode: intel-merom/intel-penryn/intel-nehalem/...
+#evc_mode: {{ evc_mode }}
+
+#DRS
+#automation_level: {{ automation_level }}
+#migration_threshold: {{ migration_threshold }}
+#predictive_drs: {{ predictive_drs }}
+
+### vStandard Switch (for delete task)
+vss_default: {{ vss_default }}
+#vss_default_pg_name: {{ vss_default_pg_name }}
+#vss_default_nic: {{ vss_default_nic }}
+#vss_default_vlanid: {{ vss_default_vlanid }}
+
+### vDistributed Switch
+#vds_version: {{ vds_version }}
+#vds_mtu: {{ vds_mtu }}
+#vds_uplinks: {{ vds_uplinks }}
+
+## vDS for MGMT
+vds_switch01: {{ vds_switch01 }}
+
+## vDS for others: vmotion, backup, iscsi, replication
+vds_switch02: {{ vds_switch02 }}
+
+## vDistributed Switch Port Group
+# MGMT Portgroup
+vds_mgmt_pg_name: {{ vds_mgmt_pg_name }}
+vds_mgmt_pg_vlanid: {{ vds_mgmt_pg_vlanid }}
+
+# vMotion Portgroup
+vds_vmotion_pg_name: {{ vds_vmotion_pg_name }}
+vds_vmotion_pg_vlanid: {{ vds_vmotion_pg_vlanid }}
+vds_vmotion_gateway: {{ vds_vmotion_gateway }}
+vds_vmotion_netmask: {{ vds_vmotion_netmask }}
+
+# BackupNFC Portgroup
+{% if vcenter_data.vds_backupnfc_pg_name is defined and vcenter_data.vds_backupnfc_pg_name %}
+vds_backupnfc_pg_name: {{ vds_backupnfc_pg_name }}
+vds_backupnfc_pg_vlanid: {{ vds_backupnfc_pg_vlanid }}
+vds_backupnfc_gateway: {{ vds_backupnfc_gateway }}
+vds_backupnfc_netmask: {{ vds_backupnfc_netmask }}
+{% endif %}
+
+# ISCSI Portgroup
+vds_iscsi_pg:
+
+  - vds_iscsi_pg_name: {{ vds_iscsi_pg_name_1 }}
+    vds_iscsi_pg_vlanid: {{ vds_iscsi_pg_vlanid_1 }}
+    vds_iscsi_gateway: {{ vds_iscsi_gateway_1 }}
+    vds_iscsi_netmask: {{ vds_iscsi_netmask_1 }}
+
+  - vds_iscsi_pg_name: {{ vds_iscsi_pg_name_2 }}
+    vds_iscsi_pg_vlanid: {{ vds_iscsi_pg_vlanid_2 }}
+    vds_iscsi_gateway: {{ vds_iscsi_gateway_2 }}
+    vds_iscsi_netmask: {{ vds_iscsi_netmask_2 }}
+
+# Replication and Replication NFC Portgroup
+{% if vcenter_data.vds_replication_pg_name is defined and vcenter_data.vds_replication_pg_name %}
+vds_replication_pg_name: {{ vds_replication_pg_name }}
+vds_replication_pg_vlanid: {{ vds_replication_pg_vlanid }}
+vds_replication_gateway: {{ vds_replication_gateway }}
+vds_replication_netmask: {{ vds_replication_netmask }}
+{% endif %}
+
+# Replication and Backup Portgroup
+{% if vcenter_data.vds_replication_backup_pg_name is defined and vds_replication_backup_pg_name %}
+vds_replication_backup_pg_name: {{ vds_replication_backup_pg_name }}
+vds_replication_backup_pg_vlanid: {{ vds_replication_backup_pg_vlanid }}
+vds_replication_backup_gateway: {{ vds_replication_backup_gateway }}
+vds_replication_backup_netmask: {{ vds_replication_backup_netmask }}
+{% endif %}

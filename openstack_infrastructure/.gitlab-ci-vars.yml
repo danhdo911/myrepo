@@ -1,5 +1,5 @@
 variables:
-  ENVIRONMENT: dev02
+  ENVIRONMENT: lab199-v2
   PROJECT: openstack_cgw_provision_s3
 
   AWS_DEFAULT_REGION: "ap-southeast-1"

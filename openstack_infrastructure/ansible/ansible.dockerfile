@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM python:3.11-slim
 
 WORKDIR /tmp/build
 
@@ -9,21 +9,18 @@ ENV DEBIAN_FRONTEND=noninteractive
 COPY requirements/requirements.apt .
 RUN apt-get update && \
     grep -vE '^\s*#|^\s*$' requirements.apt | xargs apt-get install -y && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Install requirement packages with pip
 COPY requirements/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt && \
+RUN pip install --break-system-packages --no-cache-dir -r requirements.txt && \
     rm -rf /root/.cache/pip/
 
 # Install ansible collections
 COPY requirements/collections.yml .
 RUN ansible-galaxy collection install -r collections.yml
-    
-# # Copy and set entrypoint script
-# COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
-# RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-CMD ["sh", "-c"]
+ENTRYPOINT ["/bin/bash", "-c"]
+# CMD ["sh", "-c"]

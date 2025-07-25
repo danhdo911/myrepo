@@ -1,0 +1,58 @@
+---
+# tasks file for esxi-custom-boot
+## Auto get MAC from iDRAC and generate custom boot file
+
+### UEFI Boot Mode
+- name: "Create folder with ESXi MAC Address"
+  file:
+    path: "{{ global_path_tftpboot }}/01-{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ mac_addresses }}"
+  register: esxiboot_dirs
+
+- name: "Symlink file mboot.efi"
+  file:
+    src: "{{ global_path_tftpboot }}/mboot.efi"
+    dest: "{{ global_path_tftpboot }}/01-{{ item }}/mboot.efi"
+    state: link
+    force: true
+  with_items:
+    - "{{ mac_addresses }}"
+  when: esxiboot_dirs is succeeded
+
+- name: Copy boot.cfg from ISO source
+  copy:
+    src: "{{ global_path_tftpboot }}/{{ esxi_version }}/boot.cfg"
+    dest: "{{ global_path_tftpboot }}/01-{{ item }}/boot.cfg"
+    remote_src: yes
+  with_items:
+    - "{{ mac_addresses }}"
+  when: esxiboot_dirs is succeeded
+
+- name: Modify kernelopt configuration
+  lineinfile:
+    path: "{{ global_path_tftpboot }}/01-{{ item }}/boot.cfg"
+    regexp: '^kernelopt=.*'
+    line: 'kernelopt=ks={{ global_http_ksconfig }}/{{ item }}.cfg'
+    backrefs: yes
+  with_items:
+    - "{{ mac_addresses }}"
+
+- name: Modify prefix configuration
+  lineinfile:
+    path: "{{ global_path_tftpboot }}/01-{{ item }}/boot.cfg"
+    regexp: '^prefix=.*'
+    line: 'prefix={{ esxi_version }}'
+    backrefs: yes
+  with_items:
+    - "{{ mac_addresses }}"
+
+### BIOS Boot Mode
+- name: "Create custom boot file for BIOS mode"
+  template:
+    src: boot_menu.j2
+    dest: "{{ global_pxelinux_cfg }}/01-{{ item }}"
+  with_items:
+    - "{{ mac_addresses }}"
+  when: esxiboot_dirs is succeeded

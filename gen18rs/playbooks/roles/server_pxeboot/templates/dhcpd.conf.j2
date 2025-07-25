@@ -1,0 +1,28 @@
+
+default-lease-time 150;
+
+max-lease-time 300;
+
+authoritative;
+
+allow booting;
+allow bootp;
+option client-system-arch code 93 = unsigned integer 16;
+
+subnet {{ dhcp_net }} netmask {{ dhcp_mask }} {
+    range dynamic-bootp {{ dhcp_start }} {{ dhcp_end }};
+    option broadcast-address {{ dhcp_broadcast }};
+    option routers {{ dhcp_gateway }};
+    
+    deny unknown-clients;
+}
+
+class "pxeclients" {
+   match if substring(option vendor-class-identifier, 0, 9) = "PXEClient";
+   next-server {{ dhcp_server }};
+   if option client-system-arch = 00:07 or option client-system-arch = 00:09 {
+      filename = "mboot.efi";
+   } else {
+      filename = "pxelinux.0";
+   }
+}

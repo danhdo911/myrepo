@@ -32,6 +32,7 @@ source "vsphere-iso" "linux-ubuntu-server" {
   RAM                   = var.vm_memory
   RAM_hot_plug          = var.vm_memory_hot_plug
   disk_controller_type  = [var.vm_disk_controller_type]
+  
   storage {
     disk_size             = var.vm_disk_size
     disk_thin_provisioned = var.vm_disk_thin_provision

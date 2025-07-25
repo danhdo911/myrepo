@@ -12,7 +12,7 @@ variables:
   VAULT_ADDR: "https://vault.iij.com.vn"
   VAULT_SECRET_PATH_BASE: "iijvn-ansiblevsphere/data/"
   VAULT_SECRET_PATH: "iijvn-ansiblevsphere"
-  VAULT_SECRET_DATA: "iijvn-dev01"
+  VAULT_SECRET_DATA: "lab_general"
 
   DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ""

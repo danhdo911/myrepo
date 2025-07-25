@@ -29,88 +29,173 @@ def parse_general_csv(file_path):
     return general_data
 
 # Parse ESXi-specific data CSV
+# def parse_esxi_csv(file_path):
+#     esxi_info = []
+#     with open(file_path, newline='') as csvfile:
+#         reader = csv.DictReader(csvfile)
+#         for row in reader:
+#             # Convert MAC address from colons (:) to hyphens (-)
+#             esxi_mac_address = row['esxi_macaddr'].replace(':', '-').lower()
+
+#             esxi_info.append({
+#                 'esxi_version': row['esxi_version'],
+#                 'esxi_hostname': row['esxi_hostname'],
+#                 'esxi_mgmt_ip': row['esxi_mgmt_ip'],
+#                 'esxi_macaddr': esxi_mac_address,
+#                 'esxi_vmotion_ip': row['esxi_vmotion_ip'],
+#                 # 'esxi_backupnfc_ip': row['esxi_backupnfc_ip'],
+#                 'esxi_iscsi_ip1': row['esxi_iscsi_ip1'],
+#                 'esxi_iscsi_ip2': row['esxi_iscsi_ip2'],
+#                 # 'esxi_replication_ip': row['esxi_replication_ip'],
+#                 'esxi_replication_backup_ip': row['esxi_replication_backup_ip'],
+#                 'esxi_vmnic_uplink1': row['esxi_vmnic_uplink1'],
+#                 'esxi_vmnic_uplink2': row['esxi_vmnic_uplink2'],
+#                 'esxi_vmnic_uplink3': row['esxi_vmnic_uplink3'],
+#                 'esxi_vmnic_uplink4': row['esxi_vmnic_uplink4']
+#             })
+#     return esxi_info
+
 def parse_esxi_csv(file_path):
     esxi_info = []
     with open(file_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             # Convert MAC address from colons (:) to hyphens (-)
-            esxi_mac_address = row['esxi_macaddr'].replace(':', '-').lower()
+            raw_mac = row.get('esxi_macaddr', '')
+            esxi_mac_address = raw_mac.replace(':', '-').lower() if raw_mac else ''
 
             esxi_info.append({
-                'esxi_version': row['esxi_version'],
-                'esxi_hostname': row['esxi_hostname'],
-                'esxi_mgmt_ip': row['esxi_mgmt_ip'],
+                'esxi_version': row.get('esxi_version'),
+                'esxi_hostname': row.get('esxi_hostname'),
+                'esxi_mgmt_ip': row.get('esxi_mgmt_ip'),
                 'esxi_macaddr': esxi_mac_address,
-                'esxi_vmotion_ip': row['esxi_vmotion_ip'],
-                'esxi_backupnfc_ip': row['esxi_backupnfc_ip'],
-                'esxi_iscsi_ip1': row['esxi_iscsi_ip1'],
-                'esxi_iscsi_ip2': row['esxi_iscsi_ip2'],
-                'esxi_replication_ip': row['esxi_replication_ip'],
-                # 'esxi_replication_backup_ip': row['esxi_replication_backup_ip'],
-                'esxi_vmnic_uplink1': row['esxi_vmnic_uplink1'],
-                'esxi_vmnic_uplink2': row['esxi_vmnic_uplink2'],
-                'esxi_vmnic_uplink3': row['esxi_vmnic_uplink3'],
-                'esxi_vmnic_uplink4': row['esxi_vmnic_uplink4']
+                'esxi_vmotion_ip': row.get('esxi_vmotion_ip'),
+                'esxi_backupnfc_ip': row.get('esxi_backupnfc_ip'),
+                'esxi_iscsi_ip1': row.get('esxi_iscsi_ip1'),
+                'esxi_iscsi_ip2': row.get('esxi_iscsi_ip2'),
+                'esxi_replication_ip': row.get('esxi_replication_ip'),
+                'esxi_replication_backup_ip': row.get('esxi_replication_backup_ip'),
+                'esxi_vmnic_uplink1': row.get('esxi_vmnic_uplink1'),
+                'esxi_vmnic_uplink2': row.get('esxi_vmnic_uplink2'),
+                'esxi_vmnic_uplink3': row.get('esxi_vmnic_uplink3'),
+                'esxi_vmnic_uplink4': row.get('esxi_vmnic_uplink4')
             })
     return esxi_info
 
 # Parse vCenter-specific data CSV
+# def parse_vcenter_csv(file_path):
+#     vcenter_data = {}
+#     with open(file_path, newline='') as csvfile:
+#         reader = csv.DictReader(csvfile)
+#         for row in reader:
+#             vcenter_data = {
+#                 'vcenter_hostname': row['vcenter_hostname'],
+#                 'vcenter_username': row['vcenter_username'],
+#                 'vcenter_password': row['vcenter_password'],
+#                 'vcenter_validate_certs': row['vcenter_validate_certs'],
+#                 # 'vcenter_timezone': row['vcenter_timezone'],
+#                 # 'vcenter_snmp_url': row['vcenter_snmp_url'],
+#                 # 'vcenter_snmp_port': row['vcenter_snmp_port'],
+#                 # 'vcenter_snmp_community': row['vcenter_snmp_community'],
+#                 'datacenter_name': row['datacenter_name'],
+#                 'cluster_name': row['cluster_name'],
+#                 # 'evc_mode': row['evc_mode'],
+#                 # 'automation_level': row['automation_level'],
+#                 # 'migration_threshold': row['migration_threshold'],
+#                 # 'predictive_drs': row['predictive_drs'],
+#                 'vss_default': row['vss_default'],
+#                 # 'vss_default_pg_name': row['vss_default_pg_name'],
+#                 # 'vss_default_nic': row['vss_default_nic'],
+#                 # 'vss_default_vlanid': row['vss_default_vlanid'],
+#                 # 'vds_version': row['vds_version'],
+#                 # 'vds_mtu': row['vds_mtu'],
+#                 # 'vds_uplinks': row['vds_uplinks'],
+#                 'vds_switch01': row['vds_switch01'],
+#                 'vds_switch02': row['vds_switch02'],
+#                 'vds_mgmt_pg_name': row['vds_mgmt_pg_name'],
+#                 'vds_mgmt_pg_vlanid': row['vds_mgmt_pg_vlanid'],
+#                 'vds_vmotion_pg_name': row['vds_vmotion_pg_name'],
+#                 'vds_vmotion_pg_vlanid': row['vds_vmotion_pg_vlanid'],
+#                 'vds_vmotion_gateway': row['vds_vmotion_gateway'],
+#                 'vds_vmotion_netmask': row['vds_vmotion_netmask'],
+#                 # 'vds_backupnfc_pg_name': row['vds_backupnfc_pg_name'],
+#                 # 'vds_backupnfc_pg_vlanid': row['vds_backupnfc_pg_vlanid'],
+#                 # 'vds_backupnfc_gateway': row['vds_backupnfc_gateway'],
+#                 # 'vds_backupnfc_netmask': row['vds_backupnfc_netmask'],
+#                 'vds_iscsi_pg_name_1': row['vds_iscsi_pg_name_1'],
+#                 'vds_iscsi_pg_vlanid_1': row['vds_iscsi_pg_vlanid_1'],
+#                 'vds_iscsi_gateway_1': row['vds_iscsi_gateway_1'],
+#                 'vds_iscsi_netmask_1': row['vds_iscsi_netmask_1'],
+#                 'vds_iscsi_pg_name_2': row['vds_iscsi_pg_name_2'],
+#                 'vds_iscsi_pg_vlanid_2': row['vds_iscsi_pg_vlanid_2'],
+#                 'vds_iscsi_gateway_2': row['vds_iscsi_gateway_2'],
+#                 'vds_iscsi_netmask_2': row['vds_iscsi_netmask_2'],
+#                 # 'vds_replication_pg_name': row['vds_replication_pg_name'],
+#                 # 'vds_replication_pg_vlanid': row['vds_replication_pg_vlanid'],
+#                 # 'vds_replication_gateway': row['vds_replication_gateway'],
+#                 # 'vds_replication_netmask': row['vds_replication_netmask']
+#                 'vds_replication_backup_pg_name': row['vds_replication_backup_pg_name'],
+#                 'vds_replication_backup_pg_vlanid': row['vds_replication_backup_pg_vlanid'],
+#                 'vds_replication_backup_gateway': row['vds_replication_backup_gateway'],
+#                 'vds_replication_backup_netmask': row['vds_replication_backup_netmask']
+#             }
+#     return vcenter_data
+
 def parse_vcenter_csv(file_path):
     vcenter_data = {}
     with open(file_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             vcenter_data = {
-                'vcenter_hostname': row['vcenter_hostname'],
-                'vcenter_username': row['vcenter_username'],
-                'vcenter_password': row['vcenter_password'],
-                'vcenter_validate_certs': row['vcenter_validate_certs'],
-                # 'vcenter_timezone': row['vcenter_timezone'],
-                # 'vcenter_snmp_url': row['vcenter_snmp_url'],
-                # 'vcenter_snmp_port': row['vcenter_snmp_port'],
-                # 'vcenter_snmp_community': row['vcenter_snmp_community'],
-                'datacenter_name': row['datacenter_name'],
-                'cluster_name': row['cluster_name'],
-                # 'evc_mode': row['evc_mode'],
-                # 'automation_level': row['automation_level'],
-                # 'migration_threshold': row['migration_threshold'],
-                # 'predictive_drs': row['predictive_drs'],
-                'vss_default': row['vss_default'],
-                # 'vss_default_pg_name': row['vss_default_pg_name'],
-                # 'vss_default_nic': row['vss_default_nic'],
-                # 'vss_default_vlanid': row['vss_default_vlanid'],
-                # 'vds_version': row['vds_version'],
-                # 'vds_mtu': row['vds_mtu'],
-                # 'vds_uplinks': row['vds_uplinks'],
-                'vds_switch01': row['vds_switch01'],
-                'vds_switch02': row['vds_switch02'],
-                'vds_mgmt_pg_name': row['vds_mgmt_pg_name'],
-                'vds_mgmt_pg_vlanid': row['vds_mgmt_pg_vlanid'],
-                'vds_vmotion_pg_name': row['vds_vmotion_pg_name'],
-                'vds_vmotion_pg_vlanid': row['vds_vmotion_pg_vlanid'],
-                'vds_vmotion_gateway': row['vds_vmotion_gateway'],
-                'vds_vmotion_netmask': row['vds_vmotion_netmask'],
-                'vds_backupnfc_pg_name': row['vds_backupnfc_pg_name'],
-                'vds_backupnfc_pg_vlanid': row['vds_backupnfc_pg_vlanid'],
-                'vds_backupnfc_gateway': row['vds_backupnfc_gateway'],
-                'vds_backupnfc_netmask': row['vds_backupnfc_netmask'],
-                'vds_iscsi_pg_name_1': row['vds_iscsi_pg_name_1'],
-                'vds_iscsi_pg_vlanid_1': row['vds_iscsi_pg_vlanid_1'],
-                'vds_iscsi_gateway_1': row['vds_iscsi_gateway_1'],
-                'vds_iscsi_netmask_1': row['vds_iscsi_netmask_1'],
-                'vds_iscsi_pg_name_2': row['vds_iscsi_pg_name_2'],
-                'vds_iscsi_pg_vlanid_2': row['vds_iscsi_pg_vlanid_2'],
-                'vds_iscsi_gateway_2': row['vds_iscsi_gateway_2'],
-                'vds_iscsi_netmask_2': row['vds_iscsi_netmask_2'],
-                'vds_replication_pg_name': row['vds_replication_pg_name'],
-                'vds_replication_pg_vlanid': row['vds_replication_pg_vlanid'],
-                'vds_replication_gateway': row['vds_replication_gateway'],
-                'vds_replication_netmask': row['vds_replication_netmask']
-                # 'vds_replication_backup_pg_name': row['vds_replication_backup_pg_name'],
-                # 'vds_replication_backup_pg_vlanid': row['vds_replication_backup_pg_vlanid'],
-                # 'vds_replication_backup_gateway': row['vds_replication_backup_gateway'],
-                # 'vds_replication_backup_netmask': row['vds_replication_backup_netmask']
+                'vcenter_hostname': row.get('vcenter_hostname'),
+                'vcenter_username': row.get('vcenter_username'),
+                'vcenter_password': row.get('vcenter_password'),
+                'vcenter_validate_certs': row.get('vcenter_validate_certs'),
+                'vcenter_timezone': row.get('vcenter_timezone'),
+                'vcenter_snmp_url': row.get('vcenter_snmp_url'),
+                'vcenter_snmp_port': row.get('vcenter_snmp_port'),
+                'vcenter_snmp_community': row.get('vcenter_snmp_community'),
+                'datacenter_name': row.get('datacenter_name'),
+                'cluster_name': row.get('cluster_name'),
+                'evc_mode': row.get('evc_mode'),
+                'automation_level': row.get('automation_level'),
+                'migration_threshold': row.get('migration_threshold'),
+                'predictive_drs': row.get('predictive_drs'),
+                'vss_default': row.get('vss_default'),
+                'vss_default_pg_name': row.get('vss_default_pg_name'),
+                'vss_default_nic': row.get('vss_default_nic'),
+                'vss_default_vlanid': row.get('vss_default_vlanid'),
+                'vds_version': row.get('vds_version'),
+                'vds_mtu': row.get('vds_mtu'),
+                'vds_uplinks': row.get('vds_uplinks'),
+                'vds_switch01': row.get('vds_switch01'),
+                'vds_switch02': row.get('vds_switch02'),
+                'vds_mgmt_pg_name': row.get('vds_mgmt_pg_name'),
+                'vds_mgmt_pg_vlanid': row.get('vds_mgmt_pg_vlanid'),
+                'vds_vmotion_pg_name': row.get('vds_vmotion_pg_name'),
+                'vds_vmotion_pg_vlanid': row.get('vds_vmotion_pg_vlanid'),
+                'vds_vmotion_gateway': row.get('vds_vmotion_gateway'),
+                'vds_vmotion_netmask': row.get('vds_vmotion_netmask'),
+                'vds_backupnfc_pg_name': row.get('vds_backupnfc_pg_name'),
+                'vds_backupnfc_pg_vlanid': row.get('vds_backupnfc_pg_vlanid'),
+                'vds_backupnfc_gateway': row.get('vds_backupnfc_gateway'),
+                'vds_backupnfc_netmask': row.get('vds_backupnfc_netmask'),
+                'vds_iscsi_pg_name_1': row.get('vds_iscsi_pg_name_1'),
+                'vds_iscsi_pg_vlanid_1': row.get('vds_iscsi_pg_vlanid_1'),
+                'vds_iscsi_gateway_1': row.get('vds_iscsi_gateway_1'),
+                'vds_iscsi_netmask_1': row.get('vds_iscsi_netmask_1'),
+                'vds_iscsi_pg_name_2': row.get('vds_iscsi_pg_name_2'),
+                'vds_iscsi_pg_vlanid_2': row.get('vds_iscsi_pg_vlanid_2'),
+                'vds_iscsi_gateway_2': row.get('vds_iscsi_gateway_2'),
+                'vds_iscsi_netmask_2': row.get('vds_iscsi_netmask_2'),
+                'vds_replication_pg_name': row.get('vds_replication_pg_name'),
+                'vds_replication_pg_vlanid': row.get('vds_replication_pg_vlanid'),
+                'vds_replication_gateway': row.get('vds_replication_gateway'),
+                'vds_replication_netmask': row.get('vds_replication_netmask'),
+                'vds_replication_backup_pg_name': row.get('vds_replication_backup_pg_name'),
+                'vds_replication_backup_pg_vlanid': row.get('vds_replication_backup_pg_vlanid'),
+                'vds_replication_backup_gateway': row.get('vds_replication_backup_gateway'),
+                'vds_replication_backup_netmask': row.get('vds_replication_backup_netmask')
             }
     return vcenter_data
 

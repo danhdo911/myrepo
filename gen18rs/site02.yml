@@ -1,0 +1,11 @@
+---
+  - hosts: localhost
+    gather_facts: false
+    connection: local
+
+    tasks:
+      - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}63_load_esxi_hosts.yml"
+
+      # 2 - Assign ESXi License
+      - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}13_vsphere_host_add_license.yml"
+        when: esxi_info | length > 0

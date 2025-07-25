@@ -1,0 +1,46 @@
+###Install ESXi Hypervisor
+vmaccepteula
+
+keyboard 'US Default'
+
+clearpart --alldrives --overwritevmfs
+
+install --firstdisk=local --overwritevmfs --ignoreprereqwarnings --ignoreprereqerrors --forceunsupportedinstall
+
+network --bootproto=static --device={{ item.esxi_vmnic_uplink1 }} --vlanid={{ vds_mgmt_pg_vlanid }} --ip={{ item.esxi_mgmt_ip }} --netmask={{ default_netmask }} --gateway={{ default_gateway }} --nameserver="{{ default_dns1 }},{{ default_dns2 }}" --hostname={{ item.esxi_hostname }}
+
+rootpw {{ esxi_password }}
+
+reboot
+
+###Configurations at first boot
+%firstboot --interpreter=busybox
+
+# enable & start SSH
+vim-cmd hostsvc/enable_ssh
+vim-cmd hostsvc/start_ssh
+
+# enable & start ESXi Shell
+vim-cmd hostsvc/enable_esx_shell
+vim-cmd hostsvc/start_esx_shell
+
+# Suppress ESXi Shell warning
+esxcli system settings advanced set -o /UserVars/SuppressShellWarning -i 1
+
+# Disable ipv6
+esxcli system module parameters set -m tcpip4 -p ipv6=0
+esxcli network ip set --ipv6-enabled=false
+
+# NTP
+esxcli system ntp set --server={{ default_ntp1 }} --server={{ default_ntp2 }}
+esxcli system ntp set --enabled=true
+
+# Custom PSP/SATP Selection Rule
+esxcli storage nmp satp rule add -s "VMW_SATP_ALUA" -V "PURE" -M "FlashArray" -P "VMW_PSP_RR" -O "iops=1" -e "FlashArray SATP Rule"
+
+# Place ESXi host to maintenance mode
+esxcli system maintenanceMode set --enable true
+
+#Reboot
+#esxcli system shutdown reboot --reason "OS installation finished"
+reboot

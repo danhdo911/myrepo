@@ -1,0 +1,28 @@
+---
+  - name: Check ESXi hosts status and export eligible ESXi hosts list
+    hosts: localhost
+    gather_facts: false
+    connection: local
+
+    tasks:
+      - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}41_esxi_checkstatus_2.yml"
+
+      - name: Filter ready ESXi hosts
+        ansible.builtin.set_fact:
+          _ready_esxi_info: "{{ esxi_inventory | selectattr('esxi_hostname', 'in', _ready_hosts) | list }}"
+      
+      # Used for vsphere_setup
+      - name: Write ready_esxi_info to JSON file
+        ansible.builtin.copy:
+          dest: "{{ output_dir }}ready_esxi_info.json"
+          content: "{{ _ready_esxi_info | to_nice_json }}"
+
+      # Used for configurations after deployment
+      - name: Generate dynamic inventory for ready ESXi hosts
+        ansible.builtin.copy:
+          dest: "{{ output_dir }}esxi_dynamic_inventory.ini"
+          content: |
+            [esxi_hosts]
+            {% for host in _ready_esxi_info %}
+            {{ host.esxi_hostname }} ansible_host={{ host.esxi_mgmt_ip }} ansible_user="{{ esxi_username }}" ansible_password="{{ esxi_password }}"
+            {% endfor %}

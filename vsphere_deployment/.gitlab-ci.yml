@@ -12,7 +12,7 @@ workflow:
 include: /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/group_vars/.gitlab-ci-env.yml
 
 ##################################################################
-image: harbor.iij.com.vn/customized-images/iijvn-runner:v1.0
+image: harbor.iij.com.vn/customized-images/ci-deploy:1.0
 
 ## Anchor templates - using this configure for all jobs such as: ssh cmd, after_script cmd, run manual job, tags, specific branch
 ## Using ansible_key - Set permissions on the SSH private key file
@@ -42,8 +42,8 @@ stages:
   stage: Pre-setup
   script:
     # SSH into the server and execute commands
-    - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER
-        "docker image ls | grep harbor.iij.com.vn/customized-images/ansible"
+    # - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER
+    #     "docker image ls | grep harbor.iij.com.vn/customized-images/ansible"
     ### Update latest deployment repository
     ### Update latest specific version code to use to depoyment (TAG)
     ### Synce environment and group_vars
@@ -89,6 +89,17 @@ stages:
   <<: [*common-option]
   # when: manual
   allow_failure: false
+
+04-Check-Connections:
+  stage: Pre-setup
+  needs:
+    - 03-Generate-vSphere-Variables
+  script:
+    - ssh -o StrictHostKeyChecking=no -i /tmp/private_key $HOST_USER@$SERVER_RUNNER 
+        "cd /$ROOT_PATH/$REPO_DEPLOYMENT_DIR/$REPO_MAIN_CODE_DIR &&
+          ./scripts/run_playbook.sh docker-compose.esxi.yml check_connections.yml $ANSIBLE_ENVIRONMENT_DEPLOYMENT $ANSIBLE_ENVIRONMENT_INVENTORY" 
+  <<: [*common-option]
+  allow_failure: true
 
 # 01-Generate-Boot-and-Kickstart-Files:
 #   stage: ESXi-install

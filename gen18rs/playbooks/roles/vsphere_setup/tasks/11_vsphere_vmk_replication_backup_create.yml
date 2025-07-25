@@ -1,0 +1,33 @@
+---
+  - block:
+      - name: Add Replication and Backup vmkernel port with Default TCP/IP stack
+        community.vmware.vmware_vmkernel:
+          hostname: "{{ vcenter_hostname }}"
+          username: "{{ vcenter_username }}"
+          password: "{{ vcenter_password }}"
+          validate_certs: "{{ vcenter_validate_certs }}"
+          esxi_hostname: "{{ item.esxi_hostname }}"
+          # Specific Configuration
+          dvswitch_name: "{{ vds_name }}"
+          portgroup_name: "{{ vds_replication_backup_pg_name }}"
+          mtu: "{{ mtu_vmkernel | default(9000) }}"
+          enable_replication: true
+          enable_replication_nfc: true
+          enable_backup_nfc: true
+          network:
+            type: "static"
+            ip_address: "{{ item.esxi_replication_backup_ip }}"
+            subnet_mask: "{{ vds_replication_backup_netmask }}"
+            default_gateway: "{{ vds_replication_backup_gateway }}"
+          state: present
+        loop: "{{ esxi_info }}"
+        when: >
+          item.esxi_replication_backup_ip is defined
+        delegate_to: localhost
+
+    when: >
+      vds_name is defined and
+      vds_replication_backup_pg_name is defined and
+      vds_replication_backup_netmask is defined and
+      vds_replication_backup_gateway is defined
+      

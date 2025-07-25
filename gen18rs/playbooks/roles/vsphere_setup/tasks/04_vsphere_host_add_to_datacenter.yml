@@ -1,0 +1,18 @@
+---
+  - name: Add ESXi Hosts to Datacenter
+    community.vmware.vmware_host:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter_name: "{{ datacenter_name }}"
+      folder: "/{{ datacenter_name }}/host"
+      #cluster: "{{ cluster_name }}"
+      esxi_hostname: "{{ item.esxi_hostname }}"
+      esxi_username: "{{ esxi_username }}"
+      esxi_password: "{{ esxi_password }}"
+      state: present
+      validate_certs: "{{ vcenter_validate_certs }}"
+    loop: "{{ esxi_info }}"
+    when: >
+      datacenter_name is defined
+    delegate_to: localhost

@@ -1,0 +1,81 @@
+---
+
+  - name: Create dvSwitch "{{ vds_mgmt_pg_name }}" portgroup
+    community.vmware.vmware_dvs_portgroup:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: "{{ vcenter_validate_certs }}"
+      portgroup_name: "{{ vds_mgmt_pg_name }}"
+      switch_name: "{{ vds_mc_name }}"
+      vlan_id: "{{ vds_mgmt_pg_vlanid }}"
+      num_ports: 48
+      port_binding: static
+      state: present
+    when: >
+      vds_name is defined and
+      vds_mgmt_pg_name is defined and
+      vds_mgmt_pg_vlanid is defined
+    delegate_to: localhost
+
+  - name: Create vDS vMotion portgroup
+    community.vmware.vmware_dvs_portgroup:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: "{{ vcenter_validate_certs }}"
+      portgroup_name: "{{ vds_vmotion_pg_name }}"
+      switch_name: "{{ vds_ml_name }}"
+      vlan_id: "{{ vds_vmotion_pg_vlanid }}"
+      num_ports: 48
+      port_binding: static
+      state: present
+    delegate_to: localhost
+
+  - name: Create vDS BackupNFC portgroup
+    community.vmware.vmware_dvs_portgroup:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: "{{ vcenter_validate_certs }}"
+      portgroup_name: "{{ vds_backupnfc_pg_name }}"
+      switch_name: "{{ vds_ml_name }}"
+      vlan_id: "{{ vds_backupnfc_pg_vlanid }}"
+      num_ports: 48
+      port_binding: static
+      state: present
+    delegate_to: localhost 
+
+  - name: Create vDS ISCSI portgroup
+    community.vmware.vmware_dvs_portgroup:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: "{{ vcenter_validate_certs }}"
+      switch_name: "{{ vds_ml_name }}"
+      portgroup_name: "{{ iscsi_info.vds_iscsi_pg_name }}"
+      vlan_id: "{{ iscsi_info.vds_iscsi_pg_vlanid }}"
+      num_ports: 48
+      port_binding: static
+      state: present
+    loop: "{{ vds_iscsi_pg }}"
+    loop_control:
+      loop_var: iscsi_info
+    when:
+      vds_ml_name is defined and
+      iscsi_info.vds_iscsi_pg_name is defined and
+      iscsi_info.vds_iscsi_pg_vlanid
+
+  - name: Create vDS Replication portgroup
+    community.vmware.vmware_dvs_portgroup:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: "{{ vcenter_validate_certs }}"
+      portgroup_name: "{{ vds_replication_pg_name }}"
+      switch_name: "{{ vds_ml_name }}"
+      vlan_id: "{{ vds_replication_pg_vlanid }}"
+      num_ports: 48
+      port_binding: static
+      state: present
+    delegate_to: localhost 

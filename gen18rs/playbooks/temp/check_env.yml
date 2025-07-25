@@ -1,0 +1,10 @@
+---
+  - name: playbook custom 
+    hosts: localhost
+    gather_facts: false
+    connection: local
+  
+    tasks:
+      - name: Check environment variable
+        debug:
+          var: lookup('ansible.builtin.env', 'ENVIRONMENT')

@@ -1,0 +1,3 @@
+---
+# - import_tasks: 01_ks_auto_mac.yml
+- import_tasks: 02_ks_manual_mac.yml
