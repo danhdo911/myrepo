@@ -21,7 +21,7 @@ default_ntp2: {{ default_ntp2 }}
 ### ESXi info specific
 esxi_inventory:
 {% for esxi in esxi_info %}
-{% if esxi.esxi_backupnfc_ip is defined and esxi.esxi_replication_ip is defined %}
+{% if esxi.esxi_backupnfc_ip is defined and esxi.esxi_replication_ip is defined and esxi.esxi_backupnfc_ip and esxi.esxi_replication_ip %}
   - esxi_version: {{ esxi.esxi_version }}
     esxi_hostname: {{ esxi.esxi_hostname }}
     esxi_mgmt_ip: {{ esxi.esxi_mgmt_ip }}

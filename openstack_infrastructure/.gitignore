@@ -20,6 +20,8 @@
 
 **/*private_key*
 
+**/output/*
+
 # Editor/IDE files (optional)
 *.swp
 *.swo
@@ -28,5 +30,5 @@
 .vscode/
 .idea/
 
-# test
-!deploy/openstack_cgw_provision/terraform.state.d/**/*.tfstate
+# Exception
+!output/.gitkeep

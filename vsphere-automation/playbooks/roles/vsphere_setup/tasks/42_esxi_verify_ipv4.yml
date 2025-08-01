@@ -1,7 +1,15 @@
 ---
   - name: Gather all IPs into a list
     set_fact:
-      all_ips: "{{ all_ips | default([]) + [item.esxi_mgmt_ip, item.esxi_vmotion_ip, item.esxi_backupnfc_ip, item.esxi_iscsi_ip1, item.esxi_iscsi_ip2, item.esxi_replication_ip] }}"
+      all_ips: "{{ all_ips | default([]) + ([
+        item.esxi_mgmt_ip, 
+        item.esxi_vmotion_ip, 
+        item.get('esxi_backupnfc_ip'),
+        item.esxi_iscsi_ip1, 
+        item.esxi_iscsi_ip2, 
+        item.get('esxi_replication_ip'),
+        item.get('esxi_replication_backup_ip')
+        ] | select('defined') | select('truthy') | list) }}"
     loop: "{{ esxi_inventory }}"
   
   - name: Remove duplicate IPs from the list

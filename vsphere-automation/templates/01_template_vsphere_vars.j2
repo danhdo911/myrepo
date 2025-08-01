@@ -21,34 +21,26 @@ default_ntp2: {{ default_ntp2 }}
 ### ESXi info specific
 esxi_inventory:
 {% for esxi in esxi_info %}
-{% if esxi.esxi_backupnfc_ip is defined and esxi.esxi_replication_ip is defined %}
   - esxi_version: {{ esxi.esxi_version }}
     esxi_hostname: {{ esxi.esxi_hostname }}
     esxi_mgmt_ip: {{ esxi.esxi_mgmt_ip }}
     esxi_macaddr: {{ esxi.esxi_macaddr }}
     esxi_vmotion_ip: {{ esxi.esxi_vmotion_ip }}
+    {% if esxi.esxi_backupnfc_ip is defined and esxi.esxi_backupnfc_ip %}
     esxi_backupnfc_ip: {{ esxi.esxi_backupnfc_ip }}
+    {% endif %}
     esxi_iscsi_ip1: {{ esxi.esxi_iscsi_ip1 }}
     esxi_iscsi_ip2: {{ esxi.esxi_iscsi_ip2 }}
+    {% if esxi.esxi_replication_ip is defined and esxi.esxi_replication_ip %}
     esxi_replication_ip: {{ esxi.esxi_replication_ip }}
-    esxi_vmnic_uplink1: {{ esxi.esxi_vmnic_uplink1 }}
-    esxi_vmnic_uplink2: {{ esxi.esxi_vmnic_uplink2 }}
-    esxi_vmnic_uplink3: {{ esxi.esxi_vmnic_uplink3 }}
-    esxi_vmnic_uplink4: {{ esxi.esxi_vmnic_uplink4 }}
-{% else %}
-  - esxi_version: {{ esxi.esxi_version }}
-    esxi_hostname: {{ esxi.esxi_hostname }}
-    esxi_mgmt_ip: {{ esxi.esxi_mgmt_ip }}
-    esxi_macaddr: {{ esxi.esxi_macaddr }}
-    esxi_vmotion_ip: {{ esxi.esxi_vmotion_ip }}
-    esxi_iscsi_ip1: {{ esxi.esxi_iscsi_ip1 }}
-    esxi_iscsi_ip2: {{ esxi.esxi_iscsi_ip2 }}
+    {% endif %}
+    {% if esxi.esxi_replication_backup_ip is defined and esxi.esxi_replication_backup_ip %}
     esxi_replication_backup_ip: {{ esxi.esxi_replication_backup_ip }}
+    {% endif %}
     esxi_vmnic_uplink1: {{ esxi.esxi_vmnic_uplink1 }}
     esxi_vmnic_uplink2: {{ esxi.esxi_vmnic_uplink2 }}
     esxi_vmnic_uplink3: {{ esxi.esxi_vmnic_uplink3 }}
     esxi_vmnic_uplink4: {{ esxi.esxi_vmnic_uplink4 }}
-{% endif %}
 {% endfor %}
 
 ### License 
@@ -112,8 +104,8 @@ vds_vmotion_pg_vlanid: {{ vds_vmotion_pg_vlanid }}
 vds_vmotion_gateway: {{ vds_vmotion_gateway }}
 vds_vmotion_netmask: {{ vds_vmotion_netmask }}
 
-# BackupNFC Portgroup
 {% if vcenter_data.vds_backupnfc_pg_name is defined and vcenter_data.vds_backupnfc_pg_name %}
+# BackupNFC Portgroup
 vds_backupnfc_pg_name: {{ vds_backupnfc_pg_name }}
 vds_backupnfc_pg_vlanid: {{ vds_backupnfc_pg_vlanid }}
 vds_backupnfc_gateway: {{ vds_backupnfc_gateway }}
@@ -133,16 +125,16 @@ vds_iscsi_pg:
     vds_iscsi_gateway: {{ vds_iscsi_gateway_2 }}
     vds_iscsi_netmask: {{ vds_iscsi_netmask_2 }}
 
-# Replication and Replication NFC Portgroup
 {% if vcenter_data.vds_replication_pg_name is defined and vcenter_data.vds_replication_pg_name %}
+# Replication and Replication NFC Portgroup
 vds_replication_pg_name: {{ vds_replication_pg_name }}
 vds_replication_pg_vlanid: {{ vds_replication_pg_vlanid }}
 vds_replication_gateway: {{ vds_replication_gateway }}
 vds_replication_netmask: {{ vds_replication_netmask }}
 {% endif %}
 
-# Replication and Backup Portgroup
 {% if vcenter_data.vds_replication_backup_pg_name is defined and vds_replication_backup_pg_name %}
+# Replication and Backup Portgroup
 vds_replication_backup_pg_name: {{ vds_replication_backup_pg_name }}
 vds_replication_backup_pg_vlanid: {{ vds_replication_backup_pg_vlanid }}
 vds_replication_backup_gateway: {{ vds_replication_backup_gateway }}

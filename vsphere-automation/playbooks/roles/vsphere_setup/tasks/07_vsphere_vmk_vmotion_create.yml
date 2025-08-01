@@ -31,7 +31,7 @@
             ip_address: "{{ item.esxi_vmotion_ip }}"
             subnet_mask: "{{ vds_vmotion_netmask }}"
             default_gateway: "{{ vds_vmotion_gateway }}"
-            # tcpip_stack: vmotion
+            tcpip_stack: vmotion
           state: present
         loop: "{{ esxi_info }}"
         when: >

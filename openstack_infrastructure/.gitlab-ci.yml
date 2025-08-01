@@ -32,16 +32,22 @@ default:
     expire_in: 1 days
 
   cache:
-    - key: cache-${ENVIRONMENT}-${PROJECT}
+    - key: cache-${ENVIRONMENT}-${PROJECT}-terraform
       paths:
         - ${TF_ROOT}/.terraform
         - ${TF_ROOT}/.terraform.lock.hcl
         - ${TF_ROOT}/.terraform/providers/
       policy: pull-push
-    - key: cache-${ENVIRONMENT}-aws-creds
+
+    - key: cache-${ENVIRONMENT}-${PROJECT}-awscreds
       paths:
         - ./aws_credentials
         - ./aws_config
+      policy: pull
+
+    - key: cache-${ENVIRONMENT}-${PROJECT}-env
+      paths:
+        - .env
       policy: pull
 
   before_script: &registry_login
@@ -71,7 +77,6 @@ stages:
 generate-env:
   stage: pre-build
   environment: ${ENVIRONMENT}
-  cache: []
   before_script: []
   script:
     - |
@@ -92,9 +97,11 @@ generate-env:
       AWS_CONFIG_FILE="/workspace/aws_config"
       AWS_SHARED_CREDENTIALS_FILE="/workspace/aws_credentials"
       EOF
-  artifacts:
+  cache:
+    key: cache-${ENVIRONMENT}-${PROJECT}-env
     paths:
       - .env
+    policy: push
 
 aws-create-creds:
   stage: pre-build
@@ -122,11 +129,11 @@ aws-create-creds:
       role_arn = ${AWS_ROLE_ARN}
       EOF
   cache:
-    key: cache-${ENVIRONMENT}-aws-creds
-    paths:
-      - ./aws_credentials
-      - ./aws_config
-    policy: pull-push
+    - key: cache-${ENVIRONMENT}-${PROJECT}-awscreds
+      paths:
+        - ./aws_credentials
+        - ./aws_config
+      policy: push
 
 aws-fetch-creds:
   stage: pre-build
@@ -137,11 +144,15 @@ aws-fetch-creds:
   script:
     - make aws_fetch_creds
   cache:
-    key: cache-${ENVIRONMENT}-aws-creds
-    paths:
-      - ./aws_credentials
-      - ./aws_config
-    policy: pull-push
+    - key: cache-${ENVIRONMENT}-${PROJECT}-env
+      paths:
+        - .env
+      policy: pull
+    - key: cache-${ENVIRONMENT}-${PROJECT}-awscreds
+      paths:
+        - ./aws_credentials
+        - ./aws_config
+      policy: pull-push
 
 terraform-build:
   stage: build
@@ -175,7 +186,6 @@ terraform-deploy:
 setup-os:
   stage: configure
   environment: ${ENVIRONMENT}
-  cache: []
   needs:
     - generate-env
     - terraform-deploy
@@ -189,6 +199,11 @@ setup-os:
     - make os_setup ENV=${ENVIRONMENT} TAG="netplan,os-init,ntp"
   after_script:
     - cat /dev/null > ${CI_PROJECT_DIR}/vm_private_key
+  cache:
+    - key: cache-${ENVIRONMENT}-${PROJECT}-env
+      paths:
+        - .env
+      policy: pull
 
 terraform-destroy:
   stage: clean

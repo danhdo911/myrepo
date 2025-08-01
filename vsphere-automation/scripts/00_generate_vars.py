@@ -202,7 +202,7 @@ def parse_vcenter_csv(file_path):
 # Render the template with the combined data
 def render_template(template, general_data, esxi_info, vcenter_data):
     general_data['esxi_info'] = esxi_info
-    combined_data = {**general_data, **vcenter_data}  # Combine general and vCenter data
+    combined_data = {**general_data, **vcenter_data, 'vcenter_data': vcenter_data}  # Combine general and vCenter data
     return template.render(combined_data)
 
 # Main function

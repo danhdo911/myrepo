@@ -24,5 +24,6 @@
     delegate_to: localhost
     when: >
       custom_attributes | selectattr('value', 'defined') 
-                        | selectattr('value', 'string') 
                         | selectattr('value', '!=', '')
+                        | list
+                        | length > 0

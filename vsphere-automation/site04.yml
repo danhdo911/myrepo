@@ -21,14 +21,25 @@
       # Create vmk2 - vSphere Backup NFC
       - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}08_vsphere_vmk_backupnfc_create.yml"
         when: >
-          esxi_info | length > 0
+          esxi_info | length > 0 and
+          vds_backupnfc_pg_name is defined and 
+          vds_backupnfc_pg_name | length > 0
 
-      # 6 - Create vmk3, vmk4 - iSCSI
+      # Create vmk3, vmk4 - iSCSI
       - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}09_vsphere_vmk_iscsi_create.yml"
         when: >
           esxi_info | length > 0
 
-      # 7 - Create vmk5 - vSphere Replication, vSphere Replication NFC
+      # Create vmk5 - vSphere Replication, vSphere Replication NFC
       - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}10_vsphere_vmk_replication_create.yml"
         when: >
-          esxi_info | length > 0
+          esxi_info | length > 0 and
+          vds_replication_pg_name is defined and 
+          vds_replication_pg_name | length > 0
+      
+      # Create vmk4 - vSphere Replication, vSphere Replication NFC, vSphere Backup NFC
+      - ansible.builtin.include_tasks: "{{ vsphere_role_directory }}11_vsphere_vmk_replication_backup_create.yml"
+        when: >
+          esxi_info | length > 0 and
+          vds_replication_backup_pg_name is defined and 
+          vds_replication_backup_pg_name | length > 0

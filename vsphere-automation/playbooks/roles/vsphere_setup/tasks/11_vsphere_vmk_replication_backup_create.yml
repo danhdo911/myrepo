@@ -8,7 +8,7 @@
           validate_certs: "{{ vcenter_validate_certs }}"
           esxi_hostname: "{{ item.esxi_hostname }}"
           # Specific Configuration
-          dvswitch_name: "{{ vds_name }}"
+          dvswitch_name: "{% if vds_switch02 | default(None) not in [None, ''] %}{{ vds_switch02 }}{% else %}{{ vds_switch01 }}{% endif %}"
           portgroup_name: "{{ vds_replication_backup_pg_name }}"
           mtu: "{{ mtu_vmkernel | default(9000) }}"
           enable_replication: true
@@ -26,7 +26,6 @@
         delegate_to: localhost
 
     when: >
-      vds_name is defined and
       vds_replication_backup_pg_name is defined and
       vds_replication_backup_netmask is defined and
       vds_replication_backup_gateway is defined

@@ -1,5 +1,5 @@
-# inventory_directory: "{{ lookup('ansible.builtin.env', 'ANSIBLE_ENVIRONMENT_DIR') }}/{{ env_deployment }}/{{ env_inventory }}/"
-inventory_directory: "{{ lookup('ansible.builtin.env', 'ANSIBLE_ENVIRONMENT_DIR') }}/lab/lab247_gen18rs/"
+inventory_directory: "{{ lookup('ansible.builtin.env', 'ANSIBLE_ENVIRONMENT_DIR') }}/{{ env_deployment }}/{{ env_inventory }}/"
+# inventory_directory: "{{ lookup('ansible.builtin.env', 'ANSIBLE_ENVIRONMENT_DIR') }}/lab/lab247_gen18rs/"
 
 # vSphere tasks
 vsphere_role_directory: playbooks/roles/vsphere_setup/tasks/
