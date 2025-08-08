@@ -15,6 +15,11 @@
 {{ vm.name }} ansible_host={{ vm.networks[0].ip_address.split('/')[0] }}
 {% endfor %}
 
+[configs:children]
+control
+network
+compute
+
 [nfs_endpoints:children]
 control
 compute

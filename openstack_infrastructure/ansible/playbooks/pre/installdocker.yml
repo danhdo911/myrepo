@@ -3,6 +3,10 @@
   hosts: all
   become: yes
   tasks:
+    - name: Update APT cache
+      apt:
+        update_cache: true
+
     - name: Install required dependencies
       apt:
         name:
@@ -12,6 +16,7 @@
           - gnupg
           - software-properties-common
         state: present
+        update_cache: true
 
     - name: Create keyrings directory (if not exists)
       file:
@@ -31,9 +36,7 @@
         state: present
         filename: docker
 
-    - name: Update APT cache
-      apt:
-        update_cache: yes
+
 
     - name: Install Docker Engine
       apt:

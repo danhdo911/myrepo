@@ -1,5 +1,6 @@
 module "ops_vm" {
-  source = "../../terraform/modules/vm/005-provision-ops-dev"
+  # source = "../../terraform/modules/vm/005-provision-ops-dev"
+  source = "../../terraform/modules/vm/005-provision-ops-dev-route"
 
   vsphere_datacenter    = var.vsphere_datacenter
   vsphere_cluster       = var.vsphere_cluster

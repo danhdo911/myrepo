@@ -87,7 +87,7 @@ os_setup:
 			$(if $(LIMIT),--limit "$(LIMIT)",)"
 
 gen_config: ## globals, cinder nfs, neutron ml2_config
-	docker compose -f docker-compose.yml run --rm ansible "\
+	docker compose -f docker-compose.yml run --rm ansible_kolla "\
 		ansible-playbook $(ANSIBLE_DIR)/playbooks/pre/generate_config_files.yml \
 			-i $(ENV_DIR)/dynamic_inv.ini \
 			-e "kolla_default_dir=$(KOLLA_DIR)/" \
@@ -140,7 +140,8 @@ kolla_deploy:
 
 kolla_postdeploy:
 	. $(KOLLA_VENV)/activate && \
-		kolla-ansible post-deploy -i $(KOLLA_INV) $(if $(TAG),--tags "$(TAG)",) $(if $(LIMIT),--limit "$(LIMIT)",)
+		kolla-ansible post-deploy -i $(KOLLA_INV) $(if $(TAG),--tags "$(TAG)",) $(if $(LIMIT),--limit "$(LIMIT)",) && \
+		deactivate
 
 kolla_addcert:
 	cat /etc/kolla/certificates/ca/root.crt /etc/ssl/certs/ca-certificates.crt
@@ -156,4 +157,3 @@ kolla_reconfigure:
 	. $(KOLLA_VENV)/activate && \
 		kolla-ansible reconfigure -i $(KOLLA_INV) $(if $(TAG),--tags "$(TAG)",) $(if $(LIMIT),--limit "$(LIMIT)",) && \
 		deactivate
-

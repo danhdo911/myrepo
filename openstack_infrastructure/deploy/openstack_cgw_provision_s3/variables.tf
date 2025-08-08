@@ -66,7 +66,7 @@ variable "vm_configs" {
     vm_int_alias        = list(string)
     vm_ips              = list(string)
     vm_netmask          = list(string)
-    vm_mgmt_gateway     = string
+    vm_gateway          = list(string)
     vm_disk_label       = list(string)
     vm_disk_size        = list(number)
     vm_datastore        = string

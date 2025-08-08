@@ -15,7 +15,16 @@ network:
         - to: default
           via: {{ net.ipv4_gateway }}
       nameservers:
-              addresses: {{ dns_servers | to_json }}
+          addresses: {{ dns_servers | to_json }}
+{%- if search_domain is defined and search_domain %} 
+          search: {{ search_domain | to_json }}
+{%- endif %} 
+{% endif %}
+{% if compute_genenve_subnet is defined and compute_genenve_subnet 
+  and net.alias_name == 'ens35' and inventory_hostname in groups['network'] %}
+      routes:
+        - to: {{ compute_genenve_subnet }}
+          via: {{ net.ipv4_gateway }}
 {% endif %}
 {% endif %}
       match:

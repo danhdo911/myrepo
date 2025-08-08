@@ -26,8 +26,12 @@
     - name: Add custom server to chrony.conf
       ansible.builtin.lineinfile:
         path: /etc/chrony/chrony.conf
-        line: 'server {{ ntp_server }} iburst'
+        regexp: "^server {{ item }} iburst"
+        line: "server {{ item }} iburst"
         insertafter: EOF
+        state: present
+        create: yes
+      loop: "{{ ntp_servers }}"
 
     - name: Restart Chrony service
       ansible.builtin.service:
