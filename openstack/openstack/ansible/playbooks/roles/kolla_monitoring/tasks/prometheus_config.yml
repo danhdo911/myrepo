@@ -1,0 +1,25 @@
+---
+- name: Ensure Kolla Ansible configuration directory for Prometheus exists
+  ansible.builtin.file:
+    path: "{{ kolla_config_prometheus_exporter_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Prometheus exporters configuration for OpenStack
+  ansible.builtin.template:
+    src: "{{ item.file_name }}.j2"
+    dest: "{{ kolla_config_prometheus_exporter_dir }}/{{ item.file_name }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ prometheus_exporters }}"
+
+- name: Remote write configuration for Monitoring
+  ansible.builtin.template:
+    src: "10-remote-write.yml.j2"
+    dest: "{{ kolla_config_prometheus_exporter_dir }}/10-remote-write.yml"
+    owner: root
+    group: root
+    mode: '0644'

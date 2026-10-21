@@ -1,0 +1,8 @@
+### Python packages
+requests
+pyVim
+pyVmomi
+PyYAML
+
+openstacksdk
+python-openstackclient

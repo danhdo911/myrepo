@@ -1,0 +1,10 @@
+---
+- name: Clean apt cache and update package lists
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install OS packages required for infrastructure and kolla-ansible
+  ansible.builtin.apt:
+    name: "{{ kolla_packages }}"
+    state: present

@@ -1,0 +1,6 @@
+### DNS records
+vcenter_ip: <VCENTER_IP>
+vcenter_fqdn: <VCENTER_FQDN>
+
+openstack_ip: <OPENSTACK_IP>
+openstack_fqdn: <OPENSTACK_FQDN>

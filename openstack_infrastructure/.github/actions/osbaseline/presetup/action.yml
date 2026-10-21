@@ -1,0 +1,9 @@
+name: OS Baseline Pre-setup
+description: OS Baseline Pre-setup
+
+runs:
+  using: composite
+  steps:
+    - name: OS Baseline Pre-setup
+      shell: bash
+      run: make os_baseline_setup ENV=${ENVIRONMENT} TAG=pre_setup

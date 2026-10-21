@@ -6,4 +6,7 @@ collections:
   - name: community.hashi_vault
   - name: community.general
   - name: ansible.posix
+  - name: ansible.utils
   - name: community.docker
+  - name: community.crypto
+  - name: openstack.cloud

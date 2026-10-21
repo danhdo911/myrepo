@@ -1,0 +1,19 @@
+{% set cinder_san_storage_password = '{{ nimble_password }}' %}
+[DEFAULT]
+{% if cinder_san_storage_enabled | default(false) | bool %}
+enabled_backends = {{ cinder_san_backend | default('nimble-1', true) }}
+{% if qos_volume_enabled | default(false) | bool %}
+default_volume_type = {{ cinder_san_default_volume_type | default('nimble-iops-4k', true) }}
+{% endif %}
+
+[{{ cinder_san_backend }}]
+san_ip = {{ cinder_san_storage_ip }}
+san_login = {{ cinder_san_storage_user }}
+san_password = {{ cinder_san_storage_password }}
+volume_driver = {{ cinder_san_volume_driver | default('cinder.volume.drivers.hpe.nimble.NimbleISCSIDriver', true) }}
+volume_backend_name = {{ cinder_san_backend }}
+san_thin_provision = {{ cinder_san_thin_provision | default (true) | bool }}
+nimble_subnet_label = {{ cinder_san_nimble_subnet_label | default('iSCSI-OPS', true) }}
+{% else %}
+enabled_backends = {{ cinder_nfs_backend | default('nfs-1', true) }}
+{% endif %}

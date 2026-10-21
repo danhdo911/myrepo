@@ -1,0 +1,37 @@
+readiness_requirements:
+  almalinux:
+    aliases:
+      - almalinux
+    minimum_version: "8"
+    virt_v2v_enabled: true
+
+  debian:
+    aliases:
+      - debian
+    minimum_version: "10"
+    virt_v2v_enabled: true
+
+  rocky_linux:
+    aliases:
+      - rocky linux
+    minimum_version: "8"
+    virt_v2v_enabled: true
+
+  ubuntu:
+    aliases:
+      - ubuntu
+    minimum_version: "20.04"
+    virt_v2v_enabled: false
+
+  windows_server:
+    aliases:
+      - windows server
+    minimum_version: "2016"
+    virt_v2v_enabled: true
+
+  rhel:
+    aliases:
+      - rhel
+      - red hat enterprise linux
+    minimum_version: "7"
+    virt_v2v_enabled: true

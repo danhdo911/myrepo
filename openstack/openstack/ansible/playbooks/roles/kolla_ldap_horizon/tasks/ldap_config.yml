@@ -1,0 +1,30 @@
+---
+- name: Ensure Kolla Ansible configuration directory for LDAP exists
+  ansible.builtin.file:
+    path: "{{ kolla_config_keystone_domain_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: FreeIPA LDAP Keystone configuration file for Kolla Ansible
+  ansible.builtin.template:
+    src: ldap_horizon_freeipa.j2
+    dest: "{{ kolla_config_keystone_domain_dir }}/keystone.{{ ldap_horizon_domain | lower() }}.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  when:
+    - ldap_horizon_server_type | length > 0
+    - ldap_horizon_server_type == "freeipa"
+
+- name: ADDC LDAP Keystone configuration file for Kolla Ansible
+  ansible.builtin.template:
+    src: ldap_horizon_addc.j2
+    dest: "{{ kolla_config_keystone_domain_dir }}/keystone.{{ ldap_horizon_domain | lower() }}.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  when:
+    - ldap_horizon_server_type | length > 0
+    - ldap_horizon_server_type == "addc"

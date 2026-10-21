@@ -1,0 +1,31 @@
+---
+- name: OpenStack Health Check
+  hosts: infra
+  become: true
+  become_user: root
+  gather_facts: true
+
+  tasks:
+    - name: Run health check services for OpenStack
+      ansible.builtin.include_role:
+        name: ops_healthcheck
+        tasks_from: services
+        apply:
+          tags:
+            - healthcheck_services
+            - healthcheck_all
+      tags:
+        - healthcheck_services
+        - healthcheck_all
+
+    - name: Run health check containers for OpenStack
+      ansible.builtin.include_role:
+        name: ops_healthcheck
+        tasks_from: containers
+        apply:
+          tags:
+            - healthcheck_containers
+            - healthcheck_all
+      tags:
+        - healthcheck_containers
+        - ops_healthcheck

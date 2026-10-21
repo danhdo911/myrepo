@@ -1,0 +1,69 @@
+---
+- name: Copy Alloy executed file to /usr/local/bin
+  ansible.builtin.copy:
+    src: "{{ monitoring_alloy_dir }}/alloy"
+    dest: "{{ alloy_executable_dir }}/alloy"
+    mode: "0755"
+    remote_src: true
+  notify: restart-alloy
+
+- name: Template Alloy service file for systemd
+  ansible.builtin.template:
+    src: alloy.service.j2
+    dest: "{{ monitoring_alloy_dir }}/alloy.service"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Copy Alloy service file to /etc/systemd/system
+  ansible.builtin.copy:
+    src: "{{ monitoring_alloy_dir }}/alloy.service"
+    dest: "{{ alloy_systemd_dir }}/alloy.service"
+    mode: "0755"
+    remote_src: true
+  notify: restart-alloy
+
+- name: Template Alloy configuration for systemd
+  ansible.builtin.template:
+    src: alloy.config.j2
+    dest: "{{ monitoring_alloy_dir }}/alloy.config.j2"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Fetch the Alloy configuration template from the remote server
+  ansible.builtin.fetch:
+    src: "{{ monitoring_alloy_dir }}/alloy.config.j2"
+    dest: "{{ artifacts_path }}/alloy.config.j2"
+    flat: true
+
+- name: Ensure /etc/alloy directory is exist
+  ansible.builtin.file:
+    path: "{{ alloy_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Template Alloy configuration for systemd
+  ansible.builtin.template:
+    src: "{{ artifacts_path }}/alloy.config.j2"
+    dest: "{{ alloy_config_dir }}/alloy.config"
+    owner: root
+    group: root
+    mode: "0755"
+  notify: restart-alloy
+
+- name: Ensure {{ alloy_data_workdir }} directory is exist
+  ansible.builtin.file:
+    path: "{{ alloy_data_workdir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Ensure Alloy is running and enabled on boot
+  ansible.builtin.service:
+    name: alloy
+    state: started
+    enabled: true

@@ -1,8 +1,0 @@
-#cloud-config
-users:
-  - name: test01
-    ssh-authorized-keys:
-      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDoCIdl0pMEKOL46tMn0+KoxJ7vPANopS9xIC6u3Gqx1VXwGMZEKp1n1XYfu5mjFgigzbckyOWcWOKAKyON2WmByWQ+dk9M7QTzCOKetDzusxVz5p6G8qcjgiF2Yi3fYBdlYqVkPFzm+Z2jtvNlxN4yz8jFcGxZ1pJ1+2QgDa4Zg0JnMankHbatCfcvS0594whLZbXZF0ffLEohxecK+upvsoSNS0toiD4CLCM/lFRpAvld05xuHpZ6ax+P828ysW/8ex/45JG5WArYUgom+FrgXgDn6Ip0KW/beJR4jdBGZMF7aEXT+fLKHAT2mUYbL7fxjbkG91sE0Bcap1NDf1LWRBwOC+zafJ9xWEnznzxWnckxLPB2xaAe/+3VYol4zxgYGZ+Q2JtgPYh3qDxaMuLUbypYIST6mxPcrfP3RfTrbudAOsAbfDNNXrcMwGFLEQNT9YZwMFLT3qWHrDT7JTRDIrZSsoGSViDTzmj8+CQZScVTmmjpcOoTdfSkELeq/XuCQzuPLlKnZeMH+zbEhB+xgrQLFmSrAsk+yWfZ7Lzd3bx7cb/Sdm8YFq0/L6mmAtdmg7hididhnd0Qnoa+nERkQ0RZFEc1Dpp0VMABq62oO4n+XjEFLM0yJ5Abw1DxKX0MxiuSnsr2f/Z6U924ysh+AP9Odj/t+RQOyN7OviI4Aw== danh.do@ap.iij.com
-    sudo: ['ALL=(ALL) NOPASSWD:ALL']
-    groups: sudo
-    shell: /bin/bash

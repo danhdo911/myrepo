@@ -1,0 +1,354 @@
+#/etc/grafana/provisioning/alerting/
+---
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: MariaDB
+    folder: Backup Alert
+    interval: 1h
+    rules:
+      - title: Backup file not found
+        condition: C
+        data:
+          - refId: A
+            queryType: range
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              datasource:
+                type: loki
+              editorMode: code
+              expr: |-
+                sum(
+                  count_over_time(
+                    {job="mariadb_backup"}
+                    |= "mariadb_backup_file_check.sh"
+                    | logfmt
+                    | level="error"
+                    [12h]
+                  )
+                ) or vector(0)
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: range
+              refId: A
+          - refId: reducer
+            queryType: expression
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: reducer
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: reducer
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        labels:
+          service_name: mariadb_backup
+          severity: error
+        isPaused: false
+        notification_settings:
+          receiver: IIJ-HCM99-OPS-Alert
+      - title: Backup file is too small
+        condition: C
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              datasource:
+                type: loki
+              editorMode: code
+              expr: |-
+                sum(
+                  count_over_time(
+                    {job="mariadb_backup"}
+                    |= "mariadb_backup_file_check.sh"
+                    | logfmt
+                    | level="warning"
+                    [12h]
+                  )
+                ) or vector(0)
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: instant
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        labels:
+          service_name: mariadb_backup
+          severity: warning
+        isPaused: false
+        notification_settings:
+          receiver: IIJ-HCM99-OPS-Alert
+      - title: Backup file check script execution status
+        condition: C
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              datasource:
+                type: loki
+              editorMode: code
+              expr: |-
+                absent_over_time(
+                  {job="mariadb_backup"}
+                  |= "mariadb_backup_file_check.sh"
+                  [26h]
+                )
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: instant
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        notification_settings:
+          receiver: IIJ-HCM99-OPS-Alert
+      - title: MariaDB backup error
+        condition: C
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              datasource:
+                type: loki
+              editorMode: code
+              expr: |-
+                sum(
+                  count_over_time(
+                    {job="mariadb_backup"}
+                    |= "mariadb_backup.sh"
+                    | logfmt
+                    | level="error"
+                    [12h]
+                  )
+                ) or vector(0)
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: instant
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        labels:
+          service_name: mariadb_backup
+          severity: error
+        isPaused: false
+        notification_settings:
+          receiver: IIJ-HCM99-OPS-Alert
+      - title: MariaDB backup script execution status
+        condition: C
+        data:
+          - refId: A
+            queryType: range
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              datasource:
+                type: loki
+              editorMode: code
+              expr: |-
+                absent_over_time(
+                  {job="mariadb_backup"}
+                  |= "mariadb_backup.sh"
+                  [26h]
+                )
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              queryType: range
+              refId: A
+          - refId: reducer
+            queryType: expression
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: reducer
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: reducer
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        labels:
+          service_name: mariadb_backup
+          severity: error
+        isPaused: false
+        notification_settings:
+          receiver: IIJ-HCM99-OPS-Alert

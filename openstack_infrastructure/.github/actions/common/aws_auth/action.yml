@@ -1,0 +1,32 @@
+name: AWS Authentication
+description: AWS Authentication
+
+runs:
+  using: composite
+  steps:
+    - name: Preparing aws authentication config
+      shell: bash
+      run: |
+        cat > aws_config << EOF
+        [default]
+        region = ap-southeast-1
+        output = json
+        EOF
+
+        cat > aws_credentials << EOF
+        [default]
+        aws_access_key_id = ${AWS_ACCESS_KEY_ID}
+        aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}
+        mfa_serial = ${AWS_MFA_SERIAL}
+        mfa_seed = ${AWS_MFA_SEED}
+        
+        [default_mfa]
+
+        [default_dev_tfstate]
+        source_profile = default_mfa
+        role_arn = ${AWS_ROLE_ARN}
+        EOF
+
+    - name: Authenticate to AWS
+      shell: bash
+      run: make aws_fetch_creds

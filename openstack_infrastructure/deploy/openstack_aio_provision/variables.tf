@@ -41,11 +41,21 @@ variable "vsphere_folder" {}
 
 ### VM Authenticate ###
 # variable "vm_remote_type" {}
-# variable "vm_user_login" {}
-# variable "vm_user_password" {}
+variable "vm_user_login" {
+  type      = string
+  sensitive = true
+  default   = "vm_user_login"
+}
+
+variable "vm_user_password" {
+  type      = string
+  sensitive = true
+  default   = "vm_user_password"
+}
 
 ### VMs Specific Configurations
 variable "vm_template" {}
+variable "firmware" { default = null }
 variable "vm_ssh_public_key" {
   type      = string
   sensitive = true
@@ -58,17 +68,18 @@ variable "dns_server_list" {
 
 variable "vm_configs" {
   type = map(object({
-    vm_name             = string
-    vm_num_cpus         = number
-    vm_cores_per_socket = number
-    vm_memory           = number
-    vm_networks         = list(string)
-    vm_int_alias        = list(string)
-    vm_ips              = list(string)
-    vm_netmask          = list(string)
-    vm_gateway          = list(string)
-    vm_disk_label       = list(string)
-    vm_disk_size        = list(number)
-    vm_datastore        = string
+    vm_name              = string
+    vm_num_cpus          = number
+    vm_cores_per_socket  = number
+    vm_memory            = number
+    vm_networks          = list(string)
+    vm_int_alias         = list(string)
+    vm_ips               = list(string)
+    vm_netmask           = list(string)
+    vm_gateway           = list(string)
+    vm_disk_label        = list(string)
+    vm_disk_size         = list(number)
+    vm_datastore         = string
+    vm_nested_hv_enabled = optional(bool, false)
   }))
 }

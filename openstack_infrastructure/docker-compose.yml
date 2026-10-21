@@ -2,25 +2,19 @@ services:
   terraform:
     image: harbor.iij.com.vn/customized-images/terraform:1.10.3
     volumes:
-      - ${PROJECT_DIR}:${WORK_DIR}
+      - /etc/localtime:/etc/localtime:ro
+      - ${PROJECT_DIR:-.}:${WORK_DIR:-/workspace}
+
     working_dir: ${WORK_DIR}
     env_file:
       - .env
     entrypoint: ["/bin/sh", "-c"]
 
-  ansible:
-    image: harbor.iij.com.vn/customized-images/ansible:2.0
+  ansible_ops:
+    image: harbor.iij.com.vn/customized-images/ansible:4.0
     volumes:
-      - ${PROJECT_DIR}:${WORK_DIR}
-    working_dir: ${WORK_DIR}
-    env_file:
-      - .env
-    entrypoint: ["sh", "-c"]
-
-  ansible_kolla:
-    image: harbor.iij.com.vn/customized-images/ansible:2.0
-    volumes:
-      - ${PROJECT_DIR}:${WORK_DIR}
+      - /etc/localtime:/etc/localtime:ro
+      - ${PROJECT_DIR:-.}:${WORK_DIR:-/workspace}
       - /etc/kolla:/etc/kolla
       - /tmp:/tmp
     working_dir: ${WORK_DIR}

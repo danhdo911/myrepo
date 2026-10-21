@@ -1,0 +1,20 @@
+---
+- name: Replace configuration template in Keystone
+  ansible.builtin.copy:
+    src: "{{openstack_release}}/metadata_service/{{ item }}"
+    dest: "{{ kolla_keystone_templates_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: '0640'
+    backup: true
+  loop: "{{ metadata_service_patches.keystone }}"
+
+- name: Replace configuration template in Skyline
+  ansible.builtin.copy:
+    src: "{{openstack_release}}/metadata_service/{{ item }}"
+    dest: "{{ kolla_skyline_templates_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: '0640'
+    backup: true
+  loop: "{{ metadata_service_patches.skyline }}"

@@ -1,0 +1,9 @@
+name: Kolla init environment
+description: Kolla init environment
+
+runs:
+  using: composite
+  steps:
+    - name: Kolla init environment
+      shell: bash
+      run: make kolla_config ENV=${ENVIRONMENT} TAG=kolla_init

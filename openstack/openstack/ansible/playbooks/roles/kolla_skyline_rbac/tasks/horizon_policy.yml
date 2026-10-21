@@ -1,0 +1,16 @@
+---
+- name: Ensure RBAC policy directories for Horizon exists
+  ansible.builtin.file:
+    path: "{{ kolla_config_dir }}/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop: "{{ skyline_policy_services }}"
+
+- name: RBAC policy for Horizon
+  ansible.builtin.template:
+    src: "{{ item }}_policy.yaml.j2"
+    dest: "{{ kolla_config_dir }}/{{ item }}/policy.yaml"
+    mode: '0640'
+  loop: "{{ skyline_policy_services }}"

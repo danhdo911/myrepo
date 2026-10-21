@@ -1,0 +1,8 @@
+[defaults]
+host_key_checking=False
+pipelining=True
+forks=100
+callbacks_enabled = ansible.posix.profile_tasks
+interpreter_python = /usr/bin/python3
+vault_id_match=True
+private_key_file=~/.ssh/kolla-ansible

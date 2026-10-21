@@ -1,0 +1,26 @@
+---
+- name: Verify required migration files
+  block:
+    - name: Check required files
+      ansible.builtin.stat:
+        path: "{{ item.path }}"
+      loop: "{{ required_files }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: required_files_stat
+
+    - name: Assert required files exist and are not empty
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+          - item.stat.isreg
+          - item.stat.size | int > 0
+        fail_msg: >-
+          Required file '{{ item.item.name }}'
+          was not found or is empty:
+          {{ item.item.path }}
+        success_msg: >-
+          Required file '{{ item.item.name }}' is valid.
+      loop: "{{ required_files_stat.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"

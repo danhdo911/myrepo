@@ -1,0 +1,28 @@
+name: Prepare local variables environment
+description: Prepare environment
+
+runs:
+  using: composite
+  steps:
+    - name: Preparing .env
+      shell: bash
+      run: |
+          cat > .env << EOF
+          PROJECT_DIR=.
+          WORK_DIR=/workspace
+          ANSIBLE_CONFIG=/workspace/ansible.cfg
+          ANSIBLE_SUDO_PASS="${ANSIBLE_SUDO_PASS}"
+          HARBOR_REGISTRY="${HARBOR_REGISTRY}"
+          HARBOR_USER="${HARBOR_USER}"
+          HARBOR_PASSWORD="${HARBOR_PASSWORD}"
+          VAULT_ADDR="${VAULT_ADDR}"
+          VAULT_TOKEN="${VAULT_TOKEN}"
+          TF_VAR_vault_path_base="${VAULT_SECRET_PATH_BASE}"
+          TF_VAR_vault_secret_path="${VAULT_SECRET_PATH}"
+          TF_VAR_vault_secret_data="${VAULT_SECRET_DATA}"
+          AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}"
+          AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
+          AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION}"
+          AWS_CONFIG_FILE="/workspace/aws_config"
+          AWS_SHARED_CREDENTIALS_FILE="/workspace/aws_credentials"
+          EOF

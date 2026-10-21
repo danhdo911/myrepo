@@ -1,0 +1,95 @@
+---
+- block:
+    - name: Nova configuration file for Kolla Ansible
+      ansible.builtin.include_tasks:
+        file: nova_config.yml
+        apply:
+          tags: 
+            - nova
+            - kolla_core_services
+      # vars:
+      #   nova_vnc_enabled: false
+      tags:
+        - nova
+        - kolla_core_services
+
+    - name: Neutron ML2 configuration file for Kolla Ansible
+      ansible.builtin.include_tasks: 
+        file: neutron_config.yml
+        apply:
+          tags: 
+            - neutron
+            - kolla_core_services
+      tags:
+        - neutron
+        - kolla_core_services
+
+    - name: Cinder configuration file for Kolla Ansible
+      ansible.builtin.include_tasks:
+        file: cinder_config.yml
+        apply:
+          tags: 
+            - cinder
+            - kolla_core_services
+      tags:
+        - cinder
+        - kolla_core_services
+
+    - name: Skyline configuration file for Kolla Ansible
+      ansible.builtin.include_tasks:
+        file: skyline_config.yml
+        apply:
+          tags: 
+            - skyline
+            - kolla_core_services
+      tags:
+        - skyline
+        - kolla_core_services
+      when:
+        - skyline_enabled | default(false) | bool
+  when:
+    - inventory_hostname in groups['infra']
+
+- name: NFS mountpoint for Glance
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: nfs
+    apply:
+      tags:
+        - nfs_glance
+        - kolla_core_services
+  vars:
+    nfs_ops_services_mounts: "{{ glance_nfs_mountpoint }}"
+  tags:
+    - nfs_glance
+    - kolla_core_services
+  when:
+    - inventory_hostname in groups['control']
+
+- name: Cinder NFS storage for OpenStack
+  ansible.builtin.include_tasks:
+    file: cinder_nfs_storage.yml
+    apply:
+      tags: 
+        - cinder_nfs_storage
+        - kolla_core_services
+  tags:
+    - cinder_nfs_storage
+    - kolla_core_services
+  when: 
+    - inventory_hostname in groups['control']
+    - cinder_nfs_storage_enabled | default(false) | bool
+
+- name: NFS mountpoint for Cinder
+  ansible.builtin.include_tasks:
+    file: nfs_shares.yml
+    apply:
+      tags: 
+        - cinder_nfs_storage
+        - kolla_core_services
+  tags:
+    - cinder_nfs_storage
+    - kolla_core_services
+  when:
+    - inventory_hostname in groups['infra']
+    - cinder_nfs_storage_enabled | default(false) | bool

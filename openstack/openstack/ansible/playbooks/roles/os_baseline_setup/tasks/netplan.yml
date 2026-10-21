@@ -1,0 +1,25 @@
+---
+- name: Find all files in /etc/netplan
+  ansible.builtin.find:
+    paths: /etc/netplan/
+    file_type: file
+  register: netplan_files
+
+- name: Remove all default files in /etc/netplan
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ netplan_files.files }}"
+  when: item.path | basename != netplan_file_name
+
+- name: Generate Netplan config file
+  ansible.builtin.template:
+    src: "{{ netplan_template }}"
+    dest: /etc/netplan/{{ netplan_file_name }}
+    mode: '0600'
+  notify:
+    - generate-netplan
+    - apply-netplan
+
+- name: Run netplan handlers now
+  ansible.builtin.meta: flush_handlers

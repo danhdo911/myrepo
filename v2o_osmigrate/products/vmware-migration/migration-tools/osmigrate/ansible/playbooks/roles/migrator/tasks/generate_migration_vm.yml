@@ -1,0 +1,34 @@
+---
+- name: Find existing VM migration configurations
+  ansible.builtin.find:
+    paths: "{{ environment_dir }}"
+    patterns: "migration_vm_*.yml"
+    file_type: file
+  register: existing_migration_files
+  delegate_to: localhost
+  run_once: true
+
+- name: Remove existing VM migration configurations
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ existing_migration_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  delegate_to: localhost
+  run_once: true
+
+- name: Generate VM migration configurations by conversion policy
+  ansible.builtin.template:
+    src: migration_vm.yml.j2
+    dest: "{{ environment_dir }}/migration_vm_{{ item.name }}.yml"
+    mode: "0644"
+  loop: "{{ migration_conversion_modes }}"
+  when: >-
+    readiness_inventory.values()
+    | selectattr('virt_v2v_enabled', 'defined')
+    | selectattr('virt_v2v_enabled', 'equalto', item.virt_v2v_enabled)
+    | list
+    | length > 0
+  delegate_to: localhost
+  run_once: true

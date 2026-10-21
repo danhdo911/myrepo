@@ -1,9 +1,0 @@
----
-- ansible.builtin.import_playbook:  pre/01_netplan_config.yml
-- ansible.builtin.import_playbook:  pre/02_os_init.yml
-- ansible.builtin.import_playbook:  pre/03_ops_pre.yml
-- ansible.builtin.import_playbook:  pre/04_chrony_setup.yml
-# - ansible.builtin.import_playbook:  pre/05_mariadb_setup.yml
-# - ansible.builtin.import_playbook:  pre/06_memcache_setup.yml
-# - ansible.builtin.import_playbook:  pre/07_rabbitmq_setup.yml
-# - ansible.builtin.import_playbook:  pre/08_etcd_setup.yml

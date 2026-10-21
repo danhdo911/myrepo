@@ -1,0 +1,17 @@
+### Default Cinder Volume Type
+cinder_volume_type: "<cinder_volume_type>"
+
+### Default Security Group
+security_groups: "<security_groups_id>"
+
+### Network mapping from VMware to OpenStac
+network_mappings:
+  <vmware_portgroup_id_01>:
+    ops_network_name: "<openstack_network_name_01>"
+    ops_network_id: "<openstack_network_id_01>"
+    ops_subnet_id: "<openstack_subnet_id_01>"
+
+  <vmware_portgroup_id_02>:
+    ops_network_name: "<openstack_network_name_02>"
+    ops_network_id: "<openstack_network_id_02>"
+    ops_subnet_id: "<openstack_subnet_id_02>"

@@ -1,0 +1,10 @@
+---
+- name: Replace fernet-push template in Keystone
+  ansible.builtin.copy:
+    src: "{{openstack_release}}/keystone_fernet/{{ item }}"
+    dest: "{{ kolla_keystone_templates_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: '0640'
+    backup: true
+  loop: "{{ keystone_fernet_patches.keystone }}"

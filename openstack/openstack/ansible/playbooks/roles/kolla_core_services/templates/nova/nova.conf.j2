@@ -1,0 +1,10 @@
+[DEFAULT]
+cpu_allocation_ratio = 12.0
+reclaim_instance_interval = 86400
+block_device_allocate_retries = 1800
+
+{% if nova_vnc_enabled | default(false) | bool %}
+[vnc]
+enabled = true
+novncproxy_base_url = {{ novncproxy_base_url | default("") }}
+{% endif %}

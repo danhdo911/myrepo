@@ -1,0 +1,19 @@
+[infra]
+{% for host in groups['infra'] %}
+{{ host }}.{{ search_domain[0] }}
+{% endfor %}
+
+[control]
+{% for host in groups['control'] %}
+{{ host }}.{{ search_domain[0] }}
+{% endfor %}
+
+[compute]
+{% for host in groups['compute'] %}
+{{ host }}.{{ search_domain[0] }}
+{% endfor %}
+
+[gateway]
+{% for host in groups['network'] %}
+{{ host }}.{{ search_domain[0] }}
+{% endfor %}

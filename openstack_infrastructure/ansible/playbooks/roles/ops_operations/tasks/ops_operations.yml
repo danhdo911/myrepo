@@ -1,0 +1,46 @@
+---
+- name: Flavors template
+  ansible.builtin.include_tasks: 
+    file: flavors.yml
+    apply:
+      tags:
+        - flavors
+        - ops_operations
+  tags:
+    - flavors
+    - ops_operations
+  when:
+    - inventory_hostname in groups['infra']
+    - openstack_flavors | default([]) | length > 0
+
+- name: Skyline custom roles
+  ansible.builtin.include_tasks: 
+    file: custom_roles.yml
+    apply:
+      tags:
+        - custom_roles
+        - ops_operations
+  tags:
+    - custom_roles
+    - ops_operations
+  when:
+    - inventory_hostname in groups['infra']
+    - skyline_policy_enabled | default(false) | bool
+    - openstack_custom_roles | default([]) | length > 0
+    - openstack_custom_implied_roles | default([]) | length > 0
+
+- name: QoS Volume
+  ansible.builtin.include_tasks: 
+    file: qos_volume.yml
+    apply:
+      tags:
+        - qos_volume
+        - ops_operations
+  tags:
+    - qos_volume
+    - ops_operations
+  when:
+    - inventory_hostname in groups['infra']
+    - qos_volume_enabled | default(false) | bool
+    - openstack_qos_volume | default([]) | length > 0
+    

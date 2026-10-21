@@ -1,0 +1,12 @@
+name: Prepare Ansible SSH Key
+description: Prepare Ansible SSH Key
+
+runs:
+  using: composite
+  steps:
+    - name: Prepare Ansible SSH Key
+      shell: bash
+      run: |
+        make vault_get_sshkey
+        printf "\n" >> ansible_private_key
+        ssh-keygen -l -f ansible_private_key

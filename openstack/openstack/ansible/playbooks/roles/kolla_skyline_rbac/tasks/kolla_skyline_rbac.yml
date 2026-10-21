@@ -1,0 +1,42 @@
+---
+- name: Horizon RBAC Policy configuration
+  ansible.builtin.include_tasks:
+    file: horizon_policy.yml
+    apply:
+      tags:
+        - horizon_policy
+        - kolla_skyline_rbac
+  tags:
+    - horizon_policy
+    - kolla_skyline_rbac
+  when:
+    - inventory_hostname in groups['infra']
+    - skyline_policy_services | default([]) | length > 0
+
+- name: Skyline RBAC Policy configuration
+  ansible.builtin.include_tasks:
+    file: skyline_policy.yml
+    apply:
+      tags:
+        - skyline_policy
+        - kolla_skyline_rbac
+  tags:
+    - skyline_policy
+    - kolla_skyline_rbac
+  when:
+    - inventory_hostname in groups['control']
+    - skyline_policy_services | default([]) | length > 0
+
+- name: Skyline RBAC Policy configuration file for Kolla Ansible
+  ansible.builtin.include_tasks:
+    file: skyline_policy_config.yml
+    apply:
+      tags:
+        - skyline_policy
+        - kolla_skyline_rbac
+  tags:
+    - skyline_policy
+    - kolla_skyline_rbac
+  when:
+    - inventory_hostname in groups['infra']
+    - skyline_policy_services | default([]) | length > 0

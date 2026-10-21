@@ -1,0 +1,14 @@
+---
+- name: Ensure VDDK target directory exists
+  ansible.builtin.file:
+    path: "{{ import_workloads_libdir }}"
+    state: directory
+    mode: "0755"
+
+- name: Extract VDDK archive
+  ansible.builtin.unarchive:
+    src: "{{ vddk_archive }}"
+    dest: "{{ import_workloads_libdir }}"
+    remote_src: false
+    extra_opts:
+      - --strip-components=1

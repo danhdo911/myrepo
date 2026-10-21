@@ -1,0 +1,19 @@
+---
+- name: Patching for OpenStack
+  hosts: infra
+  become: true
+  become_user: root
+  gather_facts: true
+  
+  tasks:
+    - name: OpenStack Operations
+      ansible.builtin.include_role:
+        name: kolla_patch
+        tasks_from: kolla_patch
+      tags:
+        - kolla_patch
+        - keystone_fernet
+        - keystone_http_proxy
+        - metadata_service
+      when:
+        - kolla_patch_enabled | default(false) | bool

@@ -1,0 +1,26 @@
+---
+- name: Append OpenStack flavor mapping to readiness inventory
+  ansible.builtin.set_fact:
+    vm_data_readiness: >-
+      {{
+        vm_data_readiness
+        | combine(
+            {
+              vm.key: vm_data_readiness[vm.key]
+              | combine(
+                  {
+                    'ops_flavor_id': flavor_mapped
+                  }
+                )
+            },
+            recursive=true
+          )
+      }}
+  loop: "{{ readiness_inventory | dict2items }}"
+  loop_control:
+    loop_var: vm
+    label: "{{ vm.key }}"
+  no_log: true
+  vars:
+    flavor_key: "{{ vm.value.resources.cpu }}-{{ vm.value.resources.memory_mb }}"
+    flavor_mapped: "{{ flavor_mappings.get(flavor_key, flavor_default) }}"

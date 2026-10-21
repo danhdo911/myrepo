@@ -1,0 +1,8 @@
+---
+- name: Inventory file for Grafana Alloy
+  ansible.builtin.template:
+    src: "alloy_inventory.j2"
+    dest: "{{ monitoring_dir }}/inventory"
+    owner: root
+    group: root
+    mode: '0644'

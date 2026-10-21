@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -o pipefail  # Keep pipefail, but remove errexit so we can handle errors manually
+
+# List of Keystone nodes
+NODES=(
+{% for host in groups['keystone'] %}
+{% if inventory_hostname != host %}
+    "{{ 'api' | kolla_address(host) | put_address_in_context('url') }}"
+{% endif %}
+{% endfor %}
+)
+
+
+# SSH command
+SSH_CMD="ssh -i /var/lib/keystone/.ssh/id_rsa -p 8023 -F /var/lib/keystone/.ssh/config"
+
+# Track sync success
+SUCCESS=0
+
+for NODE in "${NODES[@]}"; do
+    # Perform dry-run for health check
+    if [ ! -z "$1" ] && [ "$1" == "--check" ]; then
+        /usr/bin/rsync --dry-run -az -e "$SSH_CMD" --delete /etc/keystone/fernet-keys/ keystone@$NODE:/etc/keystone/fernet-keys
+    else
+        /usr/bin/rsync -az -e "$SSH_CMD" --delete /etc/keystone/fernet-keys/ keystone@$NODE:/etc/keystone/fernet-keys
+    fi
+
+    # If rsync succeeds for at least one node, mark success
+    if [ $? -eq 0 ]; then
+        SUCCESS=1
+    fi
+done
+
+# Health check should return success if at least one sync was successful
+if [ $SUCCESS -eq 1 ]; then
+    exit 0  # Success
+else
+    exit 1  # Failure
+fi

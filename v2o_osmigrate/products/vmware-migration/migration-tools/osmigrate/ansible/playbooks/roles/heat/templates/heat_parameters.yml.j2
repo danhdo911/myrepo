@@ -1,0 +1,24 @@
+parameters:
+  instance_name: {{ vm.key }}
+  flavor_name: {{ flavor_name }}
+
+  # Boot volume
+  boot_volume_id: {{ boot_volume_id }}
+
+{% for volume in data_volumes | default([]) %}
+  # Data volume {{ "%02d" | format(loop.index) }}
+  data_volume_{{ "%02d" | format(loop.index) }}_id: {{ volume.id }}
+{% endfor %}
+
+{% for network in networks | default([]) %}
+{% set index = "%02d" | format(loop.index) %}
+  # Network port {{ index }}
+  network_{{ index }}_id: {{ network.ops_network_id }}
+  subnet_{{ index }}_id: {{ network.ops_subnet_id }}
+  fixed_ip_address_{{ index }}: {{ network.addresses    
+                                    | select('match', '^[0-9.]+$')
+                                    | first
+                                    | default('')}}
+  custom_mac_address_{{ index }}: {{ network.mac}}
+
+{% endfor %}

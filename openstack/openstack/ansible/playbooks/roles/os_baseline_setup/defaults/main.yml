@@ -1,0 +1,36 @@
+### Netplan
+netplan_template: "01-netcfg.yaml.j2"
+netplan_file_name: "01-netcfg.yaml"
+
+### Proxy
+proxy_enabled: false
+proxy_file_name: "proxy.conf"
+proxy_host: ""
+proxy_port: ""
+no_proxy_list: []
+
+### NTP
+timezone: "Asia/Ho_Chi_Minh"
+
+### Packages
+essential_packages: ["jq", "curl", "wget", "unzip", "net-tools", "vim", "htop", "tree", "rsync"]
+
+### NFS
+nfs_packages: ["nfs-common"]
+
+### Docker
+docker_dependencies: ["apt-transport-https", "ca-certificates", "curl", "gnupg", "software-properties-common"]
+docker_packages: ["docker-ce", "docker-ce-cli", "containerd.io", "docker-compose"]
+
+### Hardening OS
+hardening_enabled: false
+hardening_packages: ["libopenscap8", "unzip", "curl", "wget"]
+hardening_workdir: "/opt/os-hardening"
+hardening_repo: "https://api.github.com/repos/ComplianceAsCode/content/releases/latest"
+hardening_os_version: "ubuntu2204"
+hardening_cis_level: "cis_level1"
+
+### SSH (hardening_compliance config file)
+ssh_config_path: "/etc/ssh/sshd_config.d"
+ssh_config_rootlogin: "{{ ssh_config_path }}/00-complianceascode-hardening.conf"
+ssh_config_passauth: "{{ ssh_config_path }}/50-cloud-init.conf"

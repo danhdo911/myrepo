@@ -1,0 +1,15 @@
+---
+- name: Ensure RBAC policy directory for Skyline exists
+  ansible.builtin.file:
+    path: "{{ skyline_policy_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: RBAC policy for Skyline
+  ansible.builtin.template:
+    src: "{{ item }}_policy.yaml.j2"
+    dest: "{{ skyline_policy_dir }}/{{ item }}_policy.yaml"
+    mode: '0755'
+  loop: "{{ skyline_policy_services }}"

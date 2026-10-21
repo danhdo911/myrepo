@@ -1,0 +1,33 @@
+- name: Extend Ubuntu LVM disk
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    disk_device: /dev/sda
+    partition_number: 3
+    vg_name: ubuntu-vg
+    lv_name: ubuntu-lv
+
+  tasks:
+    - name: Grow partition
+      ansible.builtin.command:
+        cmd: "growpart {{ disk_device }} {{ partition_number }}"
+      register: growpart_result
+      changed_when: "'CHANGED' in growpart_result.stdout"
+      failed_when:
+        - growpart_result.rc != 0
+        - "'NOCHANGE' not in growpart_result.stdout"
+
+    - name: Resize physical volume
+      ansible.builtin.command:
+        cmd: "pvresize {{ disk_device }}{{ partition_number }}"
+      register: pvresize_result
+      changed_when: "'changed' in pvresize_result.stdout | lower"
+
+    - name: Extend logical volume to use all free space
+      community.general.lvol:
+        vg: "{{ vg_name }}"
+        lv: "{{ lv_name }}"
+        size: +100%FREE
+        resizefs: true

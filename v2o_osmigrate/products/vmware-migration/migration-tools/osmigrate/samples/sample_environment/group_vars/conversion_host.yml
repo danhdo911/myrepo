@@ -1,0 +1,4 @@
+### VMware VDDK library package
+# This is the VMware VDDK version tested at the time. 
+# The version can be updated as needed.
+vddk_archive: "/tmp/VMware-vix-disklib-8.0.3-23950268.x86_64.tar.gz"

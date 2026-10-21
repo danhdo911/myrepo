@@ -1,0 +1,6 @@
+migration_conversion_modes:
+  - name: with_v2v
+    virt_v2v_enabled: true
+
+  - name: without_v2v
+    virt_v2v_enabled: false

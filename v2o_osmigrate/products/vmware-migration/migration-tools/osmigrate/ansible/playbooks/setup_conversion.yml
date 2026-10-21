@@ -1,0 +1,47 @@
+---
+- name: Setup the Conversion host
+  hosts: conversion_host
+  become: true
+  become_user: root
+  gather_facts: false
+
+  tasks:
+    - name: Add DNS records to /etc/hosts
+      ansible.builtin.include_role:
+        name: common
+        tasks_from: dns_hosts
+        apply:
+          tags:
+            - dns
+      tags:
+        - dns
+
+    - name: Install CA certificates
+      ansible.builtin.include_role:
+        name: conversion
+        tasks_from: certificates
+        apply:
+          tags:
+            - certs
+      tags:
+        - certs
+
+    - name: VDDK library
+      ansible.builtin.include_role:
+        name: conversion
+        tasks_from: vddk_lib
+        apply:
+          tags:
+            - vddk
+      tags:
+        - vddk
+
+    - name: Configure Proxy environment
+      ansible.builtin.include_role:
+        name: conversion
+        tasks_from: proxy_environment
+        apply:
+          tags:
+            - proxy
+      tags:
+        - proxy

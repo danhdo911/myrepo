@@ -1,0 +1,54 @@
+netplan_template: 01-netcfg-physical.yaml.j2
+
+interface_ethernets:
+  - name: ens192
+  - name: ens224
+  - name: ens256
+  - name: ens161
+
+interface_bonds:
+  - name: bond0
+    interfaces: ["ens192","ens161"]
+    parameters:
+      mode: active-backup
+      mii-monitor-interval: 100
+
+
+  - name: bond1
+    interfaces: ["ens224"]
+    parameters:
+      mode: active-backup
+      mii-monitor-interval: 100
+
+  - name: bond2
+    interfaces: ["ens256"]
+    parameters:
+      mode: active-backup
+      mii-monitor-interval: 100
+
+interface_vlans:
+  # api_interface
+  - name: ens33
+    id: 885
+    addresses: 172.16.85.15/24
+    routes:
+      - to: default
+        via: 172.16.85.254
+
+  # tunnel_interface
+  - name: ens35
+    link: bond1
+    id: 886
+    addresses: 172.16.86.15/24
+    routes:
+      - to: 172.16.86.0/24
+        via: 172.16.86.254
+
+  # storage_interface
+  - name: ens36
+    link: bond2
+    id: 887
+    addresses: 172.16.87.15/24
+    routes:
+      - to: 172.16.87.0/24
+        via: 172.16.87.254

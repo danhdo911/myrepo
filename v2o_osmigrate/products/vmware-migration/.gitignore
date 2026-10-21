@@ -1,0 +1,70 @@
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+.private_key
+*.key
+*.pem
+*.p12
+*.pfx
+clouds.yaml
+secure.yaml
+inventory
+
+# Generated inventories and migration data
+tmp.vmware_vms.yml
+output/
+migration_vars.yml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Ansible
+*.retry
+.ansible/
+ansible.log
+fact_cache/
+facts_cache/
+
+# Container/build artifacts
+context/
+docker-compose.override.yml
+
+# VM images and large local downloads
+*.qcow2
+*.img
+*.iso
+*.vmdk
+*.ova
+*.ovf
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+
+# Report evidence is committed on purpose; it must still be reviewed by eye
+# before it is added. See docs/reports in the README.
+!docs/reports/*.log

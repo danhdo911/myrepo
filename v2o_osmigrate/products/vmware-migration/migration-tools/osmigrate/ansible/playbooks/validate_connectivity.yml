@@ -1,0 +1,68 @@
+---
+- name: Validate connectivity from AEE
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Validate DNS, connectivity, and authentication from AEE
+      ansible.builtin.command:
+        cmd: "{{ playbook_dir }}/scripts/validate_connectivity.sh"
+      environment:
+        ENV_FILE: "{{ environment_dir }}/.env"
+      register: aee_connectivity_validation
+      changed_when: false
+
+    - name: Show AEE connectivity validation result
+      ansible.builtin.debug:
+        msg: "{{ aee_connectivity_validation.stdout_lines }}"
+
+
+- name: Validate connectivity from conversion host
+  hosts: conversion_host
+  become: true
+  become_user: root
+  gather_facts: false
+
+  vars:
+    tmp_script_check: "/tmp/validate_connectivity.sh"
+    tmp_env_check: "/tmp/os_migrate.env"
+  tasks:
+    - name: Validate connectivity from conversion host
+      block:
+        - name: Copy validation script to conversion host
+          ansible.builtin.copy:
+            src: "{{ playbook_dir }}/scripts/validate_connectivity.sh"
+            dest: "{{ tmp_script_check }}"
+            owner: root
+            group: root
+            mode: "0755"
+
+        - name: Copy environment file to conversion host
+          ansible.builtin.copy:
+            src: "{{ environment_dir }}/.env"
+            dest: "{{ tmp_env_check }}"
+            owner: root
+            group: root
+            mode: "0600"
+          no_log: true
+
+        - name: Run connectivity validation
+          ansible.builtin.command:
+            cmd: "{{ tmp_script_check }}"
+          environment:
+            ENV_FILE: "{{ tmp_env_check }}"
+          register: conversion_connectivity_validation
+          changed_when: false
+
+        - name: Show Conversion host connectivity validation result
+          ansible.builtin.debug:
+            msg: "{{ conversion_connectivity_validation.stdout_lines }}"
+
+      always:
+        - name: Remove temporary validation files
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: absent
+          loop:
+            - "{{ tmp_script_check }}"
+            - "{{ tmp_env_check }}"

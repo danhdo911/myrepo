@@ -1,0 +1,38 @@
+[identity]
+driver = ldap
+
+[ldap]
+url                     = {{ ldap_horizon_url }}
+
+# Bind user
+user                    = {{ ldap_horizon_user | lower() }}
+password                = {{ ldap_horizon_password }}
+
+# Base DN
+suffix                  = {{ ldap_horizon_suffix | lower() }}
+
+# User search base
+user_tree_dn            = {{ ldap_horizon_user_tree_dn | lower() }}
+
+# Filter users by group membership
+user_filter             = (memberOf={{ ldap_horizon_user_filter | lower() }})
+
+# Object class
+user_objectclass        = person
+
+# Attribute mappings
+user_id_attribute       = sAMAccountName
+user_name_attribute     = sAMAccountName
+user_mail_attribute     = mail
+user_pass_attribute     =
+user_enabled_attribute  = userAccountControl
+user_enabled_mask       = 2
+user_enabled_default    = 512
+
+# Project mapping (read-only)
+user_default_project_id_attribute =
+
+# Disable user management from Keystone
+user_allow_create = False
+user_allow_update = False
+user_allow_delete = False

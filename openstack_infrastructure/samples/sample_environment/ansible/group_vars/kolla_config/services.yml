@@ -1,0 +1,80 @@
+### Core services, including Skyline as default
+core_services_enabled: true
+
+# Nova VNC
+nova_vnc_enabled: true
+novncproxy_base_url: "https://{{ kolla_external_fqdn }}:6080/vnc_lite.html"
+
+# NFS for Glance
+nfs_ops_services_ip: "192.168.137.231"
+nfs_ops_services_opts: "rw,vers=4.1,_netdev"
+glance_nfs_mountpoint:
+  - mountpoint: "/glance"
+    path: "/glance"
+
+# Skyline image
+skyline_enabled: true
+skyline_console_image: "harbor.iij.com.vn/openstack.kolla/skyline-console"
+skyline_console_tag: "1.7.0"
+
+# Container proxy
+conntainer_proxy_enabled: false
+container_http_proxy: "http://172.16.81.168:8080"
+container_https_proxy: "http://172.16.81.168:8080"
+container_no_proxy: "localhost,127.0.0.1,::1,.172.16.0.0/16"
+
+# neutron/ml2_config.ini (for LAB env)
+neutron_provider_vlan_enabled: true
+neutron_provider_vlan_ranges: 137:138
+
+### NFS for Cinder (for LAB env)
+cinder_nfs_storage_enabled: true
+cinder_nfs_storage_ip: "192.168.137.231"
+cinder_nfs_storage_path: "/opslab199_data"
+cinder_nfs_storage_mountpoint: "/opslab199_data"
+cinder_nfs_backend: "nfs-1"
+
+# ### SAN for Cinder
+# cinder_san_storage_enabled: false
+# cinder_san_storage_ip: "192.168.163.99"
+# cinder_san_storage_user: "cinderuser"
+# cinder_san_backend: "nimble-1"
+# cinder_san_default_volume_type: "nimble-iops-4k"
+# cinder_san_nimble_subnet_label: "iSCSI-LAB199-OPS"
+# cinder_san_volume_driver: "cinder.volume.drivers.hpe.nimble.NimbleISCSIDriver"
+
+### Skyline RBAC Policy integration
+skyline_policy_enabled: true
+skyline_policy_dir: "{{ ansible_env.HOME }}/skyline/policy"
+
+### HIGIO Portal integration
+higio_portal_enabled: true
+
+metadata_nfs_mountpoint:
+  - mountpoint: "/metadata"
+    path: "/metadata"
+
+skyline_addons_static_url: "https://dev-skyline-console-addons-server.iijvn.local/static"
+keystone_trusted_dashboards:
+  - "https://iijvnopselb.higio.lab/api/openstack/skyline/api/v1/websso"
+keystone_federation_oidc_additional_options:
+  OIDCProviderMetadataRefreshInterval: 15
+  OIDCDiscoverURL: https://higio-iam.iijvn.local
+  OIDCRedirectURLsAllowed: ^https://(iijvnopselb\.higio\.lab|higio-iam\.iijvn\.local|higio-iam-qc\.iijvn\.local)
+  OIDCSessionInactivityTimeout: 3600
+  OIDCSessionMaxDuration: 3600
+
+# ### LDAP Horizon integration
+# ldap_horizon_enabled: false
+# ldap_horizon_server_type: "addc"
+# ldap_horizon_domain: "dd-iaas.local"
+# ldap_horizon_url: "ldap://192.168.138.240"
+# ldap_horizon_suffix: "DC=dd-iaas,DC=local"
+# ldap_horizon_user_tree_dn: "CN=Users,DC=dd-iaas,DC=local"
+# ldap_horizon_group_tree_dn: "CN=Users,DC=dd-iaas,DC=local"
+# ldap_horizon_user_filter: "CN=grp_openstack,CN=Users,DC=dd-iaas,DC=local"
+
+# ### Monitoring system integration
+# monitoring_enabled: false
+# monitoring_system_fqdn: "lab199oneview.higio.lab"
+# monitoring_system_vip_address: "172.16.85.199"

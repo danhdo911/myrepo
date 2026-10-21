@@ -1,0 +1,5 @@
+artifacts_path: "{{ work_dir }}/output/artifacts"
+openstack_auth: kolla-admin
+openstack_environment:
+  OS_CLIENT_CONFIG_FILE: "{{ artifacts_path }}/clouds.yaml"
+  OS_CACERT: "{{ artifacts_path }}/root.crt"

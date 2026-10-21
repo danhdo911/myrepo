@@ -1,0 +1,38 @@
+### kolla-venv/share/kolla-ansible/ansible/mariadb_backup_check_bkfile.yml
+---
+- name: Find backup file less than 1 day
+  find:
+    paths: "{{ backup_path }}"
+    patterns: "{{ backup_file_patterns }}"
+    age: -1d
+    age_stamp: mtime
+  register: new_backup_file
+
+- name: Ensure at least one recent backup exists
+  assert:
+    that:
+      - new_backup_file.files | length > 0
+    fail_msg: "No backup file found in {{ backup_path }} within last 1 day"
+    success_msg: "Backup files found"
+
+- name: Check the stats of backup file
+  stat:
+    path: "{{ item.path }}"
+  register: backup_file_status
+  loop: "{{ new_backup_file.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  when:
+    - new_backup_file.files | length > 0
+
+- name: Check backup file details
+  debug:
+    msg: >-
+      Backup file {{ item.stat.path }} has size
+      {{ (item.stat.size / (1024 ** 2)) | round(2) }} MB
+  loop: "{{ backup_file_status.results }}"
+  loop_control:
+    label: "{{ item.stat.path }}"
+  when:
+    - backup_file_status.results | length > 0
+    - backup_file_status.results | selectattr('stat.size', '>', 0) | list | length > 0

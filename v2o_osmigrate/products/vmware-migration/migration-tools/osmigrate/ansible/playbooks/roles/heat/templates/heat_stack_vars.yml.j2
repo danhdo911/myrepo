@@ -1,0 +1,27 @@
+vms_list:
+{% for vm_name, vm in readiness_inventory_mapped.items() %}
+  - instance_name: {{ vm.name }}
+    flavor_name: {{ vm.ops_flavor_id }}
+    boot_volume_id: {{ vm.boot_volume_id }}
+
+{% if vm.data_volumes is defined and vm.data_volumes %}
+    data_volumes:
+{% for volume in vm.data_volumes %}
+      - id: {{ volume.id }}
+{% endfor %}
+{% endif %}
+
+    networks:
+{% for network in vm.networks | default([]) %}
+      - network_id: {{ network.ops_network_id }}
+        subnet_id: {{ network.ops_subnet_id }}
+        fixed_ip: {{ network.addresses
+                    | default([])
+                    | select('match', '^[0-9.]+$')
+                    | first
+                  }}
+        mac_address: {{ network.mac }}
+
+{% endfor %}
+
+{% endfor %}

@@ -1,0 +1,36 @@
+---
+- block:
+    - name: Domain for LDAP Horizon
+      ansible.builtin.include_tasks:
+        file: ldap_domain.yml
+        apply:
+          tags:
+            - ldap_domain
+            - kolla_ldap_horizon
+      tags:
+        - ldap_domain
+        - kolla_ldap_horizon
+
+    - name: LDAP Horizon configuration
+      ansible.builtin.include_tasks:
+        file: ldap_config.yml
+        apply:
+          tags:
+            - ldap_config
+            - kolla_ldap_horizon
+      tags:
+        - ldap_config
+        - kolla_ldap_horizon
+
+    - name: Horizon custom setting
+      ansible.builtin.include_tasks:
+        file: ldap_horizon_custom_setting.yml
+        apply:
+          tags:
+            - ldap_horizon_custom
+            - kolla_ldap_horizon
+      tags:
+        - ldap_horizon_custom
+        - kolla_ldap_horizon
+  when:
+    - inventory_hostname in groups['infra']

@@ -1,0 +1,21 @@
+---
+- name: Create mount point for Cinder NFS storage
+  file:
+    path: "{{ cinder_nfs_storage_mountpoint }}"
+    state: directory
+    mode: '0755'
+
+- name: Mount Cinder NFS storage
+  mount:
+    path: "{{ cinder_nfs_storage_mountpoint }}"
+    src: "{{ cinder_nfs_storage_ip }}:{{ cinder_nfs_storage_path }}"
+    fstype: nfs
+    opts: defaults
+    state: mounted
+
+# - name: Create Cinder NFS storage directories
+#   file:
+#     path: "{{ cinder_nfs_storage_mountpoint }}/{{ item }}"
+#     state: directory
+#     mode: '0755'
+#   loop: "{{ cinder_nfs_storage_dirs }}"

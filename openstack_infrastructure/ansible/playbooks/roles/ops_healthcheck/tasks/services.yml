@@ -1,0 +1,26 @@
+---
+- name: OpenStack services health check
+  vars:
+    script_path: "services"
+    script_name: "ops-services-healthcheck.sh"
+    virtual_env: "{{ workdir_openstack }}/{{ kolla_venv }}"
+  ansible.builtin.script:
+    cmd: "{{ script_path }}/{{ script_name }} {{ virtual_env }} {{ kolla_dir }}"
+  register: healthcheck_result
+  delegate_to: "{{ groups['infra'][0] }}"
+  run_once: true
+  no_log: true
+  changed_when: false
+  failed_when: false
+
+- name: OpenStack services health check report
+  ansible.builtin.assert:
+    that:
+      - healthcheck_result.rc == 0
+    success_msg: |
+      OpenStack services health check passed.
+    fail_msg: |
+      OpenStack services health check failed.
+  delegate_to: "{{ groups['infra'][0] }}"
+  run_once: true
+  

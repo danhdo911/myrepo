@@ -1,0 +1,9 @@
+name: Generate Inventory for Ansible
+description: Generate Inventory for Ansible
+
+runs:
+  using: composite
+  steps:
+    - name: Generate Inventory for Ansible
+      shell: bash
+      run: make gen_inv ENV=${ENVIRONMENT}

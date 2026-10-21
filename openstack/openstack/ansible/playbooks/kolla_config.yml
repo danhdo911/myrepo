@@ -1,0 +1,99 @@
+---
+- name: Kolla configurations for OpenStack services
+  hosts: kolla_config
+  become: true
+  become_user: root
+  gather_facts: true
+
+  tasks:
+    - name: Setup Kolla Ansible environment 
+      ansible.builtin.include_role:
+        name: kolla_init
+        tasks_from: kolla_init
+      tags:
+        - kolla_init
+        - packages
+        - kolla_venv
+        - passwords_config
+        - inventory
+        - registry_config
+
+    - name: Openstack core services configuration
+      ansible.builtin.include_role:
+        name: kolla_core_services
+        tasks_from: kolla_core_services
+      tags:
+        - kolla_core_services
+        - nova
+        - neutron
+        - cinder
+        - nfs_glance
+        - skyline
+        - cinder_nfs_storage
+
+    - name: Skyline RBAC policy for OpenStack services
+      ansible.builtin.include_role:
+        name: kolla_skyline_rbac
+        tasks_from: kolla_skyline_rbac
+      tags:
+        - kolla_skyline_rbac
+        - horizon_policy
+        - skyline_policy
+      when:
+        - skyline_policy_enabled | default(false) | bool
+
+    - name: HIGIO Portal integration
+      ansible.builtin.include_role:
+        name: kolla_higio_portal
+        tasks_from: kolla_higio_portal
+      tags:
+        - kolla_higio_portal
+        - nfs_metadata
+      when:
+        - higio_portal_enabled | default(false) | bool
+
+    - name: LDAP Horizon integration
+      ansible.builtin.include_role:
+        name: kolla_ldap_horizon
+        tasks_from: kolla_ldap_horizon
+      tags:
+        - kolla_ldap_horizon
+        - ldap_domain
+        - ldap_config
+        - ldap_horizon_custom
+      when:
+        - ldap_horizon_enabled | default(false) | bool
+
+    - name: Monitoring system integration
+      ansible.builtin.include_role:
+        name: kolla_monitoring
+        tasks_from: kolla_monitoring
+      tags:
+        - kolla_monitoring
+        - dns_monitor
+        - prometheus_config
+        - prometheus_docker_exporter
+        - alloy_binary
+        - alloy_config
+        - alloy_inventory
+      when:
+        - monitoring_enabled | default(false) | bool
+
+# Generating globals.yml configuration
+- name: Globals configuration for OpenStack services
+  hosts: infra
+  become: true
+  become_user: root
+  gather_facts: true
+
+  tasks:
+    - name: Generate globals configuration file for OpenStack
+      ansible.builtin.template:
+        src: "templates/globals_config/globals.yml.j2"
+        dest: "{{ kolla_dir }}/globals.yml"
+        owner: root
+        group: root
+        mode: '0644'
+      tags: [globals_config]
+      delegate_to: "{{ groups['infra'][0] }}"
+      run_once: true

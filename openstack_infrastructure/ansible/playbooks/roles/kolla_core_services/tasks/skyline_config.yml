@@ -1,0 +1,37 @@
+---
+- name: Ensure Kolla Ansible configuration directory for Skyline exists
+  ansible.builtin.file:
+    path: "{{ kolla_config_skyline_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Ensure logos configuration directory for Skyline exists
+  ansible.builtin.file:
+    path: "{{ kolla_config_skyline_dir }}/logos/asset/image"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Copy logo for Skyline portal
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ kolla_config_skyline_dir }}/logos"
+    owner: root
+    group: root
+    mode: '0640'
+  with_fileglob:
+    - "skyline/*.ico"
+
+- name: Copy images for Skyline portal
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ kolla_config_skyline_dir }}/logos/asset/image/"
+    owner: root
+    group: root
+    mode: '0640'
+  with_fileglob:
+    - "skyline/*.svg"
+    - "skyline/*.png"

@@ -1,0 +1,25 @@
+################## Kolla Ansible Configurations ##################
+### OpenStack release version
+openstack_release: "2024.1"
+
+### Kolla setup
+kolla_repo: "git+https://opendev.org/openstack/kolla-ansible@unmaintained/2024.1"
+kolla_venv: "os-venv"
+kolla_dir: "/etc/kolla"
+kolla_config_dir: "{{ kolla_dir }}/config"
+kolla_config_nova_dir: "{{ kolla_config_dir }}/nova"
+kolla_config_neutron_dir: "{{ kolla_config_dir }}/neutron"
+kolla_config_cinder_dir: "{{ kolla_config_dir }}/cinder"
+kolla_config_glance_dir: "{{ kolla_config_dir }}/glance"
+kolla_config_skyline_dir: "{{ kolla_config_dir }}/skyline"
+
+### Workdir default
+workdir_default: "{{ ansible_env.HOME }}/workdir"
+workdir_openstack: "{{ workdir_default }}/openstack"
+
+### Harbor private registry
+registry_private_enabled: true
+registry_url: "harbor.iij.com.vn"
+registry_namespace: "quay-io-mirror/openstack.kolla"
+registry_user: "{{ hv.harbor_registry_user }}"
+registry_password: "{{ hv.harbor_registry_password }}"

@@ -1,0 +1,106 @@
+---
+- name: Pre-Migration
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  become: true
+  become_user: root
+
+  tasks:
+  ### Validate credentials
+    - name: Validate credentials
+      ansible.builtin.include_role:
+        name: common
+        tasks_from: verify_credentials
+        apply:
+          tags:
+            - verify_credentials
+            - pre_migrate
+      tags:
+        - verify_credentials
+        - pre_migrate
+
+  ### Data collection
+    - name: Gather Additional Information of VMs
+      ansible.builtin.include_role:
+        name: migrator
+        tasks_from: extra_vm_info
+        apply:
+          tags:
+            - data_collect
+            - pre_migrate
+      tags:
+        - data_collect
+        - pre_migrate
+
+  ### Readiness Inventory
+    - name: Validation Readiness Inventory
+      ansible.builtin.command:
+        argv:
+          - "{{ python_version }}"
+          - "{{ python_module_validation }}"
+      args:
+        chdir: "{{ python_dir }}"
+      register: readiness_check_result
+      changed_when: false
+      tags:
+        - readiness_check
+        - pre_migrate
+
+  ### VMs Migration Variable
+    - name: Verify Instance Deployment Inputs
+      ansible.builtin.include_role:
+        name: common
+        tasks_from: verify_required_files
+        apply:
+          tags:
+            - migration_vars
+            - pre_migrate
+      vars:
+        required_files:
+          - name: VM inventory readiness
+            path: "{{ vm_data_readiness }}"
+          - name: VM resource mapping
+            path: "{{ vm_resources_mapping_file }}"
+      tags: 
+        - migration_vars
+        - pre_migrate
+
+    - name: Load Readiness Inventory
+      ansible.builtin.set_fact:
+        readiness_inventory: >-
+          {{
+            lookup('ansible.builtin.file', vm_data_readiness)
+            | from_json
+          }}
+      no_log: true
+      tags:
+        - migration_vars
+        - pre_migrate
+
+    - name: Load VM Resources Mapping
+      ansible.builtin.include_vars:
+        file: "{{ vm_resources_mapping_file }}"
+      tags:
+        - migration_vars
+        - pre_migrate
+
+    - name: Networks Mapping VMware-to-OpenStack
+      ansible.builtin.include_role:
+        name: resources_mapping
+        tasks_from: resources_mapping
+      tags:
+        - migration_vars
+        - pre_migrate
+
+    - name: Variables for VMs Migration
+      ansible.builtin.include_role:
+        name: migrator
+        tasks_from: generate_migration_vm
+        apply:
+          tags:
+            - migration_vars
+            - pre_migrate
+      tags:
+        - migration_vars
+        - pre_migrate

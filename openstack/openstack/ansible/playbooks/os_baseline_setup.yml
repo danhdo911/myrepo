@@ -1,0 +1,42 @@
+---
+  - name: OS Baseline Configuration for the OpenStack pre-deployment
+    hosts: os_baseline
+    become: true
+    become_user: root
+    gather_facts: true
+
+    tasks:
+      - name: OS Baseline pre-setup
+        ansible.builtin.include_role:
+          name: os_baseline_setup
+          tasks_from: pre_setup
+        tags:
+          - pre_setup
+          - tf_loaddata
+          - netplan
+
+      - name: OS Baseline setup
+        ansible.builtin.include_role:
+          name: os_baseline_setup
+          tasks_from: setup
+        tags:
+          - setup
+          - cloud_init
+          - hostname
+          - proxy
+          - dns
+          - packages
+          - ntp
+          - docker
+          - ssh_kolla
+
+      - name: OS Baseline post-setup
+        ansible.builtin.include_role:
+          name: os_baseline_setup
+          tasks_from: post_setup
+        tags:
+          - post_setup
+          - pre_harden 
+          - apply_harden
+          - post_harden
+          - ssh

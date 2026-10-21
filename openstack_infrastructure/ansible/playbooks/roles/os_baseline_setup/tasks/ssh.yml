@@ -1,0 +1,46 @@
+---
+- block:
+    - name: Allow root login in SSH config
+      ansible.builtin.lineinfile:
+        path: "{{ ssh_config_rootlogin }}"
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin yes'
+        state: present
+      notify: restart-ssh
+
+    - name: Allow password authentication in SSH
+      ansible.builtin.lineinfile:
+        path: "{{ ssh_config_passauth }}"
+        regexp: '^PasswordAuthentication'
+        line: 'PasswordAuthentication yes'
+        state: present
+      notify: restart-ssh
+  when:
+    - hardening_enabled | default(false) | bool
+
+- name: SSH configuration for Administrator
+  ansible.builtin.template:
+    src: ssh_config.conf.j2
+    dest: "{{ ssh_config_path }}/ssh_config.conf"
+    mode: '0600'
+  notify: restart-ssh
+  when:
+    - not (hardening_enabled | default(false) | bool)
+
+- name: Ensure .ssh directory exists
+  ansible.builtin.file:
+    path: /root/.ssh
+    state: directory
+    mode: '0700'
+    owner: root
+    group: root
+
+- name: Copy SSH public key to authorized_keys
+  ansible.posix.authorized_key:
+    user: "{{ item.ssh_user }}"
+    key: "{{ item.ssh_public_key }}"
+    state: present
+  loop: "{{ ssh_admin_users }}"
+  when: 
+    - ssh_admin_users is defined
+    - ssh_admin_users | length > 0

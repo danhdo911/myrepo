@@ -1,0 +1,15 @@
+### Keystone
+kolla_config_keystone_dir: "{{ kolla_config_dir }}/keystone"
+kolla_config_keystone_domain_dir: "{{ kolla_config_keystone_dir }}/domains"
+
+# Choose LDAP server type with options:
+#   - freeipa: for FreeIPA Linux server - currently running in PRD/STG/DEV environments
+#   - addc: for AD Windows server - quick test in LAB environment
+# Default is "freeipa"
+ldap_horizon_server_type: "freeipa"
+
+ldap_horizon_user: "{{ hv.ldap_horizon_user }}"
+ldap_horizon_password: "{{ hv.ldap_horizon_password }}"
+
+###  Horizon
+kolla_config_horizon_dir: "{{ kolla_config_dir }}/horizon"

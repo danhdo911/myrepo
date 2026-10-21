@@ -1,0 +1,24 @@
+### Environment
+env: "{{ lookup('ansible.builtin.env', 'TARGET_ENVIRONMENT') }}"
+
+### Proxy Configuration
+proxy_url: "{{ lookup('ansible.builtin.env', 'PROXY_URL') }}"
+no_proxy: "{{ lookup('ansible.builtin.env', 'NO_PROXY') }}"
+
+### Directories
+work_dir: "{{ lookup('ansible.builtin.env', 'WORK_DIR') }}"
+output_dir: "{{ work_dir }}/output"
+environment_dir: "{{ work_dir }}/environments/{{ env }}"
+
+vm_data_source_file: "{{ output_dir }}/vm_data_filtered.json"
+vm_data_output_file: "{{ output_dir }}/vm_data_extra_info.json"
+vm_data_readiness: "{{ output_dir }}/vm_data_readiness.json"
+
+migration_vars_file: "{{ environment_dir }}/migration_vars.yml"
+
+vm_resources_mapping_file: "{{ environment_dir }}/vm_resources_mapping.yml"
+
+### Python libs: <sub-product>/libs/python
+python_dir: "{{ work_dir }}/python"
+python_version: "/usr/bin/python3.12"
+python_module_validation: "modules/readiness_check.py"

@@ -1,0 +1,99 @@
+---
+- name: Check for new backup files
+  find:
+    paths: "{{ backup_path }}"
+    patterns: "{{ backup_file_patterns }}"
+    age: -1d
+    age_stamp: mtime
+  register: new_backup_file
+
+- name: Check the stats of backup file
+  stat:
+    path: "{{ item.path }}"
+  loop: "{{ new_backup_file.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  register: backup_file_stat
+  when:
+    - new_backup_file.files | length > 0
+
+- name: Error if backup file is missing
+  lineinfile:
+    path: "{{ log_file_path }}"
+    line: >-
+      {{
+        {
+          "timestamp": ansible_date_time.iso8601,
+          "hostname": inventory_hostname,
+          "process": "mariadb_backup.sh",
+          "level": "error",
+          "event": "backup_file_missing",
+          "file": item.stat.path,
+          "msg": "Backup file is missing"
+        } | to_json
+      }}
+    create: yes
+  loop: "{{ backup_file_stat.results }}"
+  loop_control:
+    label: "{{ item.stat.path }}"
+  when:
+    - new_backup_file.files | length > 0
+    - not item.stat.exists | default(false)
+  delegate_to: localhost
+  throttle: 1
+
+- name: Info if backup file size is valid
+  lineinfile:
+    path: "{{ log_file_path }}"
+    line: >-
+      {{
+        {
+          "timestamp": ansible_date_time.iso8601,
+          "hostname": inventory_hostname,
+          "process": "mariadb_backup.sh",
+          "level": "info",
+          "event": "backup_file_size_valid",
+          "file": item.stat.path,
+          "size_mb": ((item.stat.size | int) / 1024 / 1024) | round(2),
+          "threshold_mb": backup_min_size_mb,
+          "msg": "Backup file size is valid. Backup task is successful."
+        } | to_json
+      }}
+    create: yes
+  loop: "{{ backup_file_stat.results }}"
+  loop_control:
+    label: "{{ item.stat.path }}"
+  when:
+    - new_backup_file.files | length > 0
+    - item.stat.exists | default(false)
+    - ((item.stat.size | int) / 1024 / 1024) >= (backup_min_size_mb | int)
+  delegate_to: localhost
+  throttle: 1
+
+- name: Warning if backup file size too small
+  lineinfile:
+    path: "{{ log_file_path }}"
+    line: >-
+      {{
+        {
+          "timestamp": ansible_date_time.iso8601,
+          "hostname": inventory_hostname,
+          "process": "mariadb_backup.sh",
+          "level": "warning",
+          "event": "backup_file_size_small",
+          "file": item.stat.path,
+          "size_mb": ((item.stat.size | int) / 1024 / 1024) | round(2),
+          "threshold_mb": backup_min_size_mb,
+          "msg": "Backup file size is less than threshold"
+        } | to_json
+      }}
+    create: yes
+  loop: "{{ backup_file_stat.results }}"
+  loop_control:
+    label: "{{ item.stat.path }}"
+  when:
+    - new_backup_file.files | length > 0
+    - item.stat.exists | default(false)
+    - ((item.stat.size | int) / 1024 / 1024) < (backup_min_size_mb | int)
+  delegate_to: localhost
+  throttle: 1

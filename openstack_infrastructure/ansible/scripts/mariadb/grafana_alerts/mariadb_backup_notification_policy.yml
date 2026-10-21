@@ -1,0 +1,13 @@
+#/etc/grafana/provisioning/alerting/
+---
+apiVersion: 1
+muteTimes:
+  - orgId: 1
+    name: mariadb_backup_notification_policy
+    time_intervals:
+      - times:
+          - start_time: "00:00"
+            end_time: "06:00"
+          - start_time: "12:00"
+            end_time: "24:00"
+        location: Asia/Ho_Chi_Minh

@@ -1,0 +1,16 @@
+---
+- name: Ensure Kolla Ansible configuration directory for Nova exists
+  ansible.builtin.file:
+    path: "{{ kolla_config_nova_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Nova configuration file for Kolla Ansible
+  ansible.builtin.template:
+    src: nova/nova.conf.j2
+    dest: "{{ kolla_config_dir }}/nova.conf"
+    owner: root
+    group: root
+    mode: '0644'

@@ -1,0 +1,32 @@
+---
+- name: Fetch Authentication OpenStack
+  ansible.builtin.import_playbook: ops_auth_fetch.yml
+  tags:
+    - ops_operations
+    - ops_auth_fetch
+
+- name: OpenStack Post-deployment 
+  hosts: infra
+  become: true
+  become_user: root
+  gather_facts: true
+  
+  tasks:
+    - name: Export CAs to /etc/kolla/admin-openrc.sh
+      ansible.builtin.shell: |
+        cat /etc/kolla/certificates/ca/root.crt | sudo tee -a /etc/ssl/certs/ca-certificates.crt
+        echo "export OS_CACERT=/etc/ssl/certs/ca-certificates.crt" >> {{ kolla_dir }}/admin-openrc.sh
+      delegate_to: "{{ groups['infra'][0] }}"
+      run_once: true
+      tags:
+        - addcerts
+
+    - name: OpenStack Operations
+      ansible.builtin.include_role:
+        name: ops_operations
+        tasks_from: ops_operations
+      tags:
+        - ops_operations
+        - flavors
+        - custom_roles
+        - qos_volume

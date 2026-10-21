@@ -1,0 +1,39 @@
+---
+- name: Install required dependencies
+  ansible.builtin.apt:
+    name: "{{ docker_dependencies }}"
+    state: present
+    update_cache: true
+
+- name: Create keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download Docker GPG key in ASCII format
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+
+- name: Add Docker APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+    filename: docker
+
+- name: Install Docker Engine
+  ansible.builtin.apt:
+    name: "{{ docker_packages }}"
+    state: present
+  notify: start-docker
+
+- name: Verify Docker installation
+  ansible.builtin.command: docker --version
+  register: docker_version
+  changed_when: false
+
+- name: Show Docker version
+  ansible.builtin.debug:
+    msg: "Docker installed successfully: {{ docker_version.stdout }}"

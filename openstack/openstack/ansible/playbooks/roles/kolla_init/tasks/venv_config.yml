@@ -1,0 +1,60 @@
+---
+- name: Create kolla virtual environment
+  ansible.builtin.command:
+    cmd: "python3 -m venv {{ workdir_openstack }}/{{ kolla_venv }}"
+    creates: "{{ workdir_openstack }}/{{ kolla_venv }}/bin/activate"
+
+- name: Add kolla virtual environment to bashrc
+  become: true
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    line: "source {{ workdir_openstack }}/{{ kolla_venv }}/bin/activate"
+    state: present
+    create: yes
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Install packages in virtual environment
+  ansible.builtin.pip:
+    name: "{{ python_libraries }}"
+    virtualenv: "{{ workdir_openstack }}/{{ kolla_venv }}"
+
+- name: Install kolla-ansible in virtual environment
+  ansible.builtin.pip:
+    name: "{{ kolla_repo }}"
+    virtualenv: "{{ workdir_openstack }}/{{ kolla_venv }}"
+
+- name: Ensure ansible directory exists
+  ansible.builtin.file:
+    path: "/etc/ansible"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create ansible configuration file
+  ansible.builtin.template:
+    src: "ansible.cfg.j2"
+    dest: "/etc/ansible/ansible.cfg"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Ensure Kolla Ansible configuration directory exists
+  ansible.builtin.file:
+    path: "{{ kolla_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install ansible-galaxy dependencies for kolla-ansible
+  ansible.builtin.shell: |
+    source {{ workdir_openstack }}/{{ kolla_venv }}/bin/activate
+    kolla-ansible install-deps
+  args:
+    executable: /bin/bash
+  register: _install_deps_result
+  failed_when: _install_deps_result.rc != 0
+  changed_when: false

@@ -1,0 +1,9 @@
+name: OS Baseline Post-setup
+description: OS Baseline Post-setup
+
+runs:
+  using: composite
+  steps:
+    - name: OS Baseline Post-setup
+      shell: bash
+      run: make os_baseline_setup ENV=${ENVIRONMENT} TAG=post_setup

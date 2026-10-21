@@ -1,0 +1,29 @@
+---
+- name: Append OpenStack volume mapping
+  ansible.builtin.set_fact:
+    vm_data_readiness: >-
+      {{
+        vm_data_readiness
+        | combine(
+            {
+              vm.key: vm_data_readiness[vm.key]
+              | combine(
+                  {
+                    'boot_volume_id': volume_mapped.boot_volume_id | default('', true),
+                    'data_volumes': volume_mapped.data_volumes | default([], true),
+                    'volumes_migrated': (
+                      volume_mapped.boot_volume_id | default('', true) | length > 0
+                    )
+                  }
+                )
+            },
+            recursive=true
+          )
+      }}
+  loop: "{{ vm_data_readiness | dict2items }}"
+  loop_control:
+    loop_var: vm
+    label: "{{ vm.key }}"
+  no_log: true
+  vars:
+    volume_mapped: "{{ vm_volumes_mapping.get(vm.key, {}) }}"

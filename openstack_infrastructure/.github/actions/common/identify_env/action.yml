@@ -1,0 +1,26 @@
+name: Identify environment
+description: Identify environment
+
+inputs:
+  changed_files:
+    required: true
+    description: Changed files list
+
+outputs:
+  environment:
+    description: Detected environment
+    value: ${{ steps.identity_env.outputs.environment }}
+
+runs:
+  using: composite
+  steps:
+    - name: Identify environment
+      id: identity_env
+      shell: bash
+      run: |
+        CHANGED_FILES="${{ inputs.changed_files }}"
+
+        ENV=$(echo "$CHANGED_FILES" | tr ' ' '\n' | grep '^environments/' | head -1 | cut -d'/' -f2)
+        
+        echo "Identify environments: $ENV"
+        echo "environment=$ENV" >> $GITHUB_OUTPUT

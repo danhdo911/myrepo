@@ -1,0 +1,71 @@
+---
+- name: DNS configuration for Monitoring system
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: dns_hosts
+    apply:
+      tags:
+        - dns_monitor
+        - kolla_monitoring
+  tags:
+    - dns_monitor
+    - kolla_monitoring
+
+- name: Exporters configuration for Prometheus
+  ansible.builtin.include_tasks:
+    file: prometheus_config.yml
+    apply:
+      tags:
+        - prometheus_config
+        - kolla_monitoring
+  tags:
+    - prometheus_config
+    - kolla_monitoring
+  when:
+    - inventory_hostname in groups['infra']
+
+- name: Docker exporter for Prometheus
+  ansible.builtin.include_tasks:
+    file: prometheus_docker_exporter.yml
+    apply:
+      tags:
+        - prometheus_docker_exporter
+        - kolla_monitoring
+  tags:
+    - prometheus_docker_exporter
+    - kolla_monitoring
+
+- name: Grafana Alloy binary download
+  ansible.builtin.include_tasks:
+    file: alloy_binary.yml
+    apply:
+      tags:
+        - alloy_binary
+        - kolla_monitoring
+  tags:
+    - alloy_binary
+    - kolla_monitoring
+
+- name: Grafana Alloy configuration
+  ansible.builtin.include_tasks:
+    file: alloy_config.yml
+    apply:
+      tags:
+        - alloy_config
+        - kolla_monitoring
+  tags:
+    - alloy_config
+    - kolla_monitoring
+
+- name: Grafana Alloy Inventory
+  ansible.builtin.include_tasks:
+    file: inventory.yml
+    apply:
+      tags:
+        - alloy_inventory
+        - kolla_monitoring
+  tags:
+    - alloy_config
+    - kolla_monitoring
+  when:
+    - inventory_hostname in groups['infra']

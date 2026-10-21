@@ -1,0 +1,14 @@
+---
+- name: Ensure Kolla Ansible configuration directory for Skyline exists
+  ansible.builtin.file:
+    path: "{{ kolla_config_skyline_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Skyline policy configuration file for Kolla Ansible
+  ansible.builtin.template:
+    src: "skyline.yaml.j2"
+    dest: "{{ kolla_config_skyline_dir }}/skyline.yaml"
+    mode: '0640'

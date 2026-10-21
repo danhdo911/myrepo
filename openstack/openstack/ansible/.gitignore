@@ -1,0 +1,7 @@
+# Used for OPS Fectch Authentication
+**/artifacts/**
+!**/artifacts/.gitkeep
+
+# Unpublish roles:
+**/castellan*
+**/vault_proxy*

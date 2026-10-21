@@ -1,0 +1,108 @@
+heat_template_version: wallaby
+
+description: >
+  Deploy a server from an existing boot volume with optional data volumes
+  and multiple Neutron ports. Each port can optionally define a subnet,
+  fixed IP address, and custom MAC address.
+
+parameters:
+  instance_name:
+    type: string
+    description: Instance name
+
+  flavor_name:
+    type: string
+    description: Flavor ID or name for the server
+
+  boot_volume_id:
+    type: string
+    description: ID or name of the existing boot volume
+
+{% for volume in data_volumes | default([]) %}
+{% set index = "%02d" | format(loop.index) %}
+  data_volume_{{ index }}_id:
+    type: string
+    description: ID or name of data volume {{ index }}
+
+{% endfor %}
+{% for network in networks | default([]) %}
+{% set index = "%02d" | format(loop.index) %}
+  network_{{ index }}_id:
+    type: string
+    description: ID or name of Neutron network {{ index }}
+
+  subnet_{{ index }}_id:
+    type: string
+    description: ID or name of subnet {{ index }}
+
+  fixed_ip_address_{{ index }}:
+    type: string
+    description: Fixed IP address for network interface {{ index }}
+
+  custom_mac_address_{{ index }}:
+    type: string
+    description: Custom MAC address for network interface {{ index }}
+
+{% endfor %}
+
+resources:
+{% for network in networks | default([]) %}
+{% set index = "%02d" | format(loop.index) %}
+  network_port_{{ index }}:
+    type: OS::Neutron::Port
+    properties:
+      network: { get_param: network_{{ index }}_id }
+      mac_address: { get_param: custom_mac_address_{{ index }} }
+      fixed_ips:
+        - subnet: { get_param: subnet_{{ index }}_id }
+          ip_address: { get_param: fixed_ip_address_{{ index }} }
+
+{% endfor %}
+  instance:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: instance_name }
+      flavor: { get_param: flavor_name }
+
+      block_device_mapping_v2:
+        - volume_id: { get_param: boot_volume_id }
+          boot_index: 0
+          delete_on_termination: false
+{% for volume in data_volumes | default([]) %}
+
+        - volume_id: { get_param: data_volume_{{ "%02d" | format(loop.index) }}_id }
+          boot_index: -1
+          delete_on_termination: false
+{% endfor %}
+
+      networks:
+{% for network in networks | default([]) %}
+        - port: { get_resource: network_port_{{ "%02d" | format(loop.index) }} }
+{% endfor %}
+
+outputs:
+  server_id:
+    description: ID of the created server
+    value: { get_resource: instance }
+
+  server_ip:
+    description: First IP address assigned to the server
+    value: { get_attr: [instance, first_address] }
+
+{% for network in networks | default([]) %}
+{% set index = "%02d" | format(loop.index) %}
+  network_port_{{ index }}_id:
+    description: ID of Neutron port {{ index }}
+    value: { get_resource: network_port_{{ index }} }
+
+  network_port_{{ index }}_mac:
+    description: MAC address assigned to Neutron port {{ index }}
+    value: { get_attr: [network_port_{{ index }}, mac_address] }
+
+{% if network.fixed_ip is defined and network.fixed_ip %}
+  network_port_{{ index }}_fixed_ip:
+    description: Configured fixed IP address for Neutron port {{ index }}
+    value: { get_param: fixed_ip_address_{{ index }} }
+
+{% endif %}
+{% endfor %}

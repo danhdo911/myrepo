@@ -1,0 +1,55 @@
+---
+# - name: Deploy Instances by Heat Stack
+#   openstack.cloud.stack:
+#     cloud: "{{ openstack_auth }}"
+#     validate_certs: false
+#     name: "{{ vm.key }}-{{ '%Y%m%d-%H%M%S' | strftime }}"
+#     state: present
+#     template: "{{ heat_stack_dir }}/{{ vm.key }}/heat_template.yml"
+#     environment: "{{ heat_stack_dir }}/{{ vm.key }}/heat_parameters.yml"
+#   environment: "{{ openstack_environment }}"
+#   loop: "{{ readiness_inventory_mapped | dict2items }}"
+#   loop_control:
+#     loop_var: vm
+#     label: "{{ vm.key }}"
+
+- name: Ensure heat_stack directory exist
+  ansible.builtin.file:
+    path: "{{ workdir_heat_stack }}"
+    state: directory
+    recurse: true
+    owner: root
+    group: root
+    mode: '0755'
+  run_once: true
+  delegate_to: "{{ groups['infra'][0] }}"
+
+- name: Copy heat stack to OpenStack Infrastructure node
+  ansible.builtin.copy:
+    src: "{{ heat_stack_dir }}/"
+    dest: "{{ workdir_heat_stack }}/"
+    owner: root
+    group: root
+    mode: '0755'
+  run_once: true
+  delegate_to: "{{ groups['infra'][0] }}"
+
+- name: Deploy Instances by Heat Stack
+  ansible.builtin.shell: |
+
+    source {{ workdir_openstack }}/{{ kolla_venv }}/bin/activate
+    source {{ kolla_dir }}/{{ openstack_auth }}
+
+    openstack stack create \
+      -t {{ workdir_heat_stack }}/{{ vm.key }}/heat_template.yml \
+      -e {{ workdir_heat_stack }}/{{ vm.key }}/heat_parameters.yml \
+      {{ vm.key }}-{{ '%Y%m%d-%H%M%S' | strftime }}
+
+  args:
+    executable: /bin/bash
+  loop: "{{ readiness_inventory_mapped | dict2items }}"
+  loop_control:
+    loop_var: vm
+    label: "{{ vm.key }}"
+  run_once: true
+  delegate_to: "{{ groups['infra'][0] }}"

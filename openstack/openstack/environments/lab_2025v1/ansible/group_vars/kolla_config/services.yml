@@ -1,0 +1,63 @@
+### Core services, including Skyline as default
+core_services_enabled: true
+
+# Nova VNC
+nova_vnc_enabled: true
+novncproxy_base_url: "https://{{ kolla_external_fqdn }}:6080/vnc_lite.html"
+
+# NFS for Glance
+nfs_ops_services_ip: "192.168.137.231"
+nfs_ops_services_opts: "rw,vers=4.1,_netdev"
+glance_nfs_mountpoint:
+  - mountpoint: "/glance"
+    path: "/ops20251/glance"
+
+# Skyline image
+skyline_enabled: true
+# skyline_console_image: "harbor.iij.com.vn/openstack.kolla/skyline-console"
+# skyline_console_tag: "1.7.0"
+
+# neutron/ml2_config.ini (for LAB env)
+neutron_provider_vlan_enabled: true
+neutron_provider_vlan_ranges: 137:138
+
+### NFS for Cinder (for LAB env)
+cinder_nfs_storage_enabled: true
+cinder_nfs_storage_ip: "192.168.137.231"
+cinder_nfs_storage_path: "/ops20251/cinder_nfs"
+cinder_nfs_storage_mountpoint: "/cinder_nfs"
+cinder_nfs_backend: "nfs-1"
+
+# Container proxy
+conntainer_proxy_enabled: true
+container_http_proxy: "http://172.16.81.168:8080"
+container_https_proxy: "http://172.16.81.168:8080"
+container_no_proxy: "localhost,127.0.0.1,local,dd-iaas.local"
+
+### Skyline RBAC Policy integration
+skyline_policy_enabled: true
+skyline_policy_dir: "{{ ansible_env.HOME }}/skyline/policy"
+
+### HIGIO Portal integration
+higio_portal_enabled: false
+
+metadata_nfs_mountpoint:
+  - mountpoint: "/metadata"
+    path: "/ops20251/metadata"
+
+skyline_addons_static_url: "https://dev-skyline-console-addons-server.iijvn.local/static"
+keystone_trusted_dashboards:
+  - "https://iijvnopselb.higio.lab/api/openstack/skyline/api/v1/websso"
+keystone_federation_oidc_additional_options:
+  OIDCProviderMetadataRefreshInterval: 15
+  OIDCDiscoverURL: https://higio-iam.iijvn.local
+  OIDCRedirectURLsAllowed: ^https://(iijvnopselb\.higio\.lab|higio-iam\.iijvn\.local|higio-iam-qc\.iijvn\.local)
+  OIDCSessionInactivityTimeout: 3600
+  OIDCSessionMaxDuration: 3600
+
+### Monitoring system integration
+monitoring_enabled: true
+monitoring_system_fqdn: "opsoneview.uag.local"
+monitoring_system_vip_address: "172.16.81.167"
+
+monitoring_loki_endpoint: "http://{{ monitoring_system_fqdn }}:3100"

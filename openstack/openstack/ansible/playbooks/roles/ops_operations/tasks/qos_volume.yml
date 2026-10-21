@@ -1,0 +1,58 @@
+---
+- name: Create Volume types
+  openstack.cloud.volume_type:
+    cloud: "{{ openstack_auth }}"
+    state: present
+    name: "{{ item.volume_type }}"
+    is_public: "{{ item.is_public | default(true) }}"
+  loop: "{{ openstack_qos_volume }}"
+  environment: "{{ openstack_environment }}"
+  delegate_to: localhost
+  run_once: true
+
+- block:
+    - name: Set volume type to private
+      ansible.builtin.shell: |
+        source {{ workdir_openstack }}/{{ kolla_venv }}/bin/activate
+        source {{ kolla_dir }}/admin-openrc.sh
+        openstack volume type set --private {{ item }} 
+      args:
+        executable: /bin/bash
+      loop: "{{ private_volumes }}"
+
+    - name: Check existing QoS specs 
+      ansible.builtin.shell: |
+        source {{ workdir_openstack }}/{{ kolla_venv }}/bin/activate
+        source {{ kolla_dir }}/admin-openrc.sh
+        openstack volume qos show {{ item.name }} -f value -c name
+      args:
+        executable: /bin/bash
+      loop: "{{ openstack_qos_volume }}"
+      register: qos_check
+      failed_when: false
+      changed_when: false
+
+    - name: Create QoS volume
+      ansible.builtin.shell: |
+        source {{ workdir_openstack }}/{{ kolla_venv }}/bin/activate
+        source {{ kolla_dir }}/admin-openrc.sh
+        openstack volume qos create \
+          {{ item.item.name }} \
+          --consumer {{ item.item.consumer | default('front-end') }} \
+          --property total_iops_sec={{ item.item.total_iops_sec }}
+      args:
+        executable: /bin/bash
+      loop: "{{ qos_check.results }}"
+      when: item.rc != 0
+
+    - name: Associate QoS to volume type
+      ansible.builtin.shell: |
+        source {{ workdir_openstack }}/{{ kolla_venv }}/bin/activate
+        source {{ kolla_dir }}/admin-openrc.sh
+        openstack volume qos associate \
+          {{ item.name }} {{ item.volume_type }}
+      args:
+        executable: /bin/bash
+      loop: "{{ openstack_qos_volume }}"
+  delegate_to: "{{ groups['infra'][0] }}"
+  run_once: true

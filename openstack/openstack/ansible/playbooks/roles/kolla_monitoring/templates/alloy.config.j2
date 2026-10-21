@@ -1,0 +1,55 @@
+{% raw %}
+{% set log_jobs = [
+  {"name": "dmesg", "path": "/var/log/dmesg", "dir": None},
+  {"name": "syslog", "path": "/var/log/syslog", "dir": None},
+  {"name": "cinder", "path": "/var/log/kolla/cinder/*.log", "dir": "/var/log/kolla/cinder"},
+  {"name": "glance", "path": "/var/log/kolla/glance/*.log", "dir": "/var/log/kolla/glance"},
+  {"name": "glance_tls_proxy", "path": "/var/log/kolla/glance-tls-proxy/*.log", "dir": "/var/log/kolla/glance-tls-proxy"},
+  {"name": "heat", "path": "/var/log/kolla/heat/*.log", "dir": "/var/log/kolla/heat"},
+  {"name": "horizon", "path": "/var/log/kolla/horizon/*.log", "dir": "/var/log/kolla/horizon"},
+  {"name": "hacluster", "path": "/var/log/kolla/hacluster/*.log", "dir": "/var/log/kolla/hacluster"},
+  {"name": "keystone", "path": "/var/log/kolla/keystone/*.log", "dir": "/var/log/kolla/keystone"},
+  {"name": "mariadb", "path": "/var/log/kolla/mariadb/*.log", "dir": "/var/log/kolla/mariadb"},
+  {"name": "mariadb_backup", "path": "/var/log/kolla/mariadb_backup/*.log", "dir": "/var/log/kolla/mariadb_backup"},
+  {"name": "neutron", "path": "/var/log/kolla/neutron/*.log", "dir": "/var/log/kolla/neutron"},
+  {"name": "neutron_tls_proxy", "path": "/var/log/kolla/neutron-tls-proxy/*.log", "dir": "/var/log/kolla/neutron-tls-proxy"},
+  {"name": "nova", "path": "/var/log/kolla/nova/*.log", "dir": "/var/log/kolla/nova"},
+  {"name": "openvswitch", "path": "/var/log/kolla/openvswitch/*.log", "dir": "/var/log/kolla/openvswitch"},
+  {"name": "placement", "path": "/var/log/kolla/placement/*.log", "dir": "/var/log/kolla/placement"},
+  {"name": "libvirt", "path": "/var/log/kolla/libvirt/*.log", "dir": "/var/log/kolla/libvirt"},
+  {"name": "prometheus", "path": "/var/log/kolla/prometheus/*.log", "dir": "/var/log/kolla/prometheus"},
+  {"name": "rabbitmq", "path": "/var/log/kolla/rabbitmq/*.log", "dir": "/var/log/kolla/rabbitmq"},
+  {"name": "masakari", "path": "/var/log/kolla/masakari/*.log", "dir": "/var/log/kolla/masakari"},
+  {"name": "skyline", "path": "/var/log/kolla/skyline/*.log", "dir": "/var/log/kolla/skyline"}
+] %}
+
+{% for job in log_jobs %}
+
+local.file_match "{{ job.name }}" {
+  path_targets = [{
+    __address__ = "{{ inventory_hostname }}",
+    __path__    = "{{ job.path }}",
+    host        = "{{ inventory_hostname }}",
+    job         = "{{ job.name }}",
+  }]
+}
+
+loki.source.file "{{ job.name }}" {
+  targets    = local.file_match.{{ job.name }}.targets
+  forward_to = [loki.write.default.receiver]
+}
+
+{% endfor %}
+{% endraw %}
+
+loki.write "default" {
+  endpoint {
+    url = "{{ monitoring_loki_endpoint }}/loki/api/v1/push"
+
+    tls_config {
+      insecure_skip_verify = true
+    }
+  }
+
+  external_labels = {}
+}

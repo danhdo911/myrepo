@@ -1,0 +1,14 @@
+---
+- name: Create OpenStack flavors
+  openstack.cloud.compute_flavor:
+    cloud: "{{ openstack_auth }}"
+    state: present
+    name: "{{ item.name }}"
+    vcpus: "{{ item.vcpu }}"
+    ram: "{{ item.ram }}"
+    disk: "{{ item.disk | default(0) }}"
+    is_public: "{{ item.is_public | default(true) }}"
+  loop: "{{ openstack_flavors }}"
+  environment: "{{ openstack_environment }}"
+  delegate_to: localhost
+  run_once: true

@@ -1,0 +1,31 @@
+### Prometheus
+kolla_config_prometheus_dir: "{{ kolla_config_dir }}/prometheus"
+kolla_config_prometheus_exporter_dir: "{{ kolla_config_prometheus_dir }}/prometheus.yml.d"
+
+prometheus_exporters:
+  - file_name: 10-docker-exporter.yml
+    job_name: docker-exporter
+    port: 8080
+  - file_name: 10-node-cert-exporter.yml
+    job_name: node-cert-exporter
+    port: 9117
+  - file_name: 10-node-exporter.yml
+    job_name: node-exporter
+    port: 9100
+
+prometheus_remote_write: "10-remote-write.yml"
+prometheus_remote_write_port: 8479
+
+prometheus_docker_exporter_image: "{{ registry_url }}/openstack.kolla/spx01/dex:latest"
+prometheus_docker_exporter_expose_ports:
+  - 8080:8080
+
+### Grafana Alloy
+monitoring_alloy_package_url: "https://api.github.com/repos/grafana/alloy/releases/latest"
+monitoring_dir: "{{ workdir_default }}/monitoring"
+monitoring_alloy_dir: "{{ monitoring_dir }}/alloy"
+
+alloy_systemd_dir: "/etc/systemd/system"
+alloy_executable_dir: "/usr/local/bin"
+alloy_config_dir: "/etc/alloy"
+alloy_data_workdir: "/var/lib/alloy"

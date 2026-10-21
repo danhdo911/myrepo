@@ -1,0 +1,16 @@
+---
+- name: Ensure Kolla Ansible configuration directory for Horizon exists
+  ansible.builtin.file:
+    path: "{{ kolla_config_horizon_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: LDAP Keystone configuration file for Kolla Ansible
+  ansible.builtin.copy:
+    src: _9999-custom-settings.py
+    dest: "{{ kolla_config_horizon_dir }}/_9999-custom-settings.py"
+    owner: root
+    group: root
+    mode: '0640'

@@ -1,0 +1,27 @@
+---
+plugin: vmware.vmware.vms
+
+validate_certs: false
+
+search_paths:
+  - ${VMWARE_SEARCH_PATH}  # Refer to VMWARE_SEARCH_PATH in the .env file
+
+properties: [config, guest]
+
+hostnames:
+  - config.name
+
+# Notes:
+# This filter excludes any VM that matches the specified conditions.
+# Therefore, define conditions using negative (not) matching so that only
+# the desired VMs are included in the exported inventory.
+#
+# Example: Gather only VMs matching opsinfra*
+#   - "config.name is not match('^opsinfra.*')"
+#
+# Example: Exclude VMs matching opscom*, opsctl*, or opsaz*
+#   - "config.name is match('^ops(com|ctl|az).*')"
+
+filter_expressions:
+  # - "config.name is not match('^ops-(deployment|ansible).*')"
+  

@@ -1,0 +1,9 @@
+name: Terraform Output
+description: Terraform Output
+
+runs:
+  using: composite
+  steps:
+    - name: Terraform output
+      shell: bash
+      run: make terraform_output TF_PROJECT=${TF_PROJECT} ENV=${ENVIRONMENT}

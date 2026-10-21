@@ -1,0 +1,35 @@
+### Default Cinder Volume Type
+cinder_volume_type: {{ cinder_volume_type }}
+
+### Default Security Group
+security_groups: {{ security_groups }}
+
+### Network mapping from VMware to OpenStack
+network_map:
+  # "vmware_portgroup_id": "openstack_network_name,openstack_subnet_id"
+{% for portgroup_id, network in network_mappings.items() %}
+  "{{ portgroup_id }}": "{{ network.ops_network_name }},{{ network.ops_subnet_id }}"
+{% endfor %}
+
+### Patched: migration_enhancements - Manual Fixed IP Configuration
+# Manually specify fixed IP addresses for VM network interfaces when VMware Tools is not installed.
+# Currently requires manual configuration.
+#
+# manual_fixed_ips:
+#   "<vm_name>":
+#     "<portgroup_id>": "<manual_ip_address>"
+
+### Patched: migration_enhancements - BitLocker Recovery Support
+# Specify the BitLocker recovery key to unlock an encrypted Windows guest during conversion.
+# Currently requires manual configuration.
+#
+# import_workloads_bitlocker_recovery_key: "<recovery_key>"
+
+### Virt-v2v configuration
+skip_conversion: {{ (not item.virt_v2v_enabled) | lower }}
+
+### VM Migration Readiness List
+vms_list:
+{% for vm_name, vm in readiness_inventory.items() if vm.virt_v2v_enabled is defined and vm.virt_v2v_enabled == item.virt_v2v_enabled %}
+  - {{ vm_name | to_json }}
+{% endfor %}

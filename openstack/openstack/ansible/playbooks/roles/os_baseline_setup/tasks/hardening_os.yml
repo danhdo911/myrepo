@@ -1,0 +1,119 @@
+---
+- name: Install OpenSCAP packages
+  ansible.builtin.apt:
+    name: "{{ hardening_packages }}"
+    state: present
+    update_cache: true
+  tags: [pre_harden]
+
+- name: Create hardening working directory
+  ansible.builtin.file:
+    path: "{{ hardening_workdir }}"
+    state: directory
+    mode: "0755"
+  tags: [pre_harden]
+
+- name: Get latest SCAP Security Guide release
+  ansible.builtin.uri:
+    url: "{{ hardening_repo }}"
+    return_content: true
+  register: scap_release
+  no_log: true
+  tags: [pre_harden]
+
+- name: Get SCAP zip URL
+  ansible.builtin.set_fact:
+    scap_zip_url: >-
+      {{
+        scap_release.json.assets
+        | selectattr('browser_download_url', 'search', '\.zip$')
+        | map(attribute='browser_download_url')
+        | first
+      }}
+  tags: [pre_harden]
+
+- name: Download latest SCAP Security Guide release
+  ansible.builtin.get_url:
+    url: "{{ scap_zip_url }}"
+    dest: "{{ hardening_workdir }}/{{ scap_zip_url | basename }}"
+    mode: "0755"
+  tags: [pre_harden]
+
+- name: Find SCAP archive
+  ansible.builtin.find:
+    paths: "{{ hardening_workdir }}"
+    patterns: "scap-security-guide-*.zip"
+    file_type: file
+  register: scap_archive
+  tags: [pre_harden]
+
+- name: Unzip SCAP Security Guide
+  ansible.builtin.unarchive:
+    src: "{{ scap_archive.files[0].path }}"
+    dest: "{{ hardening_workdir }}"
+    remote_src: true
+  register: unzip_scap_result
+  no_log: true
+  tags: [pre_harden]
+
+- name: Find extracted SCAP directory
+  ansible.builtin.find:
+    paths: "{{ hardening_workdir }}"
+    file_type: directory
+    patterns: "scap-security-guide-*"
+    recurse: false
+  register: scap_dir
+  changed_when: false
+  tags: [pre_harden, apply_harden, post_harden]
+
+- name: Show available OpenSCAP profiles
+  ansible.builtin.command:
+    cmd: oscap info ssg-{{ hardening_os_version }}-ds.xml
+    chdir: "{{ scap_dir.files[0].path }}"
+  register: oscap_info_result
+  no_log: true
+  changed_when: false
+  tags: [pre_harden]
+
+- name: Run OpenSCAP evaluation before hardening
+  become: true
+  ansible.builtin.command:
+    cmd: >
+      oscap xccdf eval
+      --results result-before.xml
+      --report report-before.html
+      --profile xccdf_org.ssgproject.content_profile_{{ hardening_cis_level }}_server
+      ssg-{{ hardening_os_version }}-ds.xml
+    chdir: "{{ scap_dir.files[0].path }}"
+  register: oscap_before_result
+  failed_when: oscap_before_result.rc not in [0, 2]
+  no_log: true
+  tags: [pre_harden]
+
+- name: Apply CIS Level 1 hardening script
+  become: true
+  ansible.builtin.command:
+    cmd: >
+      /bin/bash bash/{{ hardening_os_version }}-script-{{ hardening_cis_level }}_server.sh
+    chdir: "{{ scap_dir.files[0].path }}"
+  register: hardening_result
+  failed_when: hardening_result.rc != 0
+  no_log: true
+  async: 1800
+  poll: 30
+  tags: [apply_harden]
+
+- name: Run OpenSCAP evaluation after hardening
+  become: true
+  ansible.builtin.command:
+    cmd: >
+      oscap xccdf eval
+      --results result-after.xml
+      --report report-after.html
+      --profile xccdf_org.ssgproject.content_profile_{{ hardening_cis_level }}_server
+      ssg-{{ hardening_os_version }}-ds.xml
+    chdir: "{{ scap_dir.files[0].path }}"
+  register: oscap_after_result
+  failed_when: oscap_after_result.rc not in [0, 2]
+  no_log: true
+  tags: [post_harden]

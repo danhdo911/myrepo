@@ -1,0 +1,202 @@
+---
+# ============================================================
+# Load existing inventory
+# ============================================================
+
+- name: Check existing VM inventory file
+  ansible.builtin.stat:
+    path: "{{ vm_data_source_file }}"
+  register: vm_data_source_file_stat
+
+- name: Validate existing VM inventory file
+  ansible.builtin.assert:
+    that:
+      - vm_data_source_file_stat.stat.exists
+      - vm_data_source_file_stat.stat.size | int > 0
+    fail_msg: >-
+      VM inventory file does not exist or is empty:
+      {{ vm_data_source_file }}
+
+- name: Read current VM inventory
+  ansible.builtin.set_fact:
+    vm_inventory: >-
+      {{
+        lookup('ansible.builtin.file', vm_data_source_file)
+        | from_json
+      }}
+
+- name: Convert VM inventory to loop list
+  ansible.builtin.set_fact:
+    vm_list: "{{ vm_inventory | dict2items }}"
+
+# ============================================================
+# Gather resource pool information
+# ============================================================
+
+- name: Gather resource pool information for all VMs
+  vmware.vmware.vm_resource_info:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: false
+    moid: "{{ item.value.moid }}"
+    gather_cpu_config: false
+    gather_cpu_stats: false
+    gather_memory_config: false
+    gather_memory_stats: false
+  loop: "{{ vm_list }}"
+  loop_control:
+    label: "{{ item.key }}"
+  register: vm_resource_results
+  delegate_to: localhost
+
+# ============================================================
+# Gather snapshot information
+# ============================================================
+
+- name: Gather snapshot information for all VMs
+  community.vmware.vmware_guest_snapshot_info:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: false
+    datacenter: >-
+      {{
+        item.value.path
+        | regex_replace('^/', '')
+        | split('/')
+        | first
+      }}
+    moid: "{{ item.value.moid }}"
+  loop: "{{ vm_list }}"
+  loop_control:
+    label: "{{ item.key }}"
+  register: vm_snapshot_results
+  delegate_to: localhost
+
+# ============================================================
+# Validate gather results
+# ============================================================
+
+- name: Validate resource result count
+  ansible.builtin.assert:
+    that:
+      - vm_resource_results.results is defined
+      - vm_resource_results.results | length == vm_list | length
+    fail_msg: >-
+      Resource result count does not match the VM inventory count.
+
+- name: Validate snapshot result count
+  ansible.builtin.assert:
+    that:
+      - vm_snapshot_results.results is defined
+      - vm_snapshot_results.results | length == vm_list | length
+    fail_msg: >-
+      Snapshot result count does not match the VM inventory count.
+
+# ============================================================
+# Build normalized enrichment dictionary
+# ============================================================
+
+- name: Initialize VM enrichment dictionary
+  ansible.builtin.set_fact:
+    vm_enrichment: {}
+
+- name: Build VM enrichment dictionary
+  ansible.builtin.set_fact:
+    vm_enrichment: >-
+      {{
+        vm_enrichment
+        | combine(
+            {
+              vm_name: {
+                'resource_pool': {
+                  'name': resource_pool_data.get('name'),
+                  'moid': resource_pool_data.get('moid')
+                },
+                'snapshot': {
+                  'exists': snapshot_list | length > 0,
+                  'count': snapshot_list | length,
+                  'current_exists': current_snapshot | length > 0,
+                  'current': current_snapshot,
+                  'snapshots': snapshot_list
+                }
+              }
+            },
+            recursive=true
+          )
+      }}
+  vars:
+    vm_name: "{{ item.0.item.key }}"
+
+    resource_vm_data: >-
+      {{
+        item.0.get('vms', [])
+        | first
+        | default({})
+      }}
+
+    resource_pool_data: >-
+      {{
+        resource_vm_data.get('resource_pool', {})
+      }}
+
+    snapshot_data: >-
+      {{
+        item.1.get('guest_snapshots', {})
+      }}
+
+    snapshot_list: >-
+      {{
+        snapshot_data.get('snapshots', [])
+      }}
+
+    current_snapshot: >-
+      {{
+        snapshot_data.get('current_snapshot', {})
+      }}
+  loop: >-
+    {{
+      vm_resource_results.results
+      | zip(vm_snapshot_results.results)
+      | list
+    }}
+  loop_control:
+    label: "{{ item.0.item.key }}"
+
+- name: Validate VM enrichment dictionary
+  ansible.builtin.assert:
+    that:
+      - vm_enrichment is mapping
+      - vm_enrichment | length > 0
+      - vm_enrichment | length == vm_inventory | length
+    fail_msg: >-
+      VM enrichment dictionary is empty or incomplete.
+
+# ============================================================
+# Merge original inventory and enrichment
+# ============================================================
+
+- name: Merge enrichment into original VM inventory
+  ansible.builtin.set_fact:
+    enriched_inventory: >-
+      {{
+        vm_inventory
+        | combine(vm_enrichment, recursive=true)
+      }}
+
+# ============================================================
+# Export JSON
+# ============================================================
+
+- name: Write enriched VM inventory JSON
+  ansible.builtin.copy:
+    dest: "{{ vm_data_output_file }}"
+    content: "{{ enriched_inventory | to_nice_json }}\n"
+    mode: "0600"
+
+- name: Show output file
+  ansible.builtin.debug:
+    msg:
+      - "VM count: {{ enriched_inventory | length }}"
+      - "Output file: {{ vm_data_output_file }}"

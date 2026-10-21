@@ -1,0 +1,92 @@
+---
+- name: Cloud-init configuration
+  ansible.builtin.include_tasks:
+    file: cloud_init.yml
+    apply:
+      tags: 
+        - setup
+        - cloud_init
+  tags: 
+    - setup
+    - cloud_init
+
+- name: Hostname configuration
+  ansible.builtin.include_tasks:
+    file: hostname.yml
+    apply:
+      tags: 
+        - setup
+        - hostname
+  tags: 
+    - setup
+    - hostname
+
+- name: Proxy configuration
+  ansible.builtin.include_tasks:
+    file: proxy.yml
+    apply:
+      tags: 
+        - setup
+        - proxy
+  tags: 
+    - setup
+    - proxy
+  when:
+    - proxy_host | default('') | length > 0
+    - proxy_port | default('') | string | length > 0
+
+- name: DNS configuration for OpenStack nodes
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: dns_hosts
+    apply:
+      tags:
+        - setup
+        - dns
+  tags: 
+    - setup
+    - dns
+
+- name: Essential package installation
+  ansible.builtin.include_tasks:
+    file: packages.yml
+    apply:
+      tags: 
+        - setup
+        - packages
+  tags: 
+    - setup
+    - packages
+
+- name: NTP configuration
+  ansible.builtin.include_tasks:
+    file: ntp.yml
+    apply:
+      tags: 
+        - setup
+        - ntp
+  tags: 
+    - setup
+    - ntp
+
+- name: Docker installation
+  ansible.builtin.include_tasks:
+    file: docker.yml
+    apply:
+      tags: 
+        - setup
+        - docker
+  tags: 
+    - setup
+    - docker
+
+- name: SSH configuration for Kolla-Ansible
+  ansible.builtin.include_tasks:
+    file: ssh_kolla.yml
+    apply:
+      tags: 
+        - setup
+        - ssh_kolla
+  tags: 
+    - setup
+    - ssh_kolla

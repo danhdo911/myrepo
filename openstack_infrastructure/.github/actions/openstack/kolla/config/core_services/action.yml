@@ -1,0 +1,9 @@
+name: Render configuration for OpenStack services
+description: Render configuration for OpenStack services
+
+runs:
+  using: composite
+  steps:
+    - name: Render configuration for OpenStack Core Services
+      shell: bash
+      run: make kolla_config ENV=${ENVIRONMENT} TAG=globals_config,kolla_core_services

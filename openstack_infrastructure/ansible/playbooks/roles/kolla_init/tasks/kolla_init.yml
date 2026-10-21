@@ -1,0 +1,60 @@
+---
+- block:
+    - name: Install packages and dependencies required
+      ansible.builtin.include_tasks:
+        file: packages.yml
+        apply:
+          tags: 
+            - packages
+            - kolla_init
+      tags:
+        - packages
+        - kolla_init
+
+    - name: Setup virtual environment for Kolla Ansible
+      ansible.builtin.include_tasks:
+        file: venv_config.yml
+        apply:
+          tags:
+            - kolla_venv
+            - kolla_init
+      tags: 
+        - kolla_venv
+        - kolla_init
+
+    - name: Passwords for OpenStack services
+      ansible.builtin.include_tasks:
+        file: passwords_config.yml
+        apply:
+          tags:
+            - passwords_config
+            - kolla_init
+      tags: 
+        - passwords_config
+        - kolla_init
+
+    - name: Inventory for OpenStack services
+      ansible.builtin.include_tasks:
+        file: inventory.yml
+        apply:
+          tags: 
+            - inventory
+            - kolla_init
+      tags:
+        - inventory
+        - kolla_init
+  when:
+    - inventory_hostname in groups['infra']
+
+- name: Private registry for OpenStack services
+  ansible.builtin.include_tasks:
+    file: registry_config.yml
+    apply:
+      tags: 
+        - registry_config
+        - kolla_init
+  tags:
+    - registry_config
+    - kolla_init
+  when: 
+    - registry_private_enabled | default(true) | bool

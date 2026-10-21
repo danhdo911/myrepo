@@ -1,0 +1,39 @@
+---
+- name: Append OpenStack network mapping to readiness inventory
+  ansible.builtin.set_fact:
+    vm_data_readiness: >-
+      {{
+        vm_data_readiness
+        | combine(
+            {
+              vm.key: vm_data_readiness[vm.key]
+              | combine(
+                  {
+                    'networks': rendered_networks
+                  }
+                )
+            },
+            recursive=true
+          )
+      }}
+  loop: "{{ readiness_inventory | dict2items }}"
+  loop_control:
+    loop_var: vm
+    label: "{{ vm.key }}"
+  no_log: true
+  vars:
+    rendered_networks: >-
+      {%- set result = [] -%}
+      {%- for network in vm.value.networks | default([]) -%}
+      {%- set _ = result.append(
+            network
+            | combine(
+                network_mappings.get(
+                  network.network_id,
+                  network_default | default({})
+                )
+              )
+          )
+      -%}
+      {%- endfor -%}
+      {{ result }}

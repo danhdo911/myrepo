@@ -1,0 +1,17 @@
+[Unit] 
+Description=Grafana Alloy 
+After=network-online.target 
+Wants=network-online.target 
+  
+[Service] 
+Restart=always 
+WorkingDirectory=/var/lib/alloy 
+ExecStart=/usr/local/bin/alloy run --storage.path=/var/lib/alloy/data /etc/alloy/alloy.config 
+ExecReload=/usr/bin/env kill -HUP $MAINPID 
+TimeoutStopSec=20s 
+SendSIGKILL=no 
+MemoryLimit=1G 
+CPUQuota=100% 
+  
+[Install] 
+WantedBy=multi-user.target

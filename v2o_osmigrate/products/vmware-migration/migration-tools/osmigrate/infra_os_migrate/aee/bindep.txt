@@ -1,0 +1,8 @@
+### System packages
+openssh-clients
+openssl
+python3.12
+jq
+git
+rsync
+iputils

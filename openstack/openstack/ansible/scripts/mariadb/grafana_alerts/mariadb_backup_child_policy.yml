@@ -1,0 +1,20 @@
+#/etc/grafana/provisioning/alerting/
+---
+apiVersion: 1
+policies:
+  - orgId: 1
+    receiver: IIJ-HCM99-OPS-Alert
+    group_by:
+      - grafana_folder
+      - alertname
+    routes:
+      - receiver: IIJ-HCM99-OPS-Alert
+        object_matchers:
+          - - job
+            - =
+            - mariadb_backup
+        mute_time_intervals:
+          - mariadb_backup_notification_policy
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 4h

@@ -1,0 +1,5 @@
+---
+### Skyline RBAC Policy
+skyline_policy_enabled: false
+skyline_policy_dir: "{{ ansible_env.HOME }}/skyline/policy"
+skyline_policy_services: ["nova", "neutron", "cinder", "glance"]

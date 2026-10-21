@@ -14,9 +14,10 @@
 
 **/.env
 
-**/*.old
+**/*.old*
 
-**/*aws_*
+**/aws_config
+**/aws_credentials
 
 **/*private_key*
 
@@ -32,3 +33,5 @@
 
 # Exception
 !output/.gitkeep
+!samples/*
+!.github/**

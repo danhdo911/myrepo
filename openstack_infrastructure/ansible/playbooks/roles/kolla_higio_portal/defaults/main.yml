@@ -1,0 +1,6 @@
+higio_portal_enabled: false
+
+nfs_ops_services_opts: "rw,vers=4.1,_netdev"
+metadata_nfs_mountpoint:
+  - mountpoint: "/metadata"
+    path: "/metadata"

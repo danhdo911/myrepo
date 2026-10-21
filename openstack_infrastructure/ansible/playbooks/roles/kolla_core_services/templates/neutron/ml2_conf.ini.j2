@@ -1,0 +1,9 @@
+{% if neutron_provider_flat_enabled | default(true) | bool %}
+[ml2_type_flat]
+flat_networks = physnet1,physnet2,physnet3,physnet4,physnet5,physnet6,physnet7,physnet8
+{% endif %}
+
+{% if neutron_provider_vlan_enabled | default(false) | bool %}
+[ml2_type_vlan]
+network_vlan_ranges = physnet1:{{ neutron_provider_vlan_ranges }},physnet2:{{ neutron_provider_vlan_ranges }},physnet3:{{ neutron_provider_vlan_ranges }},physnet4:{{ neutron_provider_vlan_ranges }},physnet5:{{ neutron_provider_vlan_ranges }},physnet6:{{ neutron_provider_vlan_ranges }},physnet7:{{ neutron_provider_vlan_ranges }},physnet8:{{ neutron_provider_vlan_ranges }}
+{% endif %}

@@ -1,0 +1,54 @@
+{% set is_control = inventory_hostname in (groups['control'] | default([])) %}
+
+network:
+  version: 2
+  ethernets:
+{% for net in vm_host_data.networks %}
+{% if net.alias_name is not none and net.alias_name | length > 0 %}
+    {{ net.alias_name }}:
+      set-name: {{ net.alias_name }}
+{% if net.mac_address is defined and net.mac_address %}
+      match:
+        macaddress: {{ net.mac_address }}
+{% endif %}
+      dhcp4: false
+      dhcp6: false
+{% if net.alias_name == 'ens34' and is_control %}
+      mtu: 1500
+{% elif net.alias_name != 'ens33' %}
+      mtu: 9000
+{% else %}
+      mtu: 1500
+{% endif %}
+{% if 'eth' not in net.alias_name %}
+      addresses:
+        - {{ net.ip_address }}
+      routes:
+{% if net.alias_name == 'ens34' and is_control %}
+        - to: default
+          via: {{ net.ipv4_gateway }}
+{% elif net.alias_name == 'ens33' and not is_control %}
+        - to: default
+          via: {{ net.ipv4_gateway }}
+{% else %}
+        - to: {{ net.ip_address | ansible.utils.ipaddr('network/prefix') }}
+          via: {{ net.ipv4_gateway }}
+{% endif %}
+{% set iface_extra_routes = (interface_extra_routes | default({})).get(net.alias_name, []) %}
+{% for route in iface_extra_routes %}
+        - to: {{ route.to }}
+          via: {{ route.via }}
+{% endfor %}
+{% if net.alias_name == 'ens33' %}
+{% if dns_servers is defined and dns_servers | length > 0 %}
+      nameservers:
+        addresses: {{ dns_servers | to_json }}
+{% if search_domain is defined and search_domain %}
+        search: {{ search_domain | to_json }}
+{% endif %}
+{% endif %}
+{% endif %}
+{% endif %}
+
+{% endif %}
+{% endfor %}

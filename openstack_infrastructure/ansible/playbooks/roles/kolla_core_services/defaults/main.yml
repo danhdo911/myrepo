@@ -1,0 +1,24 @@
+---
+### OpenStack services
+# Core services, including Skyline as default
+core_services_enabled: true
+nova_vnc_enabled: true
+skyline_enabled: true
+conntainer_proxy_enabled: false
+
+# Neutron
+neutron_provider_flat_enabled: true
+neutron_provider_vlan_enabled: false
+
+# iSCSI Storage for Cinder
+cinder_san_storage_enabled: false
+
+# NFS for Cinder (for LAB env)
+cinder_nfs_storage_enabled: false
+# cinder_nfs_storage_dirs: ["cinder", "glance", "backup"]
+
+# NFS for Glance
+nfs_ops_services_opts: "rw,vers=4.1,_netdev"
+glance_nfs_mountpoint:
+  - mountpoint: "/glance"
+    path: "/glance"

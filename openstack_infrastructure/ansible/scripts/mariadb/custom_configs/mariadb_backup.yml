@@ -1,0 +1,25 @@
+### kolla-venv/share/kolla-ansible/ansible/mariadb_backup.yml
+---
+- name: Backup MariaDB
+  hosts: mariadb
+  max_fail_percentage: >-
+    {{ mariadb_backup_max_fail_percentage |
+      default(kolla_max_fail_percentage) |
+      default(100) }}
+  roles:
+    - { role: mariadb,
+        tags: mariadb,
+        when: enable_mariabackup | bool }
+
+  post_tasks:
+    - name: Check Backup File
+      when:
+        - enable_mariabackup | bool
+        - mariadb_backup_possible | bool
+        - inventory_hostname == mariadb_backup_host
+      vars:
+        - backup_path: "/var/lib/docker/volumes/mariadb_backup/_data/"
+        - backup_file_patterns: "*.qp.xbc.xbs.gz"
+        - backup_min_size_mb: 20
+        - log_file_path: "/var/log/mariadb_backup_events.log"
+      import_tasks: mariadb_backup_check_bkfile.yml

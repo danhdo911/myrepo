@@ -1,0 +1,9 @@
+name: Terraform Plan
+description: Terraform plan
+
+runs:
+  using: composite
+  steps:
+    - name: Terraform plan
+      shell: bash
+      run: make terraform_plan TF_PROJECT=${TF_PROJECT} ENV=${ENVIRONMENT}

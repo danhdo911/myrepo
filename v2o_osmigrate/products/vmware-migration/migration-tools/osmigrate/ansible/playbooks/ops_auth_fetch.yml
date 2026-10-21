@@ -1,0 +1,41 @@
+---
+- name: Fetch Authentication OpenStack
+  hosts: infra
+  become: true
+  become_user: root
+  gather_facts: true
+
+  tasks:
+    - name: Ensure artifacts directory is exist
+      ansible.builtin.file:
+        path: "{{ artifacts_path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      delegate_to: localhost
+      run_once: true
+
+    - name: Fetch clouds.yaml from Kolla Ansible
+      ansible.builtin.fetch:
+        src: "{{ kolla_dir }}/clouds.yaml"
+        dest: "{{ artifacts_path }}/clouds.yaml"
+        flat: true
+      delegate_to: "{{ groups['infra'][0] }}"
+      run_once: true
+
+    - name: Fetch OpenStack CA certificate
+      ansible.builtin.fetch:
+        src: /etc/kolla/certificates/ca/root.crt
+        dest: "{{ artifacts_path }}/root.crt"
+        flat: true
+      delegate_to: "{{ groups['infra'][0] }}"
+      run_once: true
+
+    - name: Update cacert paths in clouds.yaml
+      ansible.builtin.replace:
+        path: "{{ artifacts_path }}/clouds.yaml"
+        regexp: '(^\s*cacert:\s*).*$'
+        replace: '\1{{ artifacts_path }}/root.crt'
+      delegate_to: localhost
+      run_once: true

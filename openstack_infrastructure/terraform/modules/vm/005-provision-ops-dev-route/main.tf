@@ -5,16 +5,18 @@ resource "vsphere_virtual_machine" "vm" {
 
   for_each = var.vm_configs
 
-  name                   = each.value.vm_name
+  name                   = each.key
   resource_pool_id       = data.vsphere_resource_pool.pool.id
-  folder                  = trimprefix(data.vsphere_folder.folder.path, "/${data.vsphere_datacenter.datacenter.name}/vm")
+  folder                 = trimprefix(data.vsphere_folder.folder.path, "/${data.vsphere_datacenter.datacenter.name}/vm")
   datastore_id           = data.vsphere_datastore.datastore[each.key].id
   num_cpus               = each.value.vm_num_cpus
   num_cores_per_socket   = each.value.vm_cores_per_socket
   cpu_hot_add_enabled    = true
   memory                 = each.value.vm_memory
   memory_hot_add_enabled = true
+  nested_hv_enabled      = each.value.vm_nested_hv_enabled
   guest_id               = data.vsphere_virtual_machine.template.guest_id
+  firmware               = var.firmware
 
   dynamic "network_interface" {
     for_each = each.value.vm_networks
@@ -71,14 +73,13 @@ resource "vsphere_virtual_machine" "vm" {
 
     inline = [
       "#!/bin/bash",
-      "set -euxo pipefail",
-
+      "set -e",
       # Ensure SSH setup
-      "if [ ! -d /home/${var.vm_user_login}/.ssh ]; then sudo mkdir -p /home/${var.vm_user_login}/.ssh; fi",
-      "sudo chmod 700 /home/${var.vm_user_login}/.ssh",
-      "echo '${var.vm_ssh_public_key}' | sudo tee -a /home/${var.vm_user_login}/.ssh/authorized_keys",
-      "sudo chmod 600 /home/${var.vm_user_login}/.ssh/authorized_keys",
-      "sudo chown -R ${var.vm_user_login}:${var.vm_user_login} /home/${var.vm_user_login}/.ssh",
+      "mkdir -p /home/${var.vm_user_login}/.ssh",
+      "echo '${var.vm_ssh_public_key}' >> /home/${var.vm_user_login}/.ssh/authorized_keys",
+      "chown -R ${var.vm_user_login}:${var.vm_user_login} /home/${var.vm_user_login}/.ssh",
+      "chmod 700 /home/${var.vm_user_login}/.ssh",
+      "chmod 600 /home/${var.vm_user_login}/.ssh/authorized_keys",
     ]
   }
 }

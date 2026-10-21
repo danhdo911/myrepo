@@ -1,0 +1,15 @@
+services:
+  ansible:
+    image: vmware-migration-kit:latest
+    volumes:
+      - ${PWD}:${WORK_DIR:-/workspace}:rw
+      - ${VMWARE_DATA_DIR:-/opt/os-migrate}:${VMWARE_DATA_DIR:-/opt/os-migrate}:rw
+      - ${PYTHON_LIBS:-./libs/python}:${WORK_DIR:-/workspace}/python:rw
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/hosts:/etc/hosts:ro
+      - /root/.ssh:/root/.ssh:rw
+      - /tmp:/tmp:rw
+    working_dir: ${WORK_DIR:-/workspace}
+    env_file:
+      - ./environments/${ENV}/.env
+    entrypoint: ["bash", "-c"]

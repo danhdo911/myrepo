@@ -1,0 +1,16 @@
+---
+- name: Configure system proxy environment
+  ansible.builtin.blockinfile:
+    path: /etc/environment
+    marker: "# {mark} ANSIBLE MANAGED PROXY"
+    block: |
+      http_proxy="{{ proxy_url }}"
+      https_proxy="{{ proxy_url }}"
+      no_proxy="{{ no_proxy }}"
+      HTTP_PROXY="{{ proxy_url }}"
+      HTTPS_PROXY="{{ proxy_url }}"
+      NO_PROXY="{{ no_proxy }}"
+    create: true
+    mode: "0644"
+  become: true
+  when: proxy_url | default('') | length > 0

@@ -1,0 +1,29 @@
+### Patching for OpenStack
+kolla_patch_enabled: false
+
+### Patching directories
+kolla_ansible_role_dir: "{{ workdir_openstack }}/{{ kolla_venv }}/share/kolla-ansible/ansible/roles"
+
+kolla_keystone_defaults_dir: "{{ kolla_ansible_role_dir }}/keystone/defaults/"
+kolla_keystone_handlers_dir: "{{ kolla_ansible_role_dir }}/keystone/handlers/"
+kolla_keystone_templates_dir: "{{ kolla_ansible_role_dir }}/keystone/templates/"
+
+kolla_skyline_templates_dir: "{{ kolla_ansible_role_dir }}/skyline/templates/"
+
+### Patching services
+keystone_fernet_patches:
+  keystone:
+    - fernet-push.sh.j2
+
+keystone_http_proxy:
+  defaults:
+    - keystone_defaults.yml
+  handlers:
+    - keystone_handlers.yml
+
+metadata_service_patches:
+  keystone:
+    - keystone.json.j2
+  skyline:
+    - skyline.yaml.j2
+    - nginx.conf.j2

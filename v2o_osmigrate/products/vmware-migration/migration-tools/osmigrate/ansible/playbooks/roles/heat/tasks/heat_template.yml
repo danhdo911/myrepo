@@ -1,0 +1,15 @@
+---
+- name: Render Heat template for instance deployment
+  ansible.builtin.template:
+    src: heat_template.yml.j2
+    dest: "{{ heat_stack_dir }}/{{ vm.key }}/heat_template.yml"
+  loop: "{{ readiness_inventory_mapped | dict2items }}"
+  loop_control:
+    loop_var: vm
+    label: "{{ vm.key }}"
+  vars:
+    instance_name: "{{ vm.value.name }}"
+    flavor_name: "{{ vm.value.ops_flavor_id }}"
+    boot_volume_id: "{{ vm.value.boot_volume_id | default('') }}"
+    data_volumes: "{{ vm.value.data_volumes | default([]) }}"
+    networks: "{{ vm.value.networks | default([]) }}"

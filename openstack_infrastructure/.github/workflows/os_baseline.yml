@@ -1,0 +1,161 @@
+name: OpenStack OS Baseline
+
+on:
+    workflow_call:
+        inputs:
+            environment:
+                type: string
+                required: true
+
+            inventory_from_artifact:
+                type: boolean
+                required: false
+                default: false
+
+    workflow_dispatch:
+        inputs:
+            environment:
+                required: true
+                type: choice
+                options:
+                    - lab199
+                    - lab_2025v1
+
+            provisioning_run_id:
+                description: Previous provisioning workflow run ID
+                required: false
+                type: string
+
+permissions:
+    actions: read
+    contents: read
+
+env:
+    ENVIRONMENT: ${{ inputs.environment }}
+    ANSIBLE_PRIVATE_KEY: ${{ secrets.ANSIBLE_PRIVATE_KEY }}
+    HARBOR_REGISTRY: ${{ vars.HARBOR_REGISTRY }}
+    HARBOR_USER: ${{ secrets.HARBOR_USER }}
+    HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
+    VAULT_ADDR: ${{ vars.VAULT_ADDR }}
+    VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+    VAULT_SECRET_PATH_BASE: ${{ secrets.VAULT_SECRET_PATH_BASE }}
+    VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+    VAULT_SECRET_DATA: ${{ secrets.VAULT_SECRET_DATA }}
+
+jobs:
+    prepare_inventory:
+        if: ${{ !inputs.inventory_from_artifact }}
+        runs-on: lab
+        environment: ${{ inputs.environment }}
+
+        steps:
+            - uses: actions/checkout@v7
+
+            - name: Download Terraform output from provisioning run
+              if: ${{ github.event_name == 'workflow_dispatch' && inputs.provisioning_run_id != '' }}
+              uses: actions/download-artifact@v7
+              with:
+                  name: terraform-output
+                  repository: ${{ github.repository }}
+                  run-id: ${{ inputs.provisioning_run_id }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  path: output
+                  merge-multiple: true
+
+            - uses: ./.github/actions/common/prepare_env
+
+            - uses: ./.github/actions/common/generate_inventory
+
+            - uses: actions/upload-artifact@v7
+              with:
+                  name: ansible-inventory
+                  path: environments/${{ inputs.environment }}/ansible/inventory.ini
+                  retention-days: 1
+
+    pre_setup:
+        needs:
+            - prepare_inventory
+        if: ${{ always() && (inputs.inventory_from_artifact || needs.prepare_inventory.result == 'success') }}
+        runs-on: lab
+        environment: ${{ inputs.environment }}
+
+        steps:
+            - uses: actions/checkout@v7
+
+            - uses: ./.github/actions/common/prepare_env
+
+            - uses: ./.github/actions/common/ansible_ssh_key
+
+            - name: Download Terraform output from workflow caller
+              if: ${{ inputs.inventory_from_artifact }}
+              uses: actions/download-artifact@v7
+              with:
+                  name: terraform-output
+                  path: output
+                  merge-multiple: true
+
+            - name: Download Terraform output via workflow run id ${{ inputs.provisioning_run_id }}
+              if: ${{ github.event_name == 'workflow_dispatch' && inputs.provisioning_run_id != '' }}
+              uses: actions/download-artifact@v7
+              with:
+                  name: terraform-output
+                  repository: ${{ github.repository }}
+                  run-id: ${{ inputs.provisioning_run_id }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  path: output
+                  merge-multiple: true
+
+            - name: Download Ansible inventory
+              uses: actions/download-artifact@v7
+              with:
+                  name: ansible-inventory
+                  path: environments/${{ inputs.environment }}/ansible
+                  merge-multiple: true
+
+            - uses: ./.github/actions/osbaseline/presetup
+
+    setup:
+        needs:
+            - pre_setup
+        if: ${{ always() && needs.pre_setup.result == 'success' }}
+        runs-on: lab
+        environment: ${{ inputs.environment }}
+
+        steps:
+            - uses: actions/checkout@v7
+
+            - uses: ./.github/actions/common/prepare_env
+
+            - uses: ./.github/actions/common/ansible_ssh_key
+
+            - name: Download Ansible inventory
+              uses: actions/download-artifact@v7
+              with:
+                  name: ansible-inventory
+                  path: environments/${{ inputs.environment }}/ansible
+                  merge-multiple: true
+
+            - uses: ./.github/actions/osbaseline/setup
+
+    post_setup:
+        needs:
+            - setup
+        if: ${{ always() && needs.setup.result == 'success' }}
+        runs-on: lab
+        environment: ${{ inputs.environment }}
+
+        steps:
+            - uses: actions/checkout@v7
+
+            - uses: ./.github/actions/common/prepare_env
+
+            - uses: ./.github/actions/common/ansible_ssh_key
+
+            - name: Download Ansible inventory
+              uses: actions/download-artifact@v7
+              with:
+                  name: ansible-inventory
+                  path: environments/${{ inputs.environment }}/ansible
+                  merge-multiple: true
+
+            - uses: ./.github/actions/osbaseline/postsetup

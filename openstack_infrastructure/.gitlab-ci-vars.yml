@@ -1,8 +1,0 @@
-variables:
-  ENVIRONMENT: prdhcm10rs_cgwaz01
-  PROJECT: openstack_cgw_provision_s3
-
-  AWS_DEFAULT_REGION: "ap-southeast-1"
-  AWS_ROLE_ARN: "arn:aws:iam::654654214706:role/higio-role-readonly"
-
-  VAULT_SECRET_DATA: "sa_ops_g2"

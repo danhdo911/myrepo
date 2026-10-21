@@ -3,7 +3,7 @@ output "vms_info" {
   value = {
     for vm_key, vm in vsphere_virtual_machine.vm :
     vm_key => {
-      name = vm.name
+      name = var.vm_configs[vm_key].vm_name
       networks = [
         for index in range(length(vm.network_interface)) : {
           alias_name = (

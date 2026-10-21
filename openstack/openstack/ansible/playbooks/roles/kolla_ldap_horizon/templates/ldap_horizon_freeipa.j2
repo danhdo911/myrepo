@@ -1,0 +1,49 @@
+[identity]
+driver = ldap
+
+[ldap]
+debug_level = 4095
+# LDAP server URL
+# If using LDAPS, trust the certificate and use:
+# ldaps://iijvnad01.local:636
+url = {{ ldap_horizon_url }}
+
+# Bind user
+user = {{ ldap_horizon_user }}
+password = {{ ldap_horizon_password }}
+
+# Base DN
+suffix = {{ ldap_horizon_suffix | lower() }}
+
+# User search base
+user_tree_dn = {{ ldap_horizon_user_tree_dn | lower() }}
+
+# Group search base
+group_tree_dn = {{ ldap_horizon_group_tree_dn | lower() }}
+
+# Filter users by group membership
+user_filter = (memberOf={{ ldap_horizon_user_filter | lower() }})
+
+# Object class
+user_objectclass = person
+group_objectclass = groupOfNames
+
+# Attribute mappings
+user_id_attribute   = ipaUniqueID
+user_name_attribute = uid
+user_mail_attribute = mail
+group_id_attribute = ipaUniqueID
+group_name_attribute = cn
+group_member_attribute = member
+
+# Project mapping (read-only)
+user_default_project_id_attribute =
+
+# Disable user management from Keystone
+user_allow_create = False
+user_allow_update = False
+user_allow_delete = False
+
+group_allow_create = False
+group_allow_update = False
+group_allow_delete = False

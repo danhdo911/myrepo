@@ -1,0 +1,8 @@
+---
+- name: Ensure Kolla Ansible configuration directory for Glance exists
+  ansible.builtin.file:
+    path: "{{ kolla_config_glance_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'

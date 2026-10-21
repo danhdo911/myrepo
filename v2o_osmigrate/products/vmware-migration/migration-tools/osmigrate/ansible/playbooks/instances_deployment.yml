@@ -1,0 +1,98 @@
+---
+- name: Render Heat Stack template
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  become: true
+  become_user: root
+
+  tasks:
+    - name: Verify Instance Deployment Inputs
+      ansible.builtin.include_role:
+        name: common
+        tasks_from: verify_required_files
+        apply:
+          tags:
+            - heat_stack
+            - heat_deploy
+      vars:
+        required_files:
+          - name: VM inventory readiness resource mapped
+            path: "{{ vm_data_readiness_resources_mapped }}"
+      tags:
+        - heat_stack
+        - heat_deploy
+
+    - name: Load Readiness Inventory Resources Mapped
+      ansible.builtin.set_fact:
+        readiness_inventory_mapped: >-
+          {{
+            lookup('ansible.builtin.file', vm_data_readiness_resources_mapped)
+            | from_json
+          }}
+      no_log: true
+      tags:
+        - heat_stack
+        - heat_deploy
+
+    - name: Create Directory for Instances
+      ansible.builtin.file:
+        path: "{{ heat_stack_dir }}/{{ vm.key }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      loop: "{{ readiness_inventory_mapped | dict2items }}"
+      loop_control:
+        loop_var: vm
+        label: "{{ vm.key }}"
+      tags:
+        - heat_stack
+
+    - name: Heat template for instance deployment
+      ansible.builtin.include_role:
+        name: heat
+        tasks_from: heat_template
+        apply:
+          tags:
+            - heat_stack
+      tags:
+        - heat_stack
+
+    - name: Heat parameters for instance resources
+      ansible.builtin.include_role:
+        name: heat
+        tasks_from: heat_parameters
+        apply:
+          tags:
+            - heat_stack
+      tags:
+        - heat_stack
+
+- name: OpenStack Instances Deployment by Heat Stack
+  hosts: infra
+  become: true
+  become_user: root
+  gather_facts: true
+
+  vars:
+    readiness_inventory_mapped: >-
+      {{
+        lookup(
+          'ansible.builtin.file',
+          vm_data_readiness_resources_mapped
+        )
+        | from_json
+      }}
+
+  tasks:
+    - name: Instances Deployment by Heat Stack
+      ansible.builtin.include_role:
+        name: heat
+        tasks_from: heat_deploy
+        apply:
+          tags:
+            - heat_deploy
+      run_once: true
+      tags:
+        - heat_deploy

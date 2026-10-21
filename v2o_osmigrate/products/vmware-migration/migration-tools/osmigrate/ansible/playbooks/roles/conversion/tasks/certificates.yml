@@ -1,0 +1,17 @@
+---
+- name: Install CA certificates on conversion host
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/etc/pki/ca-trust/source/anchors/{{ item | basename }}"
+    owner: root
+    group: root
+    mode: "0644"
+  with_fileglob:
+    - "{{ work_dir }}/infra_os_migrate/certs/openstack/*.crt"
+    - "{{ work_dir }}/infra_os_migrate/certs/vmware/*.crt"
+  register: ca_certs
+
+- name: Update CA trust
+  ansible.builtin.command:
+    cmd: update-ca-trust extract
+  when: ca_certs.changed

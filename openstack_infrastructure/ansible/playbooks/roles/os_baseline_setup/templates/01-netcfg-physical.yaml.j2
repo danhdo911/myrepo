@@ -1,0 +1,57 @@
+{% set ethernets = interface_ethernets | default([]) %}
+{% set bonds = interface_bonds | default([]) %}
+{% set vlans = interface_vlans | default([]) %}
+network:
+  version: 2
+{% if ethernets | length > 0 %}
+  ethernets:
+{% for ethernet in ethernets %}
+    {{ ethernet.name }}:
+      dhcp4: {{ ethernet.dhcp4 | default(false) | lower }}
+{% endfor %}
+{% endif %}
+
+{% if bonds | length > 0 %}
+  bonds:
+{% for bond in bonds %}
+    {{ bond.name }}:
+      mtu: {{ bond.mtu | default(9000) }}
+      interfaces:
+{% for interface in bond.interfaces %}
+        - {{ interface }}
+{% endfor %}
+{% if bond.parameters | length > 0 %}
+      parameters:
+{% for key, value in bond.parameters.items() %}
+        {{ key }}: {{ value }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if vlans | length > 0 %}
+  vlans:
+{% for iface in vlans %}
+    {{ iface.name }}:
+      dhcp4: {{ iface.dhcp4 | default(false) | lower }}
+      mtu: {{ iface.mtu | default(1500 if iface.name == 'ens33' else 9000) }}
+      link: {{ iface.link | default('bond1' if iface.name == 'ens36' else 'bond0') }}
+      id: {{ iface.id }}
+      addresses:
+        - {{ iface.addresses }}
+      routes:
+{% for route in iface.routes %}
+        - to: {{ route.to }}
+          via: {{ route.via }}
+{% endfor %}
+{% if iface.name == 'ens33' %}
+{% if dns_servers is defined and dns_servers | length > 0 %}
+      nameservers:
+        addresses: {{ dns_servers | to_json }}
+{% if search_domain is defined and search_domain %}
+        search: {{ search_domain | to_json }}
+{% endif %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}

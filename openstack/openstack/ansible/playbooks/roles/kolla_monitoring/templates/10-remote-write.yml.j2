@@ -1,0 +1,10 @@
+{% if monitoring_enabled | default(false) | bool %}
+remote_write:
+  - url: https://{{ monitoring_system_fqdn }}:{{ prometheus_remote_write_port }}/insert/0/prometheus
+    queue_config:
+      max_samples_per_send: 10000
+      capacity: 20000
+      max_shards: 30
+    tls_config:
+      insecure_skip_verify: true
+{% endif %}

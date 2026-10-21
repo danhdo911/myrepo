@@ -1,0 +1,8 @@
+---
+- name: NFS shares configuration file for Kolla Ansible
+  ansible.builtin.template:
+    src: cinder/nfs_shares.j2
+    dest: "{{ kolla_config_dir }}/nfs_shares"
+    owner: root
+    group: root
+    mode: '0644'

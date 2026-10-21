@@ -1,0 +1,37 @@
+**/.vscode/
+
+**/.terraform/
+**/.terraform.lock.hcl
+
+**/*.tfstate
+**/*.tfstate.*
+
+**/*.tfplan
+**/*tfplan*
+
+**/*.log
+**/*.out
+
+**/.env
+
+**/*.old*
+
+**/aws_config
+**/aws_credentials
+
+**/*private_key*
+
+**/output/*
+
+# Editor/IDE files (optional)
+*.swp
+*.swo
+*.bak
+*.tmp
+.vscode/
+.idea/
+
+# Exception
+!output/.gitkeep
+!samples/*
+!.github/**

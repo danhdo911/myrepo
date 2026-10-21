@@ -1,0 +1,50 @@
+---
+- name: Ensure monitor directory is exist
+  ansible.builtin.file:
+    path: "{{ monitoring_alloy_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Get latest Alloy release info
+  ansible.builtin.uri:
+    url: "{{ monitoring_alloy_package_url }}"
+    return_content: true
+  register: alloy_release
+
+- name: Set Alloy download URL
+  ansible.builtin.set_fact:
+    monitoring_alloy_download_url: >-
+      {{
+        alloy_release.json.assets
+        | selectattr('browser_download_url', 'search', 'alloy-linux-amd64.zip$')
+        | map(attribute='browser_download_url')
+        | first
+      }}
+
+- name: Download Alloy
+  ansible.builtin.get_url:
+    url: "{{ monitoring_alloy_download_url }}"
+    dest: "{{ monitoring_alloy_dir }}/alloy-linux-amd64.zip"
+    mode: "0644"
+
+- name: Extract Alloy
+  ansible.builtin.unarchive:
+    src: "{{ monitoring_alloy_dir }}/alloy-linux-amd64.zip"
+    dest: "{{ monitoring_alloy_dir }}"
+    remote_src: true
+
+- name: Rename Alloy file
+  ansible.builtin.command:
+    cmd: mv alloy-linux-amd64 alloy
+    chdir: "{{ monitoring_alloy_dir }}"
+    creates: "{{ monitoring_alloy_dir }}/alloy"
+
+- name: Remove Alloy zip after extracted
+  ansible.builtin.file:
+    path: "{{ monitoring_alloy_dir }}/{{ item }}"
+    state: absent
+  loop:
+    - alloy-linux-amd64
+    - alloy-linux-amd64.zip

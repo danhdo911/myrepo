@@ -1,0 +1,31 @@
+---
+- name: NFS mountpoint for metadata
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: nfs
+    apply:
+      tags:
+        - nfs_metadata
+        - kolla_higio_portal
+  vars:
+    nfs_ops_services_mounts: "{{ metadata_nfs_mountpoint }}"
+  tags:
+    - nfs_metadata
+    - kolla_higio_portal
+  when:
+    - inventory_hostname in groups['control']
+
+- name: Change owner for metadata
+  ansible.builtin.file:
+    path: "{{ item.mountpoint }}"
+    state: directory
+    owner: "33"
+    group: "33"
+    recurse: true
+  loop: "{{ metadata_nfs_mountpoint }}"
+  become: true
+  tags:
+  - nfs_metadata
+  - kolla_higio_portal
+  when:
+    - inventory_hostname in groups['control']

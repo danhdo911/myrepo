@@ -1,0 +1,22 @@
+---
+- name: Load Terraform data for network configuration
+  ansible.builtin.include_tasks:
+    file: tf_vms_data.yml
+    apply:
+      tags:
+        - tf_loaddata
+        - pre_setup
+  tags:
+    - tf_loaddata
+    - pre_setup
+
+- name: Netplan configuration
+  ansible.builtin.include_tasks:
+    file: netplan.yml
+    apply:
+      tags:
+        - netplan
+        - pre_setup
+  tags:
+    - netplan
+    - pre_setup

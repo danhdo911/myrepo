@@ -1,0 +1,16 @@
+---
+- name: Ensure Kolla Ansible configuration directory for Cinder exists
+  ansible.builtin.file:
+    path: "{{ kolla_config_cinder_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Cinder configuration file for Kolla Ansible
+  ansible.builtin.template:
+    src: cinder/cinder.conf.j2
+    dest: "{{ kolla_config_dir }}/cinder.conf"
+    owner: root
+    group: root
+    mode: '0644'

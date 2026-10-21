@@ -1,0 +1,26 @@
+---
+- name: Create OpenStack custom roles
+  openstack.cloud.identity_role:
+    cloud: "{{ openstack_auth }}"
+    state: present
+    name: "{{ item }}"
+  loop: "{{ openstack_custom_roles }}"
+  environment: "{{ openstack_environment }}"
+  delegate_to: localhost
+  run_once: true
+
+- name: Create OpenStack custom implied roles
+  ansible.builtin.shell: |
+    source {{ workdir_openstack }}/{{ kolla_venv }}/bin/activate
+    source {{ kolla_dir }}/admin-openrc.sh
+    openstack --insecure implied role create {{ item }} --implied-role reader
+  args:
+    executable: /bin/bash
+  loop: "{{ openstack_custom_implied_roles }}"
+  register: implied_roles
+  delegate_to: "{{ groups['infra'][0] }}"
+  run_once: true
+  failed_when:
+    - implied_roles.rc != 0
+    - "'Conflict' not in implied_roles.stderr | default('')"
+  changed_when: implied_roles.rc == 0

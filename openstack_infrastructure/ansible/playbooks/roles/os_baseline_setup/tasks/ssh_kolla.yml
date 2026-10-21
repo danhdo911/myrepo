@@ -1,0 +1,37 @@
+---
+- name: Generate SSH key pair for kolla-ansible
+  community.crypto.openssh_keypair:
+    path: "{{ ansible_env.HOME }}/.ssh/kolla-ansible"
+    type: ed25519
+    comment: "kolla-ansible"
+    state: present
+    owner: root
+    group: root
+    mode: '0600'
+  register: _ssh_key_result
+  failed_when: _ssh_key_result is failed
+  delegate_to: "{{ groups['infra'][0] }}"
+  run_once: true
+
+- name: Ensure SSH private key has correct permissions
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.ssh/kolla-ansible"
+    owner: root
+    group: root
+    mode: '0600'
+  delegate_to: "{{ groups['infra'][0] }}"
+  run_once: true
+
+- name: Read SSH public key content
+  ansible.builtin.slurp:
+    src: "{{ ansible_env.HOME }}/.ssh/kolla-ansible.pub"
+  register: _ssh_pubkey_result
+  failed_when: _ssh_pubkey_result is failed
+  delegate_to: "{{ groups['infra'][0] }}"
+  run_once: true
+
+- name: Set authorized key for kolla-ansible user
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ _ssh_pubkey_result.content | b64decode }}"

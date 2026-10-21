@@ -1,0 +1,36 @@
+---
+- block:
+    - name: Apply keystone fernet patch
+      ansible.builtin.include_tasks:
+        file: keystone_fernet.yml
+        apply:
+          tags:
+            - keystone_fernet
+            - kolla_patch
+      tags:
+        - keystone_fernet
+        - kolla_patch
+
+    - name: Apply keystone http proxy patch
+      ansible.builtin.include_tasks:
+        file: keystone_http_proxy.yml
+        apply:
+          tags:
+            - keystone_http_proxy
+            - kolla_patch
+      tags:
+        - keystone_http_proxy
+        - kolla_patch
+
+    - name: Apply metadata service patch
+      ansible.builtin.include_tasks:
+        file: metadata_service.yml
+        apply:
+          tags:
+            - metadata_service
+            - kolla_patch
+      tags:
+        - metadata_service
+        - kolla_patch
+  when:
+    - inventory_hostname in groups['infra']

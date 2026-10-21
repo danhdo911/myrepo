@@ -1,0 +1,57 @@
+name: OpenStack Kolla Ansible
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options:
+          - lab199
+          - lab_2025v1
+
+env:
+  ENVIRONMENT: ${{ inputs.environment }}
+  HARBOR_REGISTRY: ${{ vars.HARBOR_REGISTRY }}
+  HARBOR_USER: ${{ secrets.HARBOR_USER }}
+  HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
+  VAULT_ADDR: ${{ vars.VAULT_ADDR }}
+  VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+  VAULT_SECRET_PATH_BASE: ${{ secrets.VAULT_SECRET_PATH_BASE }}
+  VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+  VAULT_SECRET_DATA: ${{ secrets.VAULT_SECRET_DATA }}
+  ANSIBLE_PRIVATE_KEY: ${{ secrets.ANSIBLE_PRIVATE_KEY }}
+
+jobs:
+  kolla-init:
+    runs-on: lab
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: ansible-inventory
+          path: environments/${{ inputs.environment }}/ansible
+      
+      - uses: ./.github/actions/common/prepare_env
+
+      - uses: ./.github/actions/openstack/kolla/init
+
+  kolla-core-services:
+    runs-on: lab
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: ansible-inventory
+          path: environments/${{ inputs.environment }}/ansible
+      
+      - uses: ./.github/actions/common/prepare_env
+
+      - uses: ./.github/actions/common/ansible_ssh_key
+
+      - uses: ./.github/actions/openstack/kolla/config/core_services

@@ -1,0 +1,23 @@
+---
+- name: Container state health check
+  vars:
+    script_path: "containers"
+    script_name: "ops-containers-healthcheck-v3.sh"
+    virtual_env: "{{ workdir_openstack }}/{{ kolla_venv }}"
+  ansible.builtin.script:
+    cmd: >
+      {{ script_path }}/{{ script_name }}
+      {{ groups["all"] | join(" ") }}
+  register: containers_result
+  delegate_to: "{{ groups['infra'][0] }}"
+  run_once: true
+  no_log: true
+  changed_when: false
+  failed_when: false
+
+- name: Container state health check report
+  ansible.builtin.debug:
+    msg: |
+      {{ containers_result.stdout_lines}}
+  delegate_to: "{{ groups['infra'][0] }}"
+  run_once: true

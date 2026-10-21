@@ -1,0 +1,16 @@
+---
+- name: Create mount point for NFS
+  ansible.builtin.file:
+    path: "{{ item.mountpoint }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ nfs_ops_services_mounts }}"
+
+- name: Mount NFS share
+  ansible.posix.mount:
+    path: "{{ item.mountpoint }}"
+    src: "{{ nfs_ops_services_ip }}:{{ item.path }}"
+    fstype: nfs
+    opts: "{{ nfs_ops_services_opts | default ('defaults', true) }}"
+    state: mounted
+  loop: "{{ nfs_ops_services_mounts }}"

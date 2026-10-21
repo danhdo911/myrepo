@@ -1,0 +1,5 @@
+---
+- name: Render Heat stack variables for instance resources
+  ansible.builtin.template:
+    src: heat_stack_vars.yml.j2
+    dest: "{{ heat_stack_dir }}/heat_stack_vars.yml"

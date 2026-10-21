@@ -1,0 +1,174 @@
+name: OpenStack Provision
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+    branches:
+      - main
+      - "provision-*"
+    paths:
+      - "environments/**/vms_config.tfvars"
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        required: true
+        options:
+          - lab199
+          - lab_2025v1
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  TF_PROJECT: openstack_aio_provision
+  HARBOR_REGISTRY: ${{ vars.HARBOR_REGISTRY }}
+  HARBOR_USER: ${{ secrets.HARBOR_USER }}
+  HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
+  VAULT_ADDR: ${{ vars.VAULT_ADDR }}
+  VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+  VAULT_SECRET_PATH_BASE: ${{ secrets.VAULT_SECRET_PATH_BASE }}
+  VAULT_SECRET_PATH: ${{ secrets.VAULT_SECRET_PATH }}
+  VAULT_SECRET_DATA: ${{ secrets.VAULT_SECRET_DATA }}
+  AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_MFA_SERIAL: ${{ secrets.AWS_MFA_SERIAL }}
+  AWS_MFA_SEED: ${{ secrets.AWS_MFA_SEED }}
+  AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+
+jobs:
+  set-environment:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: lab
+
+    outputs:
+      environment: ${{ steps.identify-env.outputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+        with:
+          files: environments/**
+
+      - name: Identify environment
+        uses: ./.github/actions/common/identify_env
+        id: identify-env
+        with:
+          changed_files: ${{ steps.changed-files.outputs.all_changed_files }}
+
+  terraform-plan:
+    needs: set-environment
+    if: ${{ always() && (github.event_name == 'workflow_dispatch'|| needs.set-environment.result == 'success') }}
+    runs-on: lab
+    environment: ${{ inputs.environment || needs.set-environment.outputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set environment
+        run: |
+          echo "ENVIRONMENT=${{ inputs.environment || needs.set-environment.outputs.environment }}" >> "$GITHUB_ENV"
+
+      - uses: ./.github/actions/common/prepare_env
+
+      - uses: ./.github/actions/common/aws_auth
+
+      - uses: ./.github/actions/terraform/init
+
+      - uses: ./.github/actions/terraform/plan
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: terraform-plan
+          path: output/plan.tfplan
+          retention-days: 1
+
+  terraform-apply:
+    needs:
+      - set-environment
+      - terraform-plan
+    if: ${{ always() && (github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch')  }}
+    runs-on: lab
+    environment: ${{ inputs.environment || needs.set-environment.outputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set environment
+        run: |
+          echo "ENVIRONMENT=${{ inputs.environment || needs.set-environment.outputs.environment }}" >> "$GITHUB_ENV"
+
+      - uses: ./.github/actions/common/prepare_env
+
+      - uses: ./.github/actions/common/aws_auth
+
+      - uses: ./.github/actions/terraform/init
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: terraform-plan
+          path: output
+
+      - uses: ./.github/actions/terraform/apply
+
+      - uses: ./.github/actions/terraform/output
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: terraform-output
+          path: output/*_vms_info.json
+          retention-days: 1
+
+  generate-inventory:
+    needs:
+      - set-environment
+      - terraform-apply
+    if: ${{ always() && needs.terraform-apply.result == 'success' }}
+    runs-on: lab
+    environment: ${{ inputs.environment || needs.set-environment.outputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: terraform-output
+          path: output
+          merge-multiple: true
+
+      - name: Set environment
+        run: |
+          echo "ENVIRONMENT=${{ inputs.environment || needs.set-environment.outputs.environment }}" >> "$GITHUB_ENV"
+
+      - uses: ./.github/actions/common/prepare_env
+
+      - uses: ./.github/actions/common/generate_inventory
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ansible-inventory
+          path: environments/${{ inputs.environment || needs.set-environment.outputs.environment }}/ansible/inventory.ini
+          retention-days: 1
+
+  os_baseline:
+    needs:
+      - set-environment
+      - generate-inventory
+    if: ${{ always() && needs.generate-inventory.result == 'success' }}
+
+    uses: ./.github/workflows/os_baseline.yml
+    with:
+      environment: ${{ inputs.environment || needs.set-environment.outputs.environment }}
+      inventory_from_artifact: true
+
+    secrets: inherit

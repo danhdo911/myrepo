@@ -1,0 +1,33 @@
+[all]
+
+[control]
+{% for vm in vms.values() if 'ctl' in vm.name %}
+{{ vm.name }} ansible_host={{ vm.networks[0].ip_address.split('/')[0] }}
+{% endfor %}
+
+[network]
+{% for vm in vms.values() if 'gw' in vm.name %}
+{{ vm.name }} ansible_host={{ vm.networks[0].ip_address.split('/')[0] }}
+{% endfor %}
+
+[compute]
+{% for vm in vms.values() if 'com' in vm.name %}
+{{ vm.name }} ansible_host={{ vm.networks[0].ip_address.split('/')[0] }}
+{% endfor %}
+
+[infra]
+{% for vm in vms.values() if 'infra' in vm.name %}
+{{ vm.name }} ansible_host={{ vm.networks[0].ip_address.split('/')[0] }}
+{% endfor %}
+
+[os_baseline:children]
+control
+network
+compute
+infra
+
+[kolla_config:children]
+control
+network
+compute
+infra

@@ -1,0 +1,25 @@
+---
+- name: Hardening OS
+  ansible.builtin.include_tasks:
+    file: hardening_os.yml
+    apply:
+      tags:
+        - post_setup
+  when:
+    - hardening_enabled | default(false) | bool
+  tags:
+    - post_setup
+    - pre_harden
+    - apply_harden
+    - post_harden
+
+- name: SSH configuration for Administration
+  ansible.builtin.include_tasks:
+    file: ssh.yml
+    apply: 
+      tags:
+        - post_setup
+        - ssh
+  tags:
+    - post_setup
+    - ssh

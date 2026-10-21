@@ -1,0 +1,44 @@
+---
+- name: Initialize VM data readiness dictionary
+  ansible.builtin.set_fact:
+    vm_data_readiness: "{{ readiness_inventory }}"
+  no_log: true
+  tags:
+    - always
+
+- name: Networks mapping
+  ansible.builtin.include_tasks:
+    file: networks.yml
+    apply:
+      tags:
+        - migration_vars
+        - resources_mapping
+  tags:
+    - migration_vars
+    - resources_mapping
+
+- name: Flavors mapping
+  ansible.builtin.include_tasks:
+    file: flavors.yml
+    apply:
+      tags:
+        - resources_mapping
+  tags:
+    - resources_mapping
+
+- name: Volumes mapping
+  ansible.builtin.include_tasks:
+    file: volumes.yml
+    apply:
+      tags:
+        - resources_mapping
+  tags:
+    - resources_mapping
+
+- name: Export VM readiness data with mapped OpenStack resources
+  ansible.builtin.copy:
+    dest: "{{ vm_data_readiness_resources_mapped }}"
+    content: "{{ vm_data_readiness | to_nice_json }}"
+    mode: "0644"
+  tags:
+    - resources_mapping

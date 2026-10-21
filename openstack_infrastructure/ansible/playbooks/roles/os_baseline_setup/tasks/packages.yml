@@ -1,0 +1,21 @@
+---
+- name: Clean apt cache and update package lists
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Essential packages installation
+  ansible.builtin.apt:
+    name: "{{ essential_packages }}"
+    state: present
+
+- name: Packages for NFS storage service
+  ansible.builtin.apt:
+    name: "{{ nfs_packages }}"
+    state: present
+  when:
+    - inventory_hostname in groups['control']
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true

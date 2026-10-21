@@ -1,0 +1,40 @@
+### AEE
+runner_from_aee: true
+os_migrate_vmw_data_dir: /opt/os-migrate
+import_workloads_libdir: /usr/lib/vmware-vix-disklib
+import_workloads_debug: true
+
+### Conversion host
+already_deploy_conversion_host: true
+copy_metadata_to_conv_host: true
+copy_openstack_credentials_to_conv_host: false
+conversion_host_vmware_vix_disklib: /usr/lib/vmware-vix-disklib
+
+### Migration Setting
+converted: true
+skip_conversion: true
+use_cbt: true
+cbt_sync: true
+cutover: false
+os_migrate_tear_down: false
+
+### Patched: migration_enhancements - VMware VDDK Transports
+# Specify the VMware VDDK transport mode used during VM disk conversion.
+# Supported options:
+#   - "nbd"        : Network Block Device (unencrypted).
+#   - "nbdssl"     : Network Block Device over SSL (encrypted).
+#   - "nbdssl:nbd" : Prefer SSL, with fallback to unencrypted NBD.
+#
+# Optional configuration.
+# import_workloads_vddk_transports: "nbdssl:nbd"
+
+### Heat
+use_heat: false
+heat_auto_deploy: false
+
+### VM Settings
+use_existing_flavor: true
+used_mapped_networks: true
+use_fixed_ips: true
+os_migrate_create_network_port: true
+os_migrate_create_os_instance: true

@@ -1,0 +1,15 @@
+---
+- name: Log into Private Harbor Registry
+  community.docker.docker_login:
+    registry_url: "{{ registry_url }}"
+    username: "{{ registry_user }}"
+    password: "{{ registry_password }}"
+    state: present
+
+# - name: Private registry configuration in Docker Engine
+#   ansible.builtin.template:
+#     src: registry/daemon.json.j2
+#     dest: /etc/docker/daemon.json
+#     mode: '0644'
+#   notify:
+#     - restart-docker
