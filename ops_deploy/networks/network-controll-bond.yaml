@@ -1,0 +1,71 @@
+network:
+  version: 2
+  ethernets:
+    ens192:
+      dhcp4: false
+    ens224:
+      dhcp4: false
+    ens256:
+      dhcp4: false
+    ens161:
+      dhcp4: false
+
+  bonds:
+    bond0:
+      interfaces:
+        - ens192
+        - ens224
+      parameters:
+        mode: active-backup
+        mii-monitor-interval: 100
+      mtu: 1500
+
+    bond1:
+      interfaces:
+        - ens256
+        - ens161
+      parameters:
+        mode: active-backup
+        mii-monitor-interval: 100
+      mtu: 9000
+
+  vlans:
+    ### Internal
+    ens33:
+      id: 885
+      link: bond0
+      mtu: 1500
+      dhcp4: false
+      addresses:
+        - 172.16.85.11/24
+      routes:
+        - to: default
+          via: 172.16.85.254
+      nameservers:
+        addresses: [192.168.137.200]
+        search:
+          - dd-iaas.local
+
+    ### Public
+    ens34:
+      id: 888
+      link: bond0
+      mtu: 1500
+      dhcp4: false
+      addresses:
+        - 172.16.88.11/24
+      routes:
+        - to: 172.16.88.0/24
+          via: 172.16.88.254
+
+    ### Storage
+    ens36:
+      id: 887
+      link: bond1
+      mtu: 9000
+      dhcp4: false
+      addresses:
+        - 172.16.87.11/24
+      routes:
+        - to: 172.16.87.0/24
+          via: 172.16.87.254

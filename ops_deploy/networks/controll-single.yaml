@@ -1,0 +1,43 @@
+network:
+  version: 2
+  ethernets:
+
+    ens192:
+      mtu: 1500
+      dhcp4: false
+      set-name: ens33
+      match:
+        macaddress: 00:50:56:bf:0d:2e
+      addresses:
+        - 172.16.85.11/24
+      routes:
+        - to: default
+          via: 172.16.85.254
+      nameservers:
+        addresses: [192.168.137.200]
+        search:
+          - dd-iaas.local
+
+    ens224:
+      mtu: 1500
+      dhcp4: false
+      set-name: ens34
+      match:
+        macaddress: 00:50:56:bf:61:3c
+      addresses:
+        - 172.16.88.11/24
+      routes:
+        - to: 172.16.88.0/24
+          via: 172.16.88.254
+
+    ens256:
+      mtu: 9000
+      dhcp4: false
+      set-name: ens36
+      match:
+        macaddress: 00:50:56:bf:14:34
+      addresses:
+        - 172.16.87.11/24
+      routes:
+        - to: 172.16.87.0/24
+          via: 172.16.87.254
