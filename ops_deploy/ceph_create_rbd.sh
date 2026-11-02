@@ -4,6 +4,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUTPUT_DIR="${OUTPUT_DIR:-${SCRIPT_DIR}/output/ceph}"
 
+if [[ -f "${SCRIPT_DIR}/.env" ]]; then
+    set -a
+    source "${SCRIPT_DIR}/.env"
+    set +a
+fi
+
 CEPH_POOLS=(images volumes vms backups)
 
 REPLICA_SIZE=3
@@ -110,6 +116,47 @@ export_ceph_config() {
     log "Configuration exported to: $OUTPUT_DIR"
 }
 
+distribute_ceph_config() {
+    log "Distributing Ceph configuration to deployment host"
+
+    local infra_node="${INFRA_NODE:?ERROR: INFRA_NODE is not defined or is empty}"
+    local private_key="${ADMIN_SSH_KEY:?ERROR: ADMIN_SSH_KEY is required}"
+    local remote_dir="/etc/ceph"
+
+    local files=(
+        "ceph.conf"
+        "ceph.client.glance.keyring"
+        "ceph.client.cinder.keyring"
+        "ceph.client.cinder-backup.keyring"
+    )
+
+    local ssh_opts=(
+        -o StrictHostKeyChecking=no
+        -o IdentityFile="$private_key"
+        -o IdentitiesOnly=yes
+        -o BatchMode=yes
+    )
+
+    # Validate exported files
+    for file in "${files[@]}"; do
+        if [[ ! -f "${OUTPUT_DIR}/${file}" ]]; then
+            log "ERROR: Missing Ceph configuration: ${file}"
+            return 1
+        fi
+    done
+
+    ssh "${ssh_opts[@]}" "root@${infra_node}" \
+        "mkdir -p '${remote_dir}' && chmod 700 '${remote_dir}'"
+
+    scp "${ssh_opts[@]}" "${files[@]/#/${OUTPUT_DIR}/}" \
+        "root@${infra_node}:${remote_dir}/"
+
+    ssh "${ssh_opts[@]}" "root@${infra_node}" \
+        "chmod 600 '${remote_dir}'/*.keyring && chmod 644 '${remote_dir}/ceph.conf'"
+
+    log "Ceph configuration distributed to: ${infra_node}"
+}
+
 verify_ceph_rbd() {
     log "Verifying RBD pools"
 
@@ -137,6 +184,7 @@ main() {
     configure_rbd_pools
     configure_ceph_auth
     export_ceph_config
+    distribute_ceph_config
     verify_ceph_rbd
 
     log "Ceph RBD configuration completed successfully"

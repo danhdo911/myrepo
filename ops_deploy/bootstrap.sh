@@ -271,3 +271,5 @@ main() {
 }
 
 main "$@"
+
+exec bash

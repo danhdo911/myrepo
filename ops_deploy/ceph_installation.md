@@ -80,7 +80,7 @@ chmod +x ./ceph_create_rbd.sh
 ./ceph_create_rbd.sh
 ```
 
-## Verify Ceph before 
+## Verify Ceph
 
 Verify each components.
 

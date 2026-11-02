@@ -3,6 +3,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+if [[ -f "${SCRIPT_DIR}/.env" ]]; then
+    set -a
+    source "${SCRIPT_DIR}/.env"
+    set +a
+fi
+
 # Load inventory
 source "${SCRIPT_DIR}/.inventory"
 
@@ -10,7 +16,7 @@ source "${SCRIPT_DIR}/.inventory"
 BOOTSTRAP_HOST="${CONTROLLER_01}"
 
 # SSH configuration
-ADMIN_SSH_KEY="/root/.ssh/id_ed25519"
+# ADMIN_SSH_KEY="/root/.ssh/id_ed25519"
 CEPH_PUB_KEY="${SCRIPT_DIR}/ceph.pub"
 
 SSH_OPTIONS=(
