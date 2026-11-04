@@ -7,7 +7,7 @@ log() {
     echo "[INFO] $*"
 }
 
-kolla_configure() {
+kolla_ceph_configure() {
     log "Preparing Kolla-Ansible service configurations"
 
     local config_source="${SCRIPT_DIR}/kolla_ansible/config"
@@ -64,6 +64,11 @@ kolla_configure() {
     cp "${ceph_source}/ceph.client.glance.keyring" \
        "${config_target}/glance/"
 
+    # Remove leading tabs and spaces from Ceph configuration and keyring files
+    find "${config_target}" -type f \
+        \( -name "ceph.conf" -o -name "*.keyring" \) \
+        -exec sed -i 's/^[[:space:]]*//' {} +
+
     # Secure Ceph keyring permissions
     find "${config_target}" -type f -name "*.keyring" \
         -exec chmod 600 {} +
@@ -72,7 +77,7 @@ kolla_configure() {
 }
 
 main() {
-    kolla_configure
+    kolla_ceph_configure
 }
 
 main "$@"

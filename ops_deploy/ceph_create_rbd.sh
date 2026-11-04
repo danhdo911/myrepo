@@ -62,40 +62,43 @@ configure_rbd_pools() {
 }
 
 configure_ceph_auth() {
-    log "Creating CephX users for OpenStack"
+    log "Configuring CephX users for OpenStack"
+
+    local user key decoded_size
 
     # Glance
-    if ceph auth get client.glance >/dev/null 2>&1; then
-        log "CephX user already exists, skipping: client.glance"
-    else
-        ceph auth get-or-create client.glance \
-            mon 'profile rbd' \
-            osd 'profile rbd pool=images' \
-            mgr 'profile rbd pool=images' \
-            >/dev/null
-    fi
+    ceph auth get-or-create client.glance \
+        mon 'profile rbd' \
+        osd 'profile rbd pool=images' \
+        mgr 'profile rbd pool=images' \
+        >/dev/null
 
     # Cinder and Nova
-    if ceph auth get client.cinder >/dev/null 2>&1; then
-        log "CephX user already exists, skipping: client.cinder"
-    else
-        ceph auth get-or-create client.cinder \
-            mon 'profile rbd' \
-            osd 'profile rbd pool=volumes, profile rbd pool=vms, profile rbd-read-only pool=images' \
-            mgr 'profile rbd pool=volumes, profile rbd pool=vms' \
-            >/dev/null
-    fi
+    ceph auth get-or-create client.cinder \
+        mon 'profile rbd' \
+        osd 'profile rbd pool=volumes, profile rbd pool=vms, profile rbd-read-only pool=images' \
+        mgr 'profile rbd pool=volumes, profile rbd pool=vms' \
+        >/dev/null
 
     # Cinder Backup
-    if ceph get client.cinder-backup >/dev/null 2>&1; then
-        log "CephX user already exists, skipping: client.cinder-backup"
-    else
-        ceph auth get-or-create client.cinder-backup \
-            mon 'profile rbd' \
-            osd 'profile rbd pool=backups' \
-            mgr 'profile rbd pool=backups' \
-            >/dev/null
-    fi
+    ceph auth get-or-create client.cinder-backup \
+        mon 'profile rbd' \
+        osd 'profile rbd pool=backups' \
+        mgr 'profile rbd pool=backups' \
+        >/dev/null
+
+    # Validate CephX keys
+    for user in glance cinder cinder-backup; do
+        key="$(ceph auth get-key "client.${user}")"
+
+        decoded_size="$(printf '%s' "${key}" | base64 -d | wc -c)"
+
+        if [[ "${decoded_size}" -ne 16 ]]; then
+            warn "Unexpected CephX key length for client.${user}: ${decoded_size} bytes"
+        else
+            log "CephX key validated: client.${user}"
+        fi
+    done
 }
 
 export_ceph_config() {

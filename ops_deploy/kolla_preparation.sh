@@ -3,6 +3,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+if [[ -f "${SCRIPT_DIR}/.env" ]]; then
+    set -a
+    source "${SCRIPT_DIR}/.env"
+    set +a
+fi
+
 # ============================================================
 # Kolla-Ansible Environment Preparation
 # ============================================================
@@ -107,15 +113,16 @@ configure_ansible() {
     mkdir -p "$ANSIBLE_CONFIG_DIR"
 
     if [[ ! -f "$ANSIBLE_CONFIG_DIR/ansible.cfg" ]]; then
-        cat > "$ANSIBLE_CONFIG_DIR/ansible.cfg" <<'EOF'
+        cat > "$ANSIBLE_CONFIG_DIR/ansible.cfg" <<EOF
 [defaults]
 host_key_checking = False
 pipelining = True
 forks = 100
 callbacks_enabled = ansible.posix.profile_tasks
+private_key_file = ${ADMIN_SSH_KEY}
 
 [ssh_connection]
-ssh_args = -C -o ControlMaster=auto -o ControlPersist=60s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
+ssh_args = -C -o ControlMaster=auto -o ControlPersist=60s
 EOF
     else
         log "Ansible configuration already exists, skipping"

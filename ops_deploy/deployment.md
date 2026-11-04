@@ -29,9 +29,7 @@ bootstrap.sh
           +-- Deploy
 ```
 
-## Deployment
-
-### OS Baseline
+## OS Baseline
 
 Run bootstrap to setup os baseline: configuring hostname, ntp, timezone, firewall
 and required Ceph, Python, Openstack packages.
@@ -47,9 +45,9 @@ Configure DNS in `etc/hosts`:
 cat dns_hosts.conf | sudo tee -a /etc/hosts > /etc/null
 ```
 
-### Validation OpenStack Network
+## Validation OpenStack Network
 
-#### On controller
+### On controller
 
 ./network_validation ens33 \
 172.16.85.11 \
@@ -72,7 +70,7 @@ cat dns_hosts.conf | sudo tee -a /etc/hosts > /etc/null
 172.16.85.15 \
 172.16.85.16
 
-#### On compute
+### On compute
 
 ./network_validation ens33 \
 172.16.85.11 \
@@ -99,7 +97,7 @@ cat dns_hosts.conf | sudo tee -a /etc/hosts > /etc/null
 
 [CEPH Installation](./ceph_installation.md).
 
-[x] Bootstrap Ceph on Controller 01
+[ ] Bootstrap Ceph on Controller 01
 [ ] Register all Ceph hosts
 [ ] Deploy 5 MONs
 [ ] Deploy 2 MGRs
@@ -110,3 +108,144 @@ cat dns_hosts.conf | sudo tee -a /etc/hosts > /etc/null
 [ ] Configure CephX users
 [ ] Integrate Ceph with Kolla-Ansible
 [ ] Validate Glance, Cinder and Nova storage
+
+## OpenStack Deployment (On Infrastructure node)
+
+### Pre-deployment: Kolla Preparation
+
+Install kolla-ansible packages and prepare python environment.
+
+```bash
+chmod +x kolla_preparation.sh
+./kolla_preparation.sh
+```
+
+Configure Ceph's keyrings for OpenStack services.
+
+```bash
+chmod +x kolla_ceph_configure.sh
+./kolla_ceph_configure.sh
+```
+
+Configure for Nova service.
+
+```bash
+cp kolla_ansible/config/nova/nova.conf /etc/kolla/config/nova/nova.conf
+```
+
+Configure for Neutron service.
+
+```bash
+cp kolla_ansible/config/neutron/ml2_conf.ini /etc/kolla/config/neutron/ml2_conf.ini
+```
+
+Create folders for HA service.
+
+```bash
+mkdir -p /etc/kolla/config/hacluster-corosync
+mkdir -p /etc/kolla/config/hacluster-pacemaker
+```
+
+Test connection using ansible and ping module.
+
+```bash
+source workdir/openstack/os-venv/bin/activate
+```
+
+```bash
+ansible -i workdir/openstack/multinode all -m ping
+```
+
+Generate Password for every OpenStack services.
+
+```bash
+kolla-genpwd
+```
+
+Pull images for OpenStack services.
+
+```bash
+kolla-ansible pull -i workdir/openstack/multinode
+```
+
+Generate TLS Certificates for OpenStack services.
+
+```bash
+kolla-ansible certificates -i workdir/openstack/multinode
+```
+
+### Bug fix: Custom OpenStack services image (Cinder, Glance, Nova)
+
+[Build custom image with Ceph 2.20.4 version](./kolla_custom_image.md)
+
+### Deployment OpenStack with Kolla-Ansible
+
+```bash
+kolla-ansible bootstrap-servers -i workdir/openstack/multinode
+```
+
+```bash
+kolla-ansible prechecks -i workdir/openstack/multinode
+```
+
+```bash
+kolla-ansible deploy -i workdir/openstack/multinode
+```
+
+```bash
+kolla-ansible post-deploy -i workdir/openstack/multinode
+```
+
+### Post-deployment: Verify OpenStack services
+
+```bash
+cat /etc/kolla/certificates/ca/root.crt | sudo tee -a /etc/ssl/certs/ca-certificates.crt
+```
+
+```bash
+echo "export OS_CACERT=/etc/ssl/certs/ca-certificates.crt" >> /etc/kolla/admin-openrc.sh
+```
+
+```bash
+pip3 install python-openstackclient
+```
+
+```bash
+source /etc/kolla/admin-openrc.sh
+
+openstack endpoint list
+openstack service list
+openstack compute service list
+openstack network agent list
+openstack volume service list
+```
+
+## Validation OpenStack services
+
+Create external network (notes: set gateway for external vlan, no need create static route on OVN Router)
+Create private network for tenant
+Create OVN router
+Upload image
+Create instance
+Check network connectivity
+
+### Configure Masakari for HA
+
+```bash
+source /etc/kolla/admin-openrc.sh
+```
+
+```bash
+pip3 install python-masakariclient
+```
+
+```bash
+openstack segment create \
+  --service-type COMPUTE \
+  --recovery-method auto \
+  compute-ha
+```
+
+```bash
+openstack segment host create <fqdn_compute_nodes> COMPUTE SSH compute-ha
+```

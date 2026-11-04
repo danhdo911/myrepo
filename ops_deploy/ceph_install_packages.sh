@@ -30,24 +30,6 @@ CEPH_IMAGE="${CEPH_IMAGE:-quay.io/ceph/ceph:v${CEPH_VERSION}}"
 CEPH_INSTALL_COMMON="${CEPH_INSTALL_COMMON:-false}"
 CEPHADM_PATH="/usr/local/sbin/cephadm"
 
-check_prerequisites() {
-    log "Checking Ceph installation prerequisites..."
-
-    [[ "${EUID}" -eq 0 ]] || fail "This script must run as root."
-
-    . /etc/os-release
-    [[ "${ID}" == "ubuntu" ]] || fail "Only Ubuntu is supported."
-
-    command -v docker >/dev/null 2>&1 ||
-        fail "Docker Engine is not installed."
-
-    docker info >/dev/null 2>&1 ||
-        fail "Docker daemon is not running or accessible."
-
-    log "Operating system: ${PRETTY_NAME}"
-    log "Docker Engine: $(docker --version)"
-}
-
 install_dependencies() {
     log "Installing Cephadm prerequisites..."
 
@@ -108,7 +90,7 @@ verify_installation() {
     echo "Ceph Release : ${CEPH_RELEASE}"
     echo "Ceph Version : ${CEPH_VERSION}"
     echo "Ceph Image   : ${CEPH_IMAGE}"
-    echo "Docker       : $(docker --version)"
+    echo "Podman       : $(podman --version)"
 
     if [[ -x "${CEPHADM_PATH}" ]]; then
         echo "Cephadm      : Installed"
@@ -118,7 +100,7 @@ verify_installation() {
     fi
 
     if command -v ceph >/dev/null 2>&1; then
-        echo "Ceph CLI     : $(ceph --version)"
+        echo "Ceph CLI     : $(ceph --version)"i 
     else
         echo "Ceph CLI     : Not installed"
     fi
@@ -129,7 +111,6 @@ verify_installation() {
 main() {
     log "Starting Ceph ${CEPH_RELEASE} v${CEPH_VERSION} installation..."
 
-    check_prerequisites
     install_dependencies
     install_cephadm
     configure_ceph_repository

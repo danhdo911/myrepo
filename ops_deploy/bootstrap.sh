@@ -200,6 +200,47 @@ EOF
     fi
 }
 
+install_podman() {
+    local installed_version
+
+    log "Installing Podman ${PODMAN_VERSION}..."
+
+    installed_version="$(dpkg-query -W -f='${Version}' podman 2>/dev/null || true)"
+
+    # Skip if the required version is already installed
+    if [[ "${installed_version}" == "${PODMAN_VERSION}" ]]; then
+        log "Podman ${PODMAN_VERSION} is already installed."
+    else
+        # Verify the required version is available
+        apt-cache madison podman | awk '{print $3}' |
+            grep -Fxq "${PODMAN_VERSION}" ||
+            fail "Podman ${PODMAN_VERSION} is not available in APT repositories."
+
+        # Allow installation if a different version was previously held
+        apt-mark unhold podman >/dev/null 2>&1 || true
+
+        DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            --allow-downgrades \
+            "podman=${PODMAN_VERSION}"
+
+        log "Podman installation completed."
+    fi
+
+    # Verify installed version
+    installed_version="$(dpkg-query -W -f='${Version}' podman)"
+
+    [[ "${installed_version}" == "${PODMAN_VERSION}" ]] ||
+        fail "Podman version mismatch. Expected ${PODMAN_VERSION}, got ${installed_version}."
+
+    podman info >/dev/null 2>&1 ||
+        fail "Podman verification failed."
+
+    # Prevent automatic upgrades
+    apt-mark hold podman
+
+    log "Podman ready: $(podman --version)"
+}
+
 # --------------------------------------------------
 # Bootstrap status
 # --------------------------------------------------
@@ -238,6 +279,11 @@ show_system_status() {
         echo "Docker        : Not installed"
     fi
 
+    if command -v podman >/dev/null 2>&1; then
+        echo "Podman        : $(podman --version)"
+    else
+        echo "Podman        : Not installed"
+    fi
     echo "----------------------------------------"
 }
 
@@ -265,6 +311,10 @@ main() {
         install_docker_packages
     fi
 
+    if [[ "${INSTALL_PODMAN:-false}" == "true" ]]; then
+        install_podman
+    fi
+    
     show_system_status
 
     log "Host bootstrap completed successfully."

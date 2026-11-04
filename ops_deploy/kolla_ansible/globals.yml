@@ -17,6 +17,7 @@ neutron_external_interface: "eth1"
 neutron_bridge_name: "br-ex1"
 neutron_physical_network: "physnet1"
 neutron_plugin_agent: "ovn"
+neutron_ovn_distributed_fip: "yes"
 enable_neutron_qos: "yes"
 
 # FQDN
@@ -61,6 +62,10 @@ ceph_nova_pool_name: "vms"
 enable_cinder: "yes"
 enable_cinder_backup: "yes"
 # enable_cinder_backend_iscsi: "yes"
+
+#
+cinder_cluster_name: "cinder-ceph"
+enable_valkey: "yes"
 
 # Ceph RBD - Cinder
 cinder_backend_ceph: "yes"
