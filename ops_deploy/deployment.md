@@ -3,33 +3,42 @@
 ## Workflow
 
 ```text
-bootstrap.sh
-    |
-    +-- System initialization
-    |     +-- Hostname / FQDN
-    |     +-- Timezone / NTP
-    |     +-- Cloud-init / Firewall
-    |
-    +-- Install OS packages
-    |     +-- Common
-    |     +-- OpenStack prerequisites
-    |     +-- Ceph prerequisites
-    |     +-- Python
-    |
-    +-- Install Docker Engine 28.5.1
-    |
-    +-- Setup Ceph
-    |     +-- Configure Ceph repository
-    |     +-- Install Cephadm
-    |     +-- Deploy Ceph cluster
-    |
-    +-- Deploy OpenStack 2026.1
-          +-- Kolla-Ansible bootstrap
-          +-- Prechecks
-          +-- Deploy
++-- System initialization
+|     +-- Hostname / FQDN
+|     +-- Timezone / NTP
+|     +-- Cloud-init / Firewall
+|     +-- Connectivity validation
+|
++-- Install OS packages
+|     +-- Common
+|     +-- OpenStack prerequisites
+|     +-- Ceph prerequisites
+|     +-- Python
+|
++-- Install Docker Engine
+|
++-- Install Podman Engine
+|
++-- Setup Ceph
+|     +-- Configure Ceph repository
+|     +-- Install Cephadm
+|     +-- Deploy Ceph cluster
+|
++-- Deploy OpenStack 2026.1
+      +-- Kolla-Ansible bootstrap
+      +-- Prechecks
+      +-- Deploy
 ```
 
 ## OS Baseline
+
+Perform the following tasks on all nodes:
+
+- [ ] Run the OS bootstrap script.
+- [ ] Configure hostname resolution in `/etc/hosts`.
+- [ ] Validate network connectivity between all nodes.
+
+### Bootstrap
 
 Run bootstrap to setup os baseline: configuring hostname, ntp, timezone, firewall
 and required Ceph, Python, Openstack packages.
@@ -45,10 +54,11 @@ Configure DNS in `etc/hosts`:
 cat dns_hosts.conf | sudo tee -a /etc/hosts > /etc/null
 ```
 
-## Validation OpenStack Network
+### Network Connectivity Validation
 
-### On controller
+#### On controller
 
+```bash
 ./network_validation ens33 \
 172.16.85.11 \
 172.16.85.12 \
@@ -69,9 +79,11 @@ cat dns_hosts.conf | sudo tee -a /etc/hosts > /etc/null
 172.16.87.14 \
 172.16.85.15 \
 172.16.85.16
+```
 
-### On compute
+#### On compute
 
+```bash
 ./network_validation ens33 \
 172.16.85.11 \
 172.16.85.12 \
@@ -92,22 +104,22 @@ cat dns_hosts.conf | sudo tee -a /etc/hosts > /etc/null
 172.16.85.14 \
 172.16.85.15 \
 172.16.85.16
+```
 
 ## CEPH Installation
 
 [CEPH Installation](./ceph_installation.md).
 
-[ ] Bootstrap Ceph on Controller 01
-[ ] Register all Ceph hosts
-[ ] Deploy 5 MONs
-[ ] Deploy 2 MGRs
-[ ] Validate dedicated OSD disks
-[ ] Deploy OSDs
-[ ] Verify cluster health
-[ ] Create RBD pools
-[ ] Configure CephX users
-[ ] Integrate Ceph with Kolla-Ansible
-[ ] Validate Glance, Cinder and Nova storage
+- [ ] Bootstrap Ceph on Controller 01
+- [ ] Register all Ceph hosts
+- [ ] Deploy 5 MONs
+- [ ] Deploy 2 MGRs
+- [ ] Add lables: admin, mon, mgr, osd, etc.
+- [ ] Validate dedicated OSD disks
+- [ ] Deploy OSDs
+- [ ] Verify cluster health
+- [ ] Create RBD pools
+- [ ] Configure CephX users
 
 ## OpenStack Deployment (On Infrastructure node)
 
