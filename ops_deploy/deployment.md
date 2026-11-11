@@ -30,13 +30,48 @@
       +-- Deploy
 ```
 
+## Physical Setup
+
+### Server
+
+- [ ] Configure server management: hostname, management IP, and console access.
+- [ ] Verify hardware specifications: CPU, memory, NICs, and disk capacity.
+- [ ] Verify BIOS/UEFI settings: UEFI boot mode, and boot order.
+- [ ] Enable CPU virtualization (Intel VT-x/AMD-V) for KVM on OpenStack Compute nodes.
+- [ ] Configure OS disks: RAID 1.
+- [ ] Configure Ceph OSD disks: JBOD/HBA passthrough (recommended) or single-disk RAID 0.
+- [ ] Verify hardware health: disks, memory, power supplies, and network interfaces.
+- [ ] Install Ubuntu Server 24.04.5 LTS on all nodes.
+- [ ] Configure physical network connectivity: switch ports, VLANs, bonding, and MTU.
+
+### Network
+
+- [ ] Configure switch management: hostname, management IP, gateway, and administrative access.
+- [ ] Configure switch stacking or MLAG/vPC for high availability, as supported.
+- [ ] Configure port groups and link aggregation (LACP/Port-Channel).
+- [ ] Configure required VLANs for management, OpenStack API, tenant, provider, and Ceph networks.
+- [ ] Configure access and trunk ports with the appropriate allowed VLANs.
+- [ ] Configure MTU and jumbo frames where required.
+- [ ] Configure inter-switch links and network redundancy.
+- [ ] Configure routing and gateway connectivity where required.
+- [ ] Validate switch connectivity, LACP status, VLANs, and network redundancy.
+
 ## OS Baseline
 
 Perform the following tasks on all nodes:
 
 - [ ] Run the OS bootstrap script.
-- [ ] Configure hostname resolution in `/etc/hosts`.
+- [ ] Configure hostname resolution in /etc/hosts or DNS.
+- [ ] Configure network interfaces, bonding, VLANs, and routing.
+- [ ] Configure NTP/Chrony for time synchronization.
+- [ ] Configure SSH access and administrative users.
+- [ ] Configure package repositories and proxy settings (if required).
+- [ ] Install required OS packages and dependencies.
+- [ ] Disable Firewall service.
+- [ ] Disable Cloud-init service.
 - [ ] Validate network connectivity between all nodes.
+- [ ] Validate DNS resolution and time synchronization.
+- [ ] Validate dedicated Ceph OSD disks.
 
 ### Bootstrap
 
