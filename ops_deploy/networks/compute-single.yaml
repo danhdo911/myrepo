@@ -41,3 +41,10 @@ network:
       routes:
         - to: 172.16.87.0/24
           via: 172.16.87.254
+
+    ens161:
+      mtu: 1500
+      dhcp4: false
+      set-name: eth1
+      match:
+        macaddress: 00:50:56:bf:70:e3

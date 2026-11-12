@@ -37,11 +37,11 @@
 - [ ] Configure server management: hostname, management IP, and console access.
 - [ ] Verify hardware specifications: CPU, memory, NICs, and disk capacity.
 - [ ] Verify BIOS/UEFI settings: UEFI boot mode, and boot order.
-- [ ] Enable CPU virtualization (Intel VT-x/AMD-V) for KVM on OpenStack Compute nodes.
 - [ ] Configure OS disks: RAID 1.
 - [ ] Configure Ceph OSD disks: JBOD/HBA passthrough (recommended) or single-disk RAID 0.
 - [ ] Verify hardware health: disks, memory, power supplies, and network interfaces.
 - [ ] Install Ubuntu Server 24.04.5 LTS on all nodes.
+- [ ] Enable CPU virtualization (Intel VT-x/AMD-V) for KVM on OpenStack Compute nodes.
 - [ ] Configure physical network connectivity: switch ports, VLANs, bonding, and MTU.
 
 ### Network

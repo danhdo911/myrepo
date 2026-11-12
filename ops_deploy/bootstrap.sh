@@ -53,15 +53,6 @@ configure_hostname() {
 
     hostnamectl set-hostname "${fqdn}"
 
-    # Update /etc/hosts for local hostname resolution
-    if grep -qE '^127\.0\.1\.1[[:space:]]' /etc/hosts; then
-        sed -i -E \
-            "s/^127\.0\.1\.1[[:space:]].*/127.0.1.1 ${fqdn} ${HOSTNAME_OVERRIDE}/" \
-            /etc/hosts
-    else
-        echo "127.0.1.1 ${fqdn} ${HOSTNAME_OVERRIDE}" >> /etc/hosts
-    fi
-
     log "Hostname configured successfully."
 }
 
