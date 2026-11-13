@@ -94,7 +94,7 @@ cat dns_hosts.conf | sudo tee -a /etc/hosts > /etc/null
 #### On controller
 
 ```bash
-./network_validation ens33 \
+./network_validation.sh ens33 \
 172.16.85.11 \
 172.16.85.12 \
 172.16.85.13 \
@@ -102,12 +102,12 @@ cat dns_hosts.conf | sudo tee -a /etc/hosts > /etc/null
 172.16.85.15 \
 172.16.85.16
 
-./network_validation ens34 \
+./network_validation.sh ens34 \
 172.16.85.11 \
 172.16.88.12 \
 172.16.88.13
 
-./network_validation ens36 \
+./network_validation.sh ens36 \
 172.16.85.11 \
 172.16.87.12 \
 172.16.87.13 \
@@ -119,7 +119,7 @@ cat dns_hosts.conf | sudo tee -a /etc/hosts > /etc/null
 #### On compute
 
 ```bash
-./network_validation ens33 \
+./network_validation.sh ens33 \
 172.16.85.11 \
 172.16.85.12 \
 172.16.85.13 \
@@ -127,18 +127,18 @@ cat dns_hosts.conf | sudo tee -a /etc/hosts > /etc/null
 172.16.85.15 \
 172.16.85.16
 
-./network_validation ens35 \
-172.16.85.14 \
-172.16.85.15 \
-172.16.85.16
+./network_validation.sh ens35 \
+172.16.86.14 \
+172.16.86.15 \
+172.16.86.16
 
-./network_validation ens36 \
+./network_validation.sh ens36 \
 172.16.87.11 \
 172.16.87.12 \
 172.16.87.13 \
-172.16.85.14 \
-172.16.85.15 \
-172.16.85.16
+172.16.87.14 \
+172.16.87.15 \
+172.16.87.16
 ```
 
 ## CEPH Installation

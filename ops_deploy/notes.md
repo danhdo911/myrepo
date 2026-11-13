@@ -1,3 +1,20 @@
+### Remove Windows CRLF (^M)
+
+```bash
+grep -Ilr $'\r' . --exclude-dir=.git
+```
+
+```bash
+find . -type f \( \
+  -name "*.sh" -o \
+  -name "*.conf" -o \
+  -name "*.env" -o \
+  -name ".env" -o \
+  -name "*.yml" -o \
+  -name "*.yaml" \
+\) -exec sed -i 's/\r$//' {} +
+```
+
 ### Check ceph services
 
 systemctl list-units 'ceph-*.service' --all

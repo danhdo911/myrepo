@@ -1,0 +1,7 @@
+ip link set bond0 down
+ip link set bond1 down
+ip link set dev ens192 nomaster
+ip link set dev ens224 nomaster
+ip link set dev ens256 nomaster
+ip link delete dev bond0
+ip link delete dev bond1
