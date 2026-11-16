@@ -12,7 +12,8 @@ chmod +x ceph_install_packages.sh
 Run if Public and Cluster network seprated.
 
 ```bash
-cephadm --image quay.io/ceph/ceph:v20.2.4 bootstrap \
+cephadm --image quay.io/ceph/ceph:v20.2.4 --docker bootstrap \
+    --docker \
     --mon-ip=172.16.87.11 \
     --cluster-network 172.16.88.0/24 \
     --initial-dashboard-user admin \
@@ -24,7 +25,7 @@ cephadm --image quay.io/ceph/ceph:v20.2.4 bootstrap \
 Run if Public and Cluster network are the same newtork.
 
 ```bash
-cephadm --image quay.io/ceph/ceph:v20.2.4 bootstrap \
+cephadm --image quay.io/ceph/ceph:v20.2.4 --docker bootstrap \
     --mon-ip=172.16.87.11 \
     --initial-dashboard-user admin \
     --initial-dashboard-password='P@ssw0rd' \
@@ -38,7 +39,7 @@ Run command to adding nodes to the cluster.
 
 ```bash
 chmod +x ceph_add_nodes.sh
-./ceph_add_nodes.sh.sh
+./ceph_add_nodes.sh
 ```
 
 Verify all nodes are registered.

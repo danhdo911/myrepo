@@ -103,17 +103,17 @@ cat dns_hosts.conf | sudo tee -a /etc/hosts > /etc/null
 172.16.85.16
 
 ./network_validation.sh ens34 \
-172.16.85.11 \
+172.16.88.11 \
 172.16.88.12 \
 172.16.88.13
 
 ./network_validation.sh ens36 \
-172.16.85.11 \
+172.16.87.11 \
 172.16.87.12 \
 172.16.87.13 \
 172.16.87.14 \
-172.16.85.15 \
-172.16.85.16
+172.16.87.15 \
+172.16.87.16
 ```
 
 #### On compute
@@ -167,11 +167,11 @@ chmod +x kolla_preparation.sh
 ./kolla_preparation.sh
 ```
 
-Configure Ceph's keyrings for OpenStack services.
+Kolla configuration including Ceph's keyrings and OpenStack services.
 
 ```bash
-chmod +x kolla_ceph_configure.sh
-./kolla_ceph_configure.sh
+chmod +x kolla_configure.sh
+./kolla_configure.sh
 ```
 
 Configure for Nova service.

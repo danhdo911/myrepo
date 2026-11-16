@@ -49,6 +49,7 @@ for host in "${HOSTS[@]}"; do
         continue
     fi
 
+    echo ""
     echo "[INFO] Processing host: $host"
 
     # Retrieve remote hostname

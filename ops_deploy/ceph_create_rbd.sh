@@ -20,6 +20,10 @@ log() {
     echo "[INFO] $*"
 }
 
+warn() {
+    echo "[WARN] $*" >&2
+}
+
 configure_crush_rule() {
     log "Configuring CRUSH rule: $CRUSH_RULE"
 

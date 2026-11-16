@@ -11,7 +11,8 @@ find . -type f \( \
   -name "*.env" -o \
   -name ".env" -o \
   -name "*.yml" -o \
-  -name "*.yaml" \
+  -name "*.yaml" -o\
+  -name "*.md" \
 \) -exec sed -i 's/\r$//' {} +
 ```
 

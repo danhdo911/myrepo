@@ -64,7 +64,7 @@ enable_cinder_backup: "yes"
 # enable_cinder_backend_iscsi: "yes"
 
 #
-cinder_cluster_name: "cinder-ceph"
+cinder_cluster_name: "ceph-cluster"
 enable_valkey: "yes"
 
 # Ceph RBD - Cinder

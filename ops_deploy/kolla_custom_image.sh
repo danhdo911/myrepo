@@ -25,16 +25,16 @@ compute_nodes=(
 )
 
 services=(
-    # cinder-volume
-    # cinder-backup
-    # glance-api
-    # nova-libvirt
+    cinder-volume
+    cinder-backup
+    glance-api
+    nova-libvirt
     nova-compute
 )
 
 custom_name="2026.1-ubuntu-noble-ceph20.2.4"
 
-SSH_OPTIONS=(
+SSH_OPTS=(
     -i ${ADMIN_SSH_KEY}
     -o StrictHostKeyChecking=no
     -o IdentitiesOnly=yes
