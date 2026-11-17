@@ -186,10 +186,7 @@ pip3 install python-masakariclient
 ```
 
 ```bash
-openstack segment create \
-  --service-type COMPUTE \
-  --recovery-method auto \
-  compute-ha
+openstack segment create compute-ha auto COMPUTE
 ```
 
 ```bash
