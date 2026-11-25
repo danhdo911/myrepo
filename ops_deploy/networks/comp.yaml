@@ -1,0 +1,99 @@
+network:
+  version: 2
+  ethernets:
+    ens13f0np0:
+      mtu: 9000
+      dhcp4: false
+    ens13f1np1:
+      mtu: 9000
+      dhcp4: false
+    ens14f0np0:
+      mtu: 9000
+      dhcp4: false
+    ens14f1np1:
+      mtu: 9000
+      dhcp4: false
+
+  bonds:
+    bond0:
+      interfaces:
+        - ens13f0np0
+        - ens14f0np0
+      parameters:
+        mode: active-backup
+        mii-monitor-interval: 100
+      mtu: 9000
+      dhcp4: false
+
+    bond1:
+      interfaces:
+        - ens13f1np1
+        - ens14f1np1
+      parameters:
+        mode: active-backup
+        mii-monitor-interval: 100
+      mtu: 9000
+      dhcp4: false
+
+  virtual-ethernets:
+    veth-linux:
+      peer: veth-ovs
+      mtu: 9000
+      dhcp4: false
+
+    veth-ovs:
+      peer: veth-linux
+      mtu: 9000
+      dhcp4: false
+
+  bridges:
+    br-trunk:
+      interfaces:
+        - bond0
+        - veth-linux
+      mtu: 9000
+      dhcp4: false
+      parameters:
+        stp: false
+        forward-delay: 0
+
+  vlans:
+    ### Internal
+    ens33:
+      id: 210
+      link: br-trunk
+      mtu: 1500
+      dhcp4: false
+      addresses:
+        - 172.16.210.16/24
+      routes:
+        - to: default
+          via: 172.16.210.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 1.1.1.1
+
+    ### Geneve
+    ens35:
+      id: 212
+      link: br-trunk
+      mtu: 9000
+      dhcp4: false
+      addresses:
+        - 172.16.212.16/24
+      routes:
+        - to: 172.16.212.0/24
+          via: 172.16.212.1
+
+    ### Storage
+    ens36:
+      id: 213
+      link: bond1
+      mtu: 9000
+      dhcp4: false
+      addresses:
+        - 172.16.213.16/24
+      routes:
+        - to: 172.16.213.0/24
+          via: 172.16.213.1

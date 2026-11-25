@@ -1,0 +1,109 @@
+network:
+  version: 2
+  ethernets:
+    ens13f0np0:
+      mtu: 9000
+      dhcp4: false
+    ens13f1np1:
+      mtu: 9000
+      dhcp4: false
+    ens14f0np0:
+      mtu: 9000
+      dhcp4: false
+    ens14f1np1:
+      mtu: 9000
+      dhcp4: false
+
+  bonds:
+    bond0:
+      interfaces:
+        - ens13f0np0
+        - ens14f0np0
+      parameters:
+        mode: active-backup
+        mii-monitor-interval: 100
+      mtu: 9000
+
+    bond1:
+      interfaces:
+        - ens13f1np1
+        - ens14f1np1
+      parameters:
+        mode: active-backup
+        mii-monitor-interval: 100
+      mtu: 9000
+
+  virtual-ethernets:
+    veth-linux:
+      peer: veth-ovs
+      mtu: 9000
+      dhcp4: false
+      dhcp6: false
+      link-local: []
+
+    veth-ovs:
+      peer: veth-linux
+      mtu: 9000
+      dhcp4: false
+      dhcp6: false
+      link-local: []
+
+  bridges:
+    br-trunk:
+      interfaces:
+        - bond0
+        - veth-linux
+      mtu: 9000
+      dhcp4: false
+      dhcp6: false
+      link-local: []
+      parameters:
+        stp: false
+        forward-delay: 0
+
+  vlans:
+    ### Internal
+    ens33:
+      id: 210
+      link: br-trunk
+      mtu: 1500
+      dhcp4: false
+      addresses:
+        - 172.16.210.13/24
+      routes:
+        - to: default
+          via: 172.16.210.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 1.1.1.1
+
+    ### Public
+    ens34:
+      id: 211
+      link: br-trunk
+      mtu: 1500
+      dhcp4: false
+      addresses:
+        - 172.16.211.13/24
+      routes:
+        - to: 172.16.211.0/24
+          via: 172.16.211.1
+
+    ### Geneve
+    ens35:
+      id: 212
+      link: br-trunk
+      mtu: 9000
+      dhcp4: false
+      addresses:
+        - 172.16.212.13/24
+
+    ### Storage
+    ens36:
+      id: 213
+      link: bond1
+      mtu: 9000
+      dhcp4: false
+      addresses:
+        - 172.16.213.13/24
